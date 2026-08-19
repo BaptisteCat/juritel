@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Annuaire Justice</title>
+<title>Juritel</title>
 <meta name="theme-color" content="#0d0f1e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -428,7 +428,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 <header><div class="hwrap">
   <div class="titrebar">
     <div class="logo" onclick="goHome()" data-ic="scale" data-s="19"></div>
-    <h1 onclick="goHome()">Annuaire Justice<small id="count"></small></h1>
+    <h1 onclick="goHome()">Juritel<small id="count"></small></h1>
     <div id="syncstate" title="Synchronisation"><span class="dot"></span><span id="synctxt">local</span></div>
     <button class="iconbtn" id="btntheme" title="Thème"></button>
     <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
@@ -550,14 +550,32 @@ const ICONS = {
 };
 const icn = (n, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||''}</svg>`;
 
+
+/* migration Annuaire Justice -> Juritel : conserve données, Drive et thème */
+(function(){
+  const map = {
+    'annuaireJustice.data':'juritel.data',
+    'annuaireJustice.driveOn':'juritel.driveOn',
+    'annuaireJustice.driveFileId':'juritel.driveFileId',
+    'annuaireJustice.tok':'juritel.tok',
+    'annuaireJustice.hint':'juritel.hint',
+    'annuaireJustice.theme':'juritel.theme',
+  };
+  for(const [o, n] of Object.entries(map)){
+    const v = localStorage.getItem(o);
+    if(v !== null && localStorage.getItem(n) === null){
+      try{ localStorage.setItem(n, v); localStorage.removeItem(o); }catch(e){}
+    }
+  }
+})();
 /* ============================================================
    CONFIG — synchronisation Google Drive
    ============================================================ */
 const CLIENT_ID = '1002386733501-oeq2g899a2dlgcttg0qem8a7ugvsh847.apps.googleusercontent.com';
-const DRIVE_FILENAME = 'annuaire-justice-data.json';
-const LS_KEY = 'annuaireJustice.data';
-const LS_DRIVE = 'annuaireJustice.driveOn';
-const LS_FILEID = 'annuaireJustice.driveFileId';
+const DRIVE_FILENAME = 'juritel-data.json';
+const LS_KEY = 'juritel.data';
+const LS_DRIVE = 'juritel.driveOn';
+const LS_FILEID = 'juritel.driveFileId';
 
 /* ============================ état ============================ */
 let DATA = null;
@@ -605,7 +623,7 @@ async function load(){
   if(raw){ try{ DATA = JSON.parse(raw); }catch(e){} }
   if(!DATA){
     try{
-      const r = await fetch('annuaire.json', {cache:'no-cache'});
+      const r = await fetch('juritel.json', {cache:'no-cache'});
       if(r.ok) DATA = await r.json();
     }catch(e){}
     if(!DATA) DATA = {version:1, juridictions:[]};
@@ -1364,7 +1382,7 @@ $('#btnExport').addEventListener('click', ()=>{
   const blob = new Blob([JSON.stringify(DATA,(k,v)=>k.startsWith('_')?undefined:v)],{type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'annuaire-justice-'+new Date().toISOString().slice(0,10)+'.json';
+  a.download = 'juritel-'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
 });
 $('#btnImport').addEventListener('click', ()=>$('#fileImport').click());
@@ -1403,8 +1421,8 @@ document.addEventListener('keydown', e=>{
    SYNCHRONISATION GOOGLE DRIVE (scope drive.file)
    ============================================================ */
 const Drive = (() => {
-  const LS_TOKEN = 'annuaireJustice.tok';
-  const LS_HINT = 'annuaireJustice.hint';
+  const LS_TOKEN = 'juritel.tok';
+  const LS_HINT = 'juritel.hint';
   let token=null, tokenClient=null, fileId=localStorage.getItem(LS_FILEID)||null;
   try{ token = JSON.parse(localStorage.getItem(LS_TOKEN)||'null'); }catch(e){}
   let pushTimer=null, busy=false, lastRemoteRev=null;
@@ -1473,6 +1491,20 @@ const Drive = (() => {
     let r = await fetch('https://www.googleapis.com/drive/v3/files?q='+
       encodeURIComponent(`name='${DRIVE_FILENAME}' and trashed=false`)+'&fields=files(id)',{headers:H(t)});
     if(r.ok){ const d = await r.json(); if(d.files?.length) fileId = d.files[0].id; }
+    if(!fileId){
+      // migration : ancien fichier « annuaire-justice-data.json » renommé sur place
+      r = await fetch('https://www.googleapis.com/drive/v3/files?q='+
+        encodeURIComponent("name='annuaire-justice-data.json' and trashed=false")+'&fields=files(id)',{headers:H(t)});
+      if(r.ok){
+        const d = await r.json();
+        if(d.files?.length){
+          fileId = d.files[0].id;
+          await fetch('https://www.googleapis.com/drive/v3/files/'+fileId,{
+            method:'PATCH', headers:{...H(t),'Content-Type':'application/json'},
+            body:JSON.stringify({name:DRIVE_FILENAME})});
+        }
+      }
+    }
     if(!fileId){
       r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{
         method:'POST', headers:{...H(t),'Content-Type':'multipart/related; boundary=BND'},
@@ -1631,7 +1663,7 @@ $('#syncstate').addEventListener('click', ()=>{
 
 
 /* ============================ thème ============================ */
-const LS_THEME = 'annuaireJustice.theme';
+const LS_THEME = 'juritel.theme';
 const THEME_LABEL = {auto:'automatique', dark:'sombre', light:'clair'};
 function applyTheme(){
   const t = localStorage.getItem(LS_THEME)||'auto';
