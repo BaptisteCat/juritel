@@ -707,6 +707,20 @@ const CAT_LABEL = {
 /* ============================ utilitaires ============================ */
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’‘´`]/g, "'");
 const digits = s => (s||'').replace(/\D/g,'');
+
+/* équivalences acronymes <-> formes développées pour la recherche
+   (les libellés de la base sont en toutes lettres) */
+const SYN = {
+  bo: "bureau d'ordre", bog: "bureau d'ordre general", bop: "bureau d'ordre penal",
+  ji: "juge d'instruction", jld: "juge des libertes", jap: "application des peines",
+  sap: "application des peines", jaf: "affaires familiales", jex: "juge de l'execution",
+  jcp: "contentieux de la protection", je: "juge des enfants", tpe: "tribunal pour enfants",
+  baj: "aide juridictionnelle", bav: "aide aux victimes", bex: "bureau de l'execution",
+  civi: "indemnisation des victimes", cph: "prud", sauj: "accueil",
+  pr: "procureur", crpc: "comparution sur reconnaissance",
+};
+const tokMatch = (txt, t) => txt.includes(t) || (SYN[t] && txt.includes(SYN[t]));
+
 const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const esc = s => (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -807,14 +821,14 @@ function search(){
   for(const j of DATA.juridictions){
     if(currentCat && j.categorie!==currentCat) continue;
     if(!tokens.length){ results.push({j, hits:null, nameHit:0}); continue; }
-    const rest = tokens.filter(t=>!j._txt.includes(t));
+    const rest = tokens.filter(t=>!tokMatch(j._txt, t));
     const nameHit = tokens.length - rest.length;
     if(!rest.length){ results.push({j, hits:null, nameHit}); continue; }
     const hits = [];
     for(const s of j.services){
-      const rest2 = rest.filter(t=>!s._txt.includes(t));
+      const rest2 = rest.filter(t=>!tokMatch(s._txt, t));
       const cts = s.contacts.filter(c =>
-        rest2.every(t => c._txt.includes(t) ||
+        rest2.every(t => tokMatch(c._txt, t) ||
           (c._dig && digits(t).length>=4 && c._dig.includes(digits(t)))));
       if(cts.length) hits.push({s, cts});
     }
@@ -991,11 +1005,11 @@ function isOpen(id, dflt){ return openState[id]!==undefined ? openState[id] : df
 
 function svcMatches(j, s, tokens){
   if(!tokens.length) return false;
-  const rest = tokens.filter(t=>!j._txt.includes(t));
+  const rest = tokens.filter(t=>!tokMatch(j._txt, t));
   if(!rest.length) return false;
-  const rest2 = rest.filter(t=>!s._txt.includes(t));
+  const rest2 = rest.filter(t=>!tokMatch(s._txt, t));
   if(!rest2.length) return true;
-  return s.contacts.some(c => rest2.every(t => c._txt.includes(t) ||
+  return s.contacts.some(c => rest2.every(t => tokMatch(c._txt, t) ||
     (c._dig && digits(t).length>=4 && c._dig.includes(digits(t)))));
 }
 
