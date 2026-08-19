@@ -59,6 +59,8 @@
     --fax:#aeb4c4; --fax-bg:#282d3c;
     --btj-grad:linear-gradient(135deg,#ffffff,#c4cbdf); --btj-ink:#12141c;
     --bar-a:#93a5ff; --bar-b:#c9a1ff;
+    --chip-a:#93a5ff; --chip-b:#8f7ff2; --chip-ink:#0f1220;
+    --chip-glow:rgba(147,165,255,.3);
     --title-grad:linear-gradient(115deg,#ffffff 0%,#dde2ee 55%,#9ea8c2 100%);
     --title-color:transparent;
   }
@@ -85,6 +87,8 @@
   --fax:#aeb4c4; --fax-bg:#282d3c;
   --btj-grad:linear-gradient(135deg,#ffffff,#c4cbdf); --btj-ink:#12141c;
     --bar-a:#93a5ff; --bar-b:#c9a1ff;
+    --chip-a:#93a5ff; --chip-b:#8f7ff2; --chip-ink:#0f1220;
+    --chip-glow:rgba(147,165,255,.3);
   --title-grad:linear-gradient(115deg,#ffffff 0%,#dde2ee 55%,#9ea8c2 100%);
   --title-color:transparent;
 }
@@ -179,9 +183,9 @@ header{
 }
 .chip:hover{border-color:var(--ink-3); color:var(--ink); transform:translateY(-1px); box-shadow:var(--shadow-s)}
 .chip.on{
-  background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
-  color:var(--cta-ink); border-color:transparent;
-  box-shadow:0 3px 10px var(--glow);
+  background:linear-gradient(135deg,var(--chip-a,var(--grad-a)),var(--chip-b,var(--grad-b)));
+  color:var(--chip-ink,var(--cta-ink)); border-color:transparent;
+  box-shadow:0 3px 10px var(--chip-glow,var(--glow));
 }
 
 main{max-width:1080px; margin:0 auto; padding:16px 18px}
