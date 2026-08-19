@@ -33,6 +33,7 @@
   --tel:#3542d8; --tel-bg:#eceeff; --mail:#7c3aed; --mail-bg:#f3edfd;
   --fax:#585d75; --fax-bg:#eef0f4;
   --btj-grad:linear-gradient(135deg,#4353ff,#7c3aed); --btj-ink:#fff;
+  --bar-a:#4353ff; --bar-b:#7c3aed;
   --title-grad:none; --title-color:var(--ink);
 }
 @media (prefers-color-scheme: dark){
@@ -44,19 +45,20 @@
     --card:#141721; --card-2:#1a1d29;
     --ink:#eef0f5; --ink-2:#a4aabb; --ink-3:#5f6678;
     --line:#242836; --line-2:#1e2230;
-    --accent:#e2e6f2; --accent-2:#c3c9da;
+    --accent:#93a5ff; --accent-2:#7d92ff;
     --grad-a:#ffffff; --grad-b:#c4cbdf;
     --cta-ink:#12141c;
     --glow:rgba(180,190,220,.16);
-    --hairline-a:rgba(255,255,255,.45); --hairline-b:rgba(154,163,190,.15);
+    --hairline-a:rgba(150,168,255,.5); --hairline-b:rgba(201,161,255,.15);
     --gold:#d3b878;
     --ok:#43cf7f; --ok-bg:#11301e; --ko:#ff6f75; --ko-bg:#391317;
     --shadow-s:0 1px 2px rgba(0,0,0,.5);
     --shadow-m:0 2px 8px rgba(0,0,0,.45), 0 16px 40px rgba(0,0,0,.42);
     --shadow-l:0 16px 48px rgba(0,0,0,.62);
-    --tel:#aab6d9; --tel-bg:#1f2433; --mail:#c0a8e8; --mail-bg:#282138;
+    --tel:#96a8ff; --tel-bg:#1e2545; --mail:#c9a1ff; --mail-bg:#2b2049;
     --fax:#a2a8b8; --fax-bg:#20232e;
     --btj-grad:linear-gradient(135deg,#ffffff,#c4cbdf); --btj-ink:#12141c;
+    --bar-a:#93a5ff; --bar-b:#c9a1ff;
     --title-grad:linear-gradient(115deg,#ffffff 0%,#dde2ee 55%,#9ea8c2 100%);
     --title-color:transparent;
   }
@@ -69,19 +71,20 @@
   --card:#141721; --card-2:#1a1d29;
   --ink:#eef0f5; --ink-2:#a4aabb; --ink-3:#5f6678;
   --line:#242836; --line-2:#1e2230;
-  --accent:#e2e6f2; --accent-2:#c3c9da;
+  --accent:#93a5ff; --accent-2:#7d92ff;
   --grad-a:#ffffff; --grad-b:#c4cbdf;
   --cta-ink:#12141c;
   --glow:rgba(180,190,220,.16);
-  --hairline-a:rgba(255,255,255,.45); --hairline-b:rgba(154,163,190,.15);
+  --hairline-a:rgba(150,168,255,.5); --hairline-b:rgba(201,161,255,.15);
   --gold:#d3b878;
   --ok:#43cf7f; --ok-bg:#11301e; --ko:#ff6f75; --ko-bg:#391317;
   --shadow-s:0 1px 2px rgba(0,0,0,.5);
   --shadow-m:0 2px 8px rgba(0,0,0,.45), 0 16px 40px rgba(0,0,0,.42);
   --shadow-l:0 16px 48px rgba(0,0,0,.62);
-  --tel:#aab6d9; --tel-bg:#1f2433; --mail:#c0a8e8; --mail-bg:#282138;
+  --tel:#96a8ff; --tel-bg:#1e2545; --mail:#c9a1ff; --mail-bg:#2b2049;
   --fax:#a2a8b8; --fax-bg:#20232e;
   --btj-grad:linear-gradient(135deg,#ffffff,#c4cbdf); --btj-ink:#12141c;
+    --bar-a:#93a5ff; --bar-b:#c9a1ff;
   --title-grad:linear-gradient(115deg,#ffffff 0%,#dde2ee 55%,#9ea8c2 100%);
   --title-color:transparent;
 }
@@ -371,7 +374,7 @@ select.mini{
   letter-spacing:-.01em;
 }
 .bureau>h4::before{content:''; width:3px; height:14px; border-radius:2px;
-  background:linear-gradient(180deg,var(--grad-a),var(--grad-b)); flex-shrink:0}
+  background:linear-gradient(180deg,var(--bar-a,var(--grad-a)),var(--bar-b,var(--grad-b))); flex-shrink:0}
 .bureau>h4 .cnt{font-size:10.5px; color:var(--ink-3); font-weight:600}
 
 .entry{
