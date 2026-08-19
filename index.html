@@ -430,6 +430,7 @@ let DATA = null;
 let currentCat = '';
 let shownCards = 60;
 let ficheId = null;          // juridiction affichée en fiche (null = liste)
+let ficheDom = '';           // filtre de domaine dans la fiche ('' = tout)
 const openState = {};        // id -> ouvert/fermé (services, volets)
 const $ = s => document.querySelector(s);
 
@@ -570,10 +571,12 @@ function search(){
 function goHome(){ ficheId = null; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
 window.goHome = goHome;
 window.openFiche = id => {
+  if(id!==ficheId) ficheDom = '';
   ficheId = id;
   history.pushState(null,'','#f/'+id);
   render(); window.scrollTo(0,0);
 };
+window.setFicheDom = d => { ficheDom = d; render(); };
 window.addEventListener('popstate', ()=>{
   const m = location.hash.match(/^#f\/(.+)$/);
   ficheId = m ? m[1] : null;
@@ -655,7 +658,7 @@ function cardJur({j, hits}, tokens){
 
 /* ---------- vue fiche ---------- */
 const DOMAIN_LABEL = {general:'Général', civil:'Civil', penal:'Pénal',
-  famille:'Famille', autres:'Autres'};
+  famille:'JAF', autres:'Autres'};
 
 function isOpen(id, dflt){ return openState[id]!==undefined ? openState[id] : dflt; }
 
@@ -673,15 +676,30 @@ function renderFiche(j){
   const tokens = norm($('#q').value.trim()).split(/\s+/).filter(Boolean);
   const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
   $('#stats').textContent = '';
-  let toc = '', blocks = '', lastDom = null;
+  // boutons de filtre par domaine (Tout / Général / Civil / Pénal / JAF / Autres)
+  const domCounts = {};
   for(const s of j.services){
-    if(s.domaine && s.domaine!==lastDom){
-      toc += `<div class="tochead">${DOMAIN_LABEL[s.domaine]||s.domaine}</div>`;
-      lastDom = s.domaine;
+    const d = s.domaine||'autres';
+    domCounts[d] = (domCounts[d]||0) + s.contacts.length;
+  }
+  const hasDomains = j.services.some(s=>s.domaine);
+  let fchips = '';
+  if(hasDomains){
+    fchips = `<div class="chips" style="padding:2px 2px 10px">`+
+      `<button class="chip ${!ficheDom?'on':''}" onclick="setFicheDom('')">Tout · ${nc}</button>`;
+    for(const d of ['general','civil','penal','famille','autres']){
+      if(!domCounts[d]) continue;
+      fchips += `<button class="chip ${ficheDom===d?'on':''}" onclick="setFicheDom('${d}')">${DOMAIN_LABEL[d]} · ${domCounts[d]}</button>`;
     }
+    fchips += '</div>';
+  }
+  let toc = '', blocks = '';
+  for(const s of j.services){
+    if(ficheDom && (s.domaine||'autres')!==ficheDom) continue;
     toc += `<a onclick="gotoSvc('${s.id}')">${esc(s.nom)}<span class="cnt">${s.contacts.length}</span></a>`;
     blocks += renderSvcBlock(j, s, svcMatches(j, s, tokens));
   }
+  if(!blocks) blocks = `<div class="vide">Aucun service dans cette catégorie.</div>`;
   $('#view').innerHTML = `
     <div class="fhead">
       <div class="row1">
@@ -696,6 +714,7 @@ function renderFiche(j){
         <span class="mini" style="cursor:default">${j.services.length} services · ${nc} contacts</span>
       </div>
     </div>
+    ${fchips}
     <div class="flayout">
       <nav class="toc">${toc}</nav>
       <div>${blocks}</div>
