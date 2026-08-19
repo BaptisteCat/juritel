@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Annuaire Justice</title>
+<meta name="theme-color" content="#000091">
+<style>
+:root{
+  --bleu:#000091; --bleu-clair:#2323ff; --fond:#f5f6fa; --carte:#ffffff;
+  --texte:#1a1a2e; --gris:#6b6f80; --bord:#e3e5ee;
+  --ok:#18753c; --ok-fond:#dffee6; --ko:#c9191e; --ko-fond:#ffe9e9;
+  --jaune:#b18500; --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --fond:#12121a; --carte:#1d1d2b; --texte:#ececf4; --gris:#9a9eb0;
+    --bord:#31324a; --bleu:#7a7aff; --bleu-clair:#9c9cff;
+    --ok:#4cd07d; --ok-fond:#123822; --ko:#ff6b6e; --ko-fond:#3a1518; --jaune:#e3b341; }
+}
+*{box-sizing:border-box; margin:0}
+html{-webkit-text-size-adjust:100%}
+body{font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:var(--fond); color:var(--texte); padding-bottom:70px}
+header{position:sticky; top:0; z-index:20; background:var(--fond);
+  padding:10px 12px 8px; border-bottom:1px solid var(--bord)}
+.titrebar{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+.titrebar h1{font-size:17px; font-weight:700; color:var(--bleu); flex:1;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.titrebar h1 span{opacity:.55; font-weight:500}
+.iconbtn{border:1px solid var(--bord); background:var(--carte); color:var(--texte);
+  border-radius:8px; padding:6px 10px; font-size:14px; cursor:pointer; line-height:1}
+.iconbtn:hover{border-color:var(--bleu)}
+#syncstate{font-size:12px; color:var(--gris); display:flex; align-items:center; gap:5px}
+#syncstate .dot{width:8px;height:8px;border-radius:50%;background:var(--gris)}
+#syncstate.on .dot{background:var(--ok)}
+#syncstate.err .dot{background:var(--ko)}
+#syncstate.work .dot{background:var(--jaune); animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.searchwrap{position:relative}
+#q{width:100%; padding:12px 40px 12px 14px; font-size:16px; border:2px solid var(--bord);
+  border-radius:12px; background:var(--carte); color:var(--texte); outline:none}
+#q:focus{border-color:var(--bleu)}
+#clearq{position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  border:none; background:none; font-size:18px; color:var(--gris); cursor:pointer;
+  padding:6px 10px; display:none}
+.chips{display:flex; gap:6px; overflow-x:auto; padding:8px 0 2px; scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--bord); background:var(--carte); color:var(--texte);
+  border-radius:20px; padding:4px 12px; font-size:13px; cursor:pointer; white-space:nowrap}
+.chip.on{background:var(--bleu); color:#fff; border-color:var(--bleu)}
+main{max-width:860px; margin:0 auto; padding:10px 12px}
+#stats{color:var(--gris); font-size:13px; margin:4px 2px 10px}
+.jur{background:var(--carte); border:1px solid var(--bord); border-radius:var(--radius);
+  margin-bottom:10px; overflow:hidden}
+.jurhead{display:flex; align-items:center; gap:8px; padding:10px 12px; cursor:pointer;
+  user-select:none}
+.jurhead:hover{background:rgba(120,120,200,.06)}
+.jurhead .nom{font-weight:700; flex:1; min-width:0}
+.jurhead .adr{font-size:12px; color:var(--gris); font-weight:400; display:block}
+.badge{font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px;
+  background:var(--fond); color:var(--gris); border:1px solid var(--bord);
+  white-space:nowrap; text-transform:uppercase}
+.badge.tj{color:#fff; background:var(--bleu); border-color:var(--bleu)}
+.badge.ca{color:#6a3fb5; border-color:#6a3fb5}
+.badge.cassation{color:#b18500; border-color:#b18500}
+.badge.penitentiaire{color:#8a4b12; border-color:#8a4b12}
+.badge.commissariat{color:#0f6f8a; border-color:#0f6f8a}
+.caret{color:var(--gris); transition:transform .15s}
+.jur.open .caret{transform:rotate(90deg)}
+.jurbody{display:none; border-top:1px solid var(--bord)}
+.jur.open .jurbody{display:block}
+.svc{padding:4px 0 8px}
+.svchead{display:flex; align-items:center; gap:8px; padding:8px 12px 2px;
+  font-size:13px; font-weight:700; color:var(--bleu); text-transform:uppercase;
+  letter-spacing:.02em}
+.svchead .n{flex:1}
+.mini{border:none; background:none; color:var(--gris); cursor:pointer; font-size:13px;
+  padding:2px 6px; border-radius:6px; opacity:.75}
+.mini:hover{background:var(--fond); opacity:1; color:var(--texte)}
+.ct{display:flex; align-items:center; gap:8px; padding:7px 12px; border-top:1px dashed var(--bord)}
+.ct:first-of-type{border-top:none}
+.ct.dead{opacity:.5}
+.ct .ic{width:20px; text-align:center; flex-shrink:0}
+.ct .info{flex:1; min-width:0}
+.ct .val a{font-weight:650; color:var(--bleu-clair); text-decoration:none; font-size:15px}
+.ct .val a:hover{text-decoration:underline}
+.ct .lib{font-size:13px; color:var(--gris); overflow:hidden; text-overflow:ellipsis;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
+.ct .note{font-size:12px; color:var(--gris); font-style:italic; display:none}
+.ct.shownote .note{display:block}
+.score{font-size:11px; font-weight:700; border-radius:9px; padding:2px 7px; white-space:nowrap}
+.score.good{color:var(--ok); background:var(--ok-fond)}
+.score.bad{color:var(--ko); background:var(--ko-fond)}
+.rate{display:flex; gap:4px; flex-shrink:0}
+.rate button{border:1px solid var(--bord); background:var(--carte); border-radius:8px;
+  width:34px; height:30px; cursor:pointer; font-size:14px}
+.rate .rok:hover{background:var(--ok-fond); border-color:var(--ok)}
+.rate .rko:hover{background:var(--ko-fond); border-color:var(--ko)}
+.more{width:100%; padding:12px; border:1px dashed var(--bord); background:none;
+  color:var(--bleu); border-radius:var(--radius); cursor:pointer; font-size:14px;
+  margin:4px 0 20px}
+#fab{position:fixed; right:18px; bottom:18px; width:56px; height:56px; border-radius:50%;
+  border:none; background:var(--bleu); color:#fff; font-size:28px; cursor:pointer;
+  box-shadow:0 4px 14px rgba(0,0,60,.35); z-index:30}
+dialog{border:none; border-radius:14px; padding:0; max-width:480px; width:calc(100vw - 36px);
+  background:var(--carte); color:var(--texte); box-shadow:0 10px 40px rgba(0,0,40,.4)}
+dialog::backdrop{background:rgba(10,10,30,.45)}
+.dlg{padding:18px}
+.dlg h2{font-size:17px; margin-bottom:14px}
+.dlg label{display:block; font-size:13px; font-weight:600; margin:10px 0 4px; color:var(--gris)}
+.dlg input, .dlg select, .dlg textarea{width:100%; padding:9px 10px; font-size:15px;
+  border:1.5px solid var(--bord); border-radius:8px; background:var(--fond);
+  color:var(--texte); outline:none; font-family:inherit}
+.dlg input:focus, .dlg select:focus, .dlg textarea:focus{border-color:var(--bleu)}
+.dlgbtns{display:flex; gap:8px; justify-content:flex-end; margin-top:18px}
+.btn{padding:9px 16px; border-radius:8px; font-size:14px; cursor:pointer;
+  border:1px solid var(--bord); background:var(--carte); color:var(--texte)}
+.btn.primary{background:var(--bleu); color:#fff; border-color:var(--bleu); font-weight:600}
+.btn.danger{color:var(--ko); border-color:var(--ko)}
+#toast{position:fixed; left:50%; bottom:86px; transform:translateX(-50%);
+  background:var(--texte); color:var(--fond); padding:10px 18px; border-radius:10px;
+  font-size:14px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:40;
+  max-width:90vw; text-align:center}
+#toast.show{opacity:.95}
+.vide{text-align:center; color:var(--gris); padding:40px 10px}
+.setrow{display:flex; align-items:center; gap:8px; margin:8px 0}
+.setrow .btn{flex:1}
+hr{border:none; border-top:1px solid var(--bord); margin:14px 0}
+.hint{font-size:12px; color:var(--gris)}
+mark{background:#ffe9a8; color:inherit; border-radius:3px; padding:0 1px}
+@media (prefers-color-scheme: dark){ mark{background:#5a4a12} }
+</style>
+</head>
+<body>
+<header>
+  <div class="titrebar">
+    <h1>⚖️ Annuaire Justice <span id="count"></span></h1>
+    <div id="syncstate" title="Synchronisation"><span class="dot"></span><span id="synctxt">local</span></div>
+    <button class="iconbtn" id="btnsettings" title="Réglages">⚙️</button>
+  </div>
+  <div class="searchwrap">
+    <input id="q" type="search" placeholder="Rechercher : ville, juridiction, numéro, mail, service…"
+      autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button id="clearq" title="Effacer">✕</button>
+  </div>
+  <div class="chips" id="chips"></div>
+</header>
+
+<main>
+  <div id="stats"></div>
+  <div id="results"></div>
+</main>
+
+<button id="fab" title="Ajouter un contact">+</button>
+<div id="toast"></div>
+
+<!-- ============ dialogues ============ -->
+<dialog id="dlgAdd"><form class="dlg" method="dialog" id="formAdd">
+  <h2 id="addTitle">Ajouter un contact</h2>
+  <label>Juridiction</label>
+  <input id="fJur" list="listJur" placeholder="TJ Melun, CA Paris… (nouvelle si inconnue)" required>
+  <datalist id="listJur"></datalist>
+  <label>Catégorie <span class="hint">(si nouvelle juridiction)</span></label>
+  <select id="fCat">
+    <option value="tj">Tribunal judiciaire</option>
+    <option value="ca">Cour d'appel</option>
+    <option value="cassation">Cour de cassation</option>
+    <option value="penitentiaire">Établissement pénitentiaire</option>
+    <option value="commissariat">Commissariat</option>
+    <option value="cra">CRA</option>
+    <option value="prefecture">Préfecture</option>
+    <option value="douane">Douanes</option>
+    <option value="autre">Autre</option>
+  </select>
+  <label>Service / greffe</label>
+  <input id="fSvc" list="listSvc" placeholder="Greffe correctionnel, Parquet, JAF…">
+  <datalist id="listSvc"></datalist>
+  <label>Type</label>
+  <select id="fType">
+    <option value="tel">📞 Téléphone</option>
+    <option value="email">✉️ Email</option>
+    <option value="fax">📠 Fax</option>
+  </select>
+  <label>Numéro ou adresse mail</label>
+  <input id="fVal" placeholder="01 23 45 67 89 ou greffe@justice.fr" required>
+  <label>Libellé <span class="hint">(à quoi sert ce contact)</span></label>
+  <input id="fLib" placeholder="Greffe de la 3e chambre…">
+  <label>Note <span class="hint">(facultatif)</span></label>
+  <textarea id="fNote" rows="2" placeholder="Précisions, horaires, interlocuteur…"></textarea>
+  <div class="dlgbtns">
+    <button class="btn" value="cancel" formnovalidate>Annuler</button>
+    <button class="btn primary" value="ok" id="addOk">Ajouter</button>
+  </div>
+</form></dialog>
+
+<dialog id="dlgSettings"><div class="dlg">
+  <h2>Réglages</h2>
+  <div class="setrow"><button class="btn" id="btnExport">⬇️ Exporter les données (JSON)</button></div>
+  <div class="setrow"><button class="btn" id="btnImport">⬆️ Importer un fichier JSON</button>
+    <input type="file" id="fileImport" accept=".json" hidden></div>
+  <hr>
+  <div id="driveBox">
+    <div class="setrow"><button class="btn primary" id="btnDrive">☁️ Connecter Google Drive</button></div>
+    <div class="setrow" style="display:none" id="rowDriveOff"><button class="btn" id="btnDriveOff">Déconnecter Google Drive</button></div>
+    <p class="hint" id="driveHint"></p>
+  </div>
+  <hr>
+  <p class="hint" id="metaInfo"></p>
+  <div class="dlgbtns"><button class="btn primary" id="btnCloseSettings">Fermer</button></div>
+</div></dialog>
+
+<script>
+'use strict';
+/* ============================================================
+   CONFIG — synchronisation Google Drive
+   Renseigner CLIENT_ID (console Google Cloud, identifiant OAuth
+   « application Web ») pour activer la synchronisation.
+   ============================================================ */
+const CLIENT_ID = '';
+const DRIVE_FILENAME = 'annuaire-justice-data.json';
+const LS_KEY = 'annuaireJustice.data';
+const LS_DRIVE = 'annuaireJustice.driveOn';
+const LS_FILEID = 'annuaireJustice.driveFileId';
+
+/* ============================ état ============================ */
+let DATA = null;          // {version, updatedAt, tombstones:{id:ts}, juridictions:[...]}
+let currentCat = '';      // filtre catégorie
+let shownGroups = 30;     // pagination
+const $ = s => document.querySelector(s);
+
+const CATS = {
+  tj:'Tribunaux judiciaires', ca:"Cours d'appel", cassation:'Cassation',
+  penitentiaire:'Prisons', commissariat:'Commissariats', cra:'CRA',
+  prefecture:'Préfectures', douane:'Douanes', etranger:'Étranger',
+  commerce:'Commerce', autre:'Autres'
+};
+
+/* ============================ utilitaires ============================ */
+const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const digits = s => (s||'').replace(/\D/g,'');
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function fmtDate(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'2-digit'});
+}
+
+/* ============================ persistance ============================ */
+function save(){
+  DATA.updatedAt = Date.now();
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }
+  catch(e){ toast('⚠️ Stockage local plein : ' + e.message); }
+  Drive.schedulePush();
+}
+async function load(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(raw){ try{ DATA = JSON.parse(raw); }catch(e){} }
+  if(!DATA){
+    try{
+      const r = await fetch('annuaire.json', {cache:'no-cache'});
+      if(r.ok){ DATA = await r.json(); }
+    }catch(e){}
+    if(!DATA) DATA = {version:1, juridictions:[]};
+    DATA.tombstones = DATA.tombstones || {};
+    DATA.updatedAt = Date.now();
+    localStorage.setItem(LS_KEY, JSON.stringify(DATA));
+  }
+  DATA.tombstones = DATA.tombstones || {};
+  buildIndex();
+}
+
+/* ============================ index de recherche ============================ */
+function buildIndex(){
+  for(const j of DATA.juridictions){
+    j._txt = norm(j.nom + ' ' + (CATS[j.categorie]||'') + ' ' + j.categorie + ' ' + (j.adresse||''));
+    for(const s of j.services){
+      s._txt = norm(s.nom);
+      for(const c of s.contacts){
+        c._txt = norm((c.libelle||'') + ' ' + c.valeur + ' ' + (c.note||''));
+        c._dig = c.type==='email' ? '' : digits(c.valeur);
+      }
+    }
+  }
+}
+
+/* ============================ notation / tri ============================ */
+const NOW = () => Date.now();
+const J90 = 90*24*3600*1000;
+function score(c){
+  let s = (c.ok||0)*3 - (c.ko||0)*2;
+  if(c.lastOk && NOW()-c.lastOk < J90) s += 100;
+  else if(c.lastOk) s += 40;
+  return s;
+}
+const isDead = c => (c.ko||0)>=3 && !(c.ok>0);
+function sortContacts(list){
+  return [...list].sort((a,b)=>{
+    const d = score(b)-score(a);
+    return d !== 0 ? d : 0;
+  });
+}
+
+/* ============================ recherche ============================ */
+function search(){
+  const qraw = $('#q').value.trim();
+  const tokens = norm(qraw).split(/\s+/).filter(Boolean);
+  const results = [];
+  for(const j of DATA.juridictions){
+    if(currentCat && j.categorie!==currentCat) continue;
+    if(!tokens.length){ results.push({j, svcs:null}); continue; }
+    // répartir les jetons : ceux satisfaits par la juridiction, le reste sur services/contacts
+    const rest = tokens.filter(t => !j._txt.includes(t));
+    if(!rest.length){ results.push({j, svcs:null}); continue; }
+    const svcs = [];
+    for(const s of j.services){
+      const rest2 = rest.filter(t => !s._txt.includes(t));
+      const cts = s.contacts.filter(c =>
+        rest2.every(t => c._txt.includes(t) || (c._dig && c._dig.includes(digits(t)) && digits(t).length>=4)));
+      if(cts.length) svcs.push({s, cts});
+    }
+    if(svcs.length) results.push({j, svcs});
+  }
+  return {results, tokens};
+}
+
+/* ============================ rendu ============================ */
+function render(){
+  const {results, tokens} = search();
+  const R = $('#results');
+  const total = DATA.juridictions.length;
+  const nc = DATA.juridictions.reduce((n,j)=>n+j.services.reduce((m,s)=>m+s.contacts.length,0),0);
+  $('#count').textContent = `· ${total} juridictions`;
+  $('#stats').textContent = tokens.length || currentCat ?
+    `${results.length} juridiction${results.length>1?'s':''} trouvée${results.length>1?'s':''}` :
+    `${total} juridictions, ${nc.toLocaleString('fr-FR')} contacts — tapez pour rechercher`;
+  $('#clearq').style.display = $('#q').value ? 'block' : 'none';
+
+  if(!results.length){
+    R.innerHTML = '<div class="vide">Aucun résultat.<br><br><button class="btn primary" onclick="openAdd()">＋ Ajouter ce contact</button></div>';
+    return;
+  }
+  const openAll = tokens.length>0;
+  const slice = results.slice(0, shownGroups);
+  let html = '';
+  for(const r of slice){ html += renderJur(r, openAll); }
+  R.innerHTML = html;
+  if(results.length > shownGroups){
+    R.innerHTML += `<button class="more" onclick="shownGroups+=40;render()">Afficher plus (${results.length-shownGroups} restantes)</button>`;
+  }
+}
+
+function renderJur({j, svcs}, open){
+  const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  let body = '';
+  if(open || j._open){
+    const list = svcs || j.services.map(s=>({s, cts:s.contacts}));
+    for(const {s, cts} of list){
+      body += `<div class="svc"><div class="svchead"><span class="n">${esc(s.nom)}</span>
+        <button class="mini" title="Ajouter un contact ici" onclick="openAdd('${j.id}','${s.id}')">＋</button>
+        <button class="mini" title="Supprimer ce service" onclick="delService('${j.id}','${s.id}')">🗑</button></div>`;
+      for(const c of sortContacts(cts)){ body += renderContact(j, s, c); }
+      body += '</div>';
+    }
+    body = `<div class="jurbody">${body}
+      <div style="padding:8px 12px 12px; display:flex; gap:8px">
+        <button class="mini" onclick="openAdd('${j.id}')">＋ Ajouter un contact</button>
+        <button class="mini" onclick="delJur('${j.id}')">🗑 Supprimer la juridiction</button>
+      </div></div>`;
+  }
+  return `<div class="jur ${open||j._open?'open':''}" id="jur-${j.id}">
+    <div class="jurhead" onclick="toggleJur('${j.id}')">
+      <span class="caret">▶</span>
+      <span class="nom">${esc(j.nom)}${j.adresse?`<span class="adr">${esc(j.adresse)}</span>`:''}</span>
+      <span class="badge ${j.categorie}">${esc(j.categorie)}</span>
+      <span class="hint">${nc}</span>
+    </div>${body}</div>`;
+}
+
+function renderContact(j, s, c){
+  const tel = c.type!=='email';
+  const href = c.type==='email' ? 'mailto:'+c.valeur : 'tel:+33'+digits(c.valeur).slice(1);
+  const ic = c.type==='email' ? '✉️' : c.type==='fax' ? '📠' : '📞';
+  let badge = '';
+  if(c.ok>0) badge = `<span class="score good" title="Dernier succès : ${fmtDate(c.lastOk)}">✓${c.ok}${c.lastOk?' · '+fmtDate(c.lastOk):''}</span>`;
+  else if(c.ko>0) badge = `<span class="score bad">✗${c.ko}</span>`;
+  const noteBtn = c.note ? `<button class="mini" onclick="this.closest('.ct').classList.toggle('shownote')" title="Note">ℹ️</button>` : '';
+  return `<div class="ct ${isDead(c)?'dead':''}" id="ct-${c.id}">
+    <span class="ic">${ic}</span>
+    <div class="info">
+      <div class="val"><a href="${href}" ${c.type==='fax'?'onclick="return false"':''}>${esc(c.valeur)}</a> ${badge}</div>
+      ${c.libelle?`<div class="lib">${esc(c.libelle)}</div>`:''}
+      ${c.note?`<div class="note">${esc(c.note)}</div>`:''}
+    </div>
+    ${noteBtn}
+    <button class="mini" title="Copier" onclick="copyVal('${esc(c.valeur)}')">⧉</button>
+    <div class="rate">
+      <button class="rok" title="Ça a répondu" onclick="rate('${c.id}',1)">✓</button>
+      <button class="rko" title="Pas de réponse / ne fonctionne pas" onclick="rate('${c.id}',0)">✗</button>
+    </div>
+    <button class="mini" title="Supprimer" onclick="delContact('${c.id}')">🗑</button>
+  </div>`;
+}
+
+function renderChips(){
+  const counts = {};
+  for(const j of DATA.juridictions) counts[j.categorie]=(counts[j.categorie]||0)+1;
+  let html = `<button class="chip ${!currentCat?'on':''}" onclick="setCat('')">Tout</button>`;
+  for(const [k,v] of Object.entries(CATS)){
+    if(!counts[k]) continue;
+    html += `<button class="chip ${currentCat===k?'on':''}" onclick="setCat('${k}')">${v} (${counts[k]})</button>`;
+  }
+  $('#chips').innerHTML = html;
+}
+
+/* ============================ interactions ============================ */
+window.setCat = c => { currentCat = c; shownGroups = 30; renderChips(); render(); };
+window.toggleJur = id => {
+  const j = DATA.juridictions.find(x=>x.id===id);
+  if(j){ j._open = !j._open; render(); }
+};
+window.copyVal = v => { navigator.clipboard?.writeText(v).then(()=>toast('Copié : '+v)); };
+
+function findContact(id){
+  for(const j of DATA.juridictions) for(const s of j.services)
+    for(const c of s.contacts) if(c.id===id) return {j,s,c};
+  return null;
+}
+window.rate = (id, ok) => {
+  const f = findContact(id); if(!f) return;
+  const c = f.c;
+  if(ok){ c.ok=(c.ok||0)+1; c.lastOk=NOW(); toast('✓ Numéro noté comme fonctionnel'); }
+  else { c.ko=(c.ko||0)+1; toast('✗ Échec noté'); }
+  c.lastTry = NOW(); c.u = NOW();
+  save(); render();
+};
+window.delContact = id => {
+  const f = findContact(id); if(!f) return;
+  if(!confirm(`Supprimer ${f.c.valeur} (${f.c.libelle||f.s.nom}) ?`)) return;
+  f.s.contacts = f.s.contacts.filter(c=>c.id!==id);
+  DATA.tombstones[id] = NOW();
+  save(); render(); toast('Contact supprimé');
+};
+window.delService = (jid, sid) => {
+  const j = DATA.juridictions.find(x=>x.id===jid); if(!j) return;
+  const s = j.services.find(x=>x.id===sid); if(!s) return;
+  if(!confirm(`Supprimer le service « ${s.nom} » et ses ${s.contacts.length} contacts ?`)) return;
+  for(const c of s.contacts) DATA.tombstones[c.id]=NOW();
+  DATA.tombstones[sid]=NOW();
+  j.services = j.services.filter(x=>x.id!==sid);
+  save(); render(); toast('Service supprimé');
+};
+window.delJur = id => {
+  const j = DATA.juridictions.find(x=>x.id===id); if(!j) return;
+  const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  if(!confirm(`Supprimer « ${j.nom} » et ses ${nc} contacts ?`)) return;
+  for(const s of j.services){ for(const c of s.contacts) DATA.tombstones[c.id]=NOW(); DATA.tombstones[s.id]=NOW(); }
+  DATA.tombstones[id]=NOW();
+  DATA.juridictions = DATA.juridictions.filter(x=>x.id!==id);
+  save(); renderChips(); render(); toast('Juridiction supprimée');
+};
+
+/* ============================ ajout ============================ */
+let addCtx = {};
+window.openAdd = (jid, sid) => {
+  addCtx = {jid, sid};
+  const dlg = $('#dlgAdd');
+  $('#listJur').innerHTML = DATA.juridictions.map(j=>`<option value="${esc(j.nom)}">`).join('');
+  const j = jid && DATA.juridictions.find(x=>x.id===jid);
+  $('#fJur').value = j ? j.nom : '';
+  refreshSvcList();
+  const s = j && sid && j.services.find(x=>x.id===sid);
+  $('#fSvc').value = s ? s.nom : '';
+  $('#fVal').value = ''; $('#fLib').value=''; $('#fNote').value='';
+  const q = $('#q').value.trim();
+  if(!jid && q && !/\d/.test(q)) $('#fJur').value = q;
+  dlg.showModal();
+};
+function refreshSvcList(){
+  const nomJ = norm($('#fJur').value.trim());
+  const j = DATA.juridictions.find(x=>norm(x.nom)===nomJ);
+  $('#listSvc').innerHTML = j ? j.services.map(s=>`<option value="${esc(s.nom)}">`).join('') : '';
+}
+$('#fJur').addEventListener('input', refreshSvcList);
+$('#fVal').addEventListener('input', e=>{
+  const v = e.target.value;
+  if(v.includes('@')) $('#fType').value='email';
+  else if(digits(v).length>=10) { if($('#fType').value==='email') $('#fType').value='tel'; }
+});
+$('#formAdd').addEventListener('submit', e=>{
+  if(e.submitter && e.submitter.value==='cancel') return;
+  const nomJ = $('#fJur').value.trim();
+  const nomS = $('#fSvc').value.trim() || 'Général';
+  let val = $('#fVal').value.trim();
+  const type = $('#fType').value;
+  if(type!=='email' && digits(val).length===10)
+    val = digits(val).replace(/(\d\d)(?=\d)/g,'$1 ').trim();
+  let j = DATA.juridictions.find(x=>norm(x.nom)===norm(nomJ));
+  if(!j){
+    j = {id:uid('j'), nom:nomJ, categorie:$('#fCat').value, adresse:'', services:[], u:NOW()};
+    DATA.juridictions.push(j);
+    DATA.juridictions.sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  }
+  let s = j.services.find(x=>norm(x.nom)===norm(nomS));
+  if(!s){ s = {id:uid('s'), nom:nomS, contacts:[], u:NOW()}; j.services.push(s); }
+  const c = {id:uid('c'), type, valeur:val, libelle:$('#fLib').value.trim(),
+    note:$('#fNote').value.trim(), ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()};
+  s.contacts.push(c);
+  buildIndex(); save(); renderChips();
+  j._open = true; render();
+  toast('Contact ajouté à ' + j.nom);
+  document.getElementById('ct-'+c.id)?.scrollIntoView({block:'center', behavior:'smooth'});
+});
+$('#fab').addEventListener('click', ()=>openAdd());
+
+/* ============================ réglages / export-import ============================ */
+$('#btnsettings').addEventListener('click', ()=>{
+  const nc = DATA.juridictions.reduce((n,j)=>n+j.services.reduce((m,s)=>m+s.contacts.length,0),0);
+  $('#metaInfo').textContent = `${DATA.juridictions.length} juridictions, ${nc} contacts. `+
+    `Dernière modification : ${new Date(DATA.updatedAt).toLocaleString('fr-FR')}.`;
+  Drive.refreshSettingsUI();
+  $('#dlgSettings').showModal();
+});
+$('#btnCloseSettings').addEventListener('click', ()=>$('#dlgSettings').close());
+$('#btnExport').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(DATA, (k,v)=>k.startsWith('_')?undefined:v)],
+    {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'annuaire-justice-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+});
+$('#btnImport').addEventListener('click', ()=>$('#fileImport').click());
+$('#fileImport').addEventListener('change', async e=>{
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    const d = JSON.parse(await f.text());
+    if(!Array.isArray(d.juridictions)) throw new Error('format invalide');
+    if(!confirm(`Remplacer les données actuelles par « ${f.name} » (${d.juridictions.length} juridictions) ?`)) return;
+    DATA = d; DATA.tombstones = DATA.tombstones||{};
+    buildIndex(); save(); renderChips(); render();
+    toast('Import réussi'); $('#dlgSettings').close();
+  }catch(err){ alert('Import impossible : '+err.message); }
+  e.target.value='';
+});
+
+/* ============================ recherche : événements ============================ */
+let qTimer;
+$('#q').addEventListener('input', ()=>{
+  clearTimeout(qTimer);
+  qTimer = setTimeout(()=>{ shownGroups=30; render(); }, 90);
+});
+$('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownGroups=30; render(); $('#q').focus(); });
+document.addEventListener('keydown', e=>{
+  if(e.key==='/' && document.activeElement!==$('#q') && !document.querySelector('dialog[open]')){
+    e.preventDefault(); $('#q').focus(); $('#q').select();
+  }
+});
+
+/* ============================================================
+   SYNCHRONISATION GOOGLE DRIVE (scope drive.file)
+   ============================================================ */
+const Drive = (() => {
+  let token = null, tokenClient = null, fileId = localStorage.getItem(LS_FILEID) || null;
+  let pushTimer = null, busy = false, lastRemoteRev = null;
+  const enabled = () => !!CLIENT_ID;
+  const on = () => enabled() && localStorage.getItem(LS_DRIVE)==='1';
+
+  function setState(cls, txt){
+    const el = $('#syncstate'); el.className = cls; $('#synctxt').textContent = txt;
+  }
+  function refreshSettingsUI(){
+    if(!enabled()){
+      $('#btnDrive').style.display='none'; $('#rowDriveOff').style.display='none';
+      $('#driveHint').textContent = 'Synchronisation Google Drive non configurée (CLIENT_ID absent). Les données restent sur cet appareil ; utilisez Exporter/Importer pour les transférer.';
+      return;
+    }
+    $('#btnDrive').style.display = on() ? 'none':'flex';
+    $('#rowDriveOff').style.display = on() ? 'flex':'none';
+    $('#driveHint').textContent = on() ?
+      'Connecté : le fichier « '+DRIVE_FILENAME+' » de votre Drive est synchronisé automatiquement.' :
+      'Vos données seront stockées dans un fichier de votre Google Drive, synchronisé entre tous vos appareils.';
+  }
+
+  async function ensureToken(interactive){
+    if(!enabled()) return null;
+    if(token && token.exp > Date.now()+60000) return token.v;
+    if(!window.google?.accounts?.oauth2){ setState('err','lib Google absente'); return null; }
+    if(!tokenClient){
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: ()=>{}
+      });
+    }
+    return new Promise(resolve=>{
+      tokenClient.callback = resp => {
+        if(resp.access_token){
+          token = {v:resp.access_token, exp:Date.now()+(resp.expires_in-30)*1000};
+          resolve(token.v);
+        } else resolve(null);
+      };
+      try{ tokenClient.requestAccessToken({prompt: interactive?'consent':''}); }
+      catch(e){ resolve(null); }
+    });
+  }
+  const H = t => ({'Authorization':'Bearer '+t});
+
+  async function findOrCreate(t){
+    if(fileId) return fileId;
+    let r = await fetch('https://www.googleapis.com/drive/v3/files?q='+
+      encodeURIComponent(`name='${DRIVE_FILENAME}' and trashed=false`)+'&fields=files(id)', {headers:H(t)});
+    if(r.ok){
+      const d = await r.json();
+      if(d.files?.length){ fileId = d.files[0].id; }
+    }
+    if(!fileId){
+      r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+        method:'POST', headers:{...H(t), 'Content-Type':'multipart/related; boundary=BND'},
+        body: `--BND\r\nContent-Type: application/json\r\n\r\n`+
+          JSON.stringify({name:DRIVE_FILENAME, mimeType:'application/json'})+
+          `\r\n--BND\r\nContent-Type: application/json\r\n\r\n`+
+          exportJson()+`\r\n--BND--`
+      });
+      if(r.ok){ fileId = (await r.json()).id; }
+    }
+    if(fileId) localStorage.setItem(LS_FILEID, fileId);
+    return fileId;
+  }
+  const exportJson = () => JSON.stringify(DATA, (k,v)=>k.startsWith('_')?undefined:v);
+
+  async function meta(t){
+    const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=version,modifiedTime`, {headers:H(t)});
+    return r.ok ? r.json() : null;
+  }
+
+  /* fusion : union par id, plus récent gagne, tombstones appliquées */
+  function mergeData(remote){
+    if(!remote || !Array.isArray(remote.juridictions)) return false;
+    const tomb = {...(remote.tombstones||{}), ...DATA.tombstones};
+    const byId = arr => Object.fromEntries(arr.map(x=>[x.id,x]));
+    const newer = (a,b) => (a.u||0) >= (b.u||0) ? a : b;
+    const jl = byId(DATA.juridictions);
+    for(const rj of remote.juridictions){
+      if(!jl[rj.id]){ jl[rj.id]=rj; continue; }
+      const lj = jl[rj.id];
+      const keep = newer(lj, rj);
+      const sl = byId(lj.services);
+      for(const rs of rj.services){
+        if(!sl[rs.id]){ sl[rs.id]=rs; continue; }
+        const ls = sl[rs.id];
+        const cl = byId(ls.contacts);
+        for(const rc of rs.contacts){
+          if(!cl[rc.id]){ cl[rc.id]=rc; continue; }
+          const lc = cl[rc.id];
+          const base = newer(lc, rc);
+          cl[rc.id] = {...base,
+            ok: Math.max(lc.ok||0, rc.ok||0),
+            ko: Math.max(lc.ko||0, rc.ko||0),
+            lastOk: Math.max(lc.lastOk||0, rc.lastOk||0) || null,
+            lastTry: Math.max(lc.lastTry||0, rc.lastTry||0) || null};
+        }
+        ls.contacts = Object.values(cl);
+        ls.nom = newer(ls, rs).nom;
+      }
+      lj.services = Object.values(sl);
+      lj.nom = keep.nom; lj.categorie = keep.categorie; lj.adresse = keep.adresse;
+    }
+    let js = Object.values(jl);
+    // appliquer les suppressions
+    js = js.filter(j => !(tomb[j.id] > (j.u||0)));
+    for(const j of js){
+      j.services = j.services.filter(s => !(tomb[s.id] > (s.u||0)));
+      for(const s of j.services)
+        s.contacts = s.contacts.filter(c => !(tomb[c.id] > (c.u||0)));
+    }
+    DATA.juridictions = js;
+    DATA.tombstones = tomb;
+    return true;
+  }
+
+  async function pull(interactive){
+    if(!on()) return;
+    const t = await ensureToken(interactive); if(!t){ setState('err','hors ligne'); return; }
+    setState('work','sync…'); busy = true;
+    try{
+      if(!await findOrCreate(t)){ setState('err','erreur Drive'); return; }
+      const m = await meta(t);
+      const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {headers:H(t)});
+      if(r.ok){
+        const remote = await r.json().catch(()=>null);
+        if(remote && mergeData(remote)){
+          buildIndex(); localStorage.setItem(LS_KEY, JSON.stringify(DATA));
+          renderChips(); render();
+        }
+        lastRemoteRev = m?.version || null;
+        await push(true);
+        setState('on','synchronisé');
+      } else setState('err','erreur lecture');
+    } finally { busy = false; }
+  }
+
+  async function push(skipCheck){
+    if(!on() || !fileId) return;
+    const t = await ensureToken(false); if(!t){ setState('err','reconnexion requise'); return; }
+    setState('work','envoi…');
+    if(!skipCheck){
+      const m = await meta(t);
+      if(m && lastRemoteRev && m.version !== lastRemoteRev){
+        await pull(false); return; // quelqu'un d'autre a écrit : fusionner d'abord
+      }
+    }
+    const r = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media&fields=version`, {
+      method:'PATCH', headers:{...H(t), 'Content-Type':'application/json'}, body: exportJson()});
+    if(r.ok){ lastRemoteRev = (await r.json()).version; setState('on','synchronisé'); }
+    else setState('err','erreur envoi');
+  }
+
+  function schedulePush(){
+    if(!on()) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(()=>{ if(!busy) push(false); }, 2500);
+  }
+
+  async function connect(){
+    const t = await ensureToken(true);
+    if(!t){ toast('Connexion Google refusée'); return; }
+    localStorage.setItem(LS_DRIVE,'1');
+    refreshSettingsUI();
+    await pull(false);
+    toast('Google Drive connecté ☁️');
+  }
+  function disconnect(){
+    localStorage.removeItem(LS_DRIVE); localStorage.removeItem(LS_FILEID);
+    fileId = null; token = null;
+    setState('', 'local'); refreshSettingsUI();
+  }
+
+  function init(){
+    if(!enabled()){ setState('', 'local'); return; }
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = ()=>{ if(on()) pull(false); };
+    document.head.appendChild(s);
+    if(!on()) setState('', 'local');
+    // resynchroniser au retour sur l'app
+    document.addEventListener('visibilitychange', ()=>{
+      if(!document.hidden && on() && !busy) pull(false);
+    });
+    setInterval(()=>{ if(on() && !busy && !document.hidden) pull(false); }, 5*60*1000);
+  }
+  return {init, connect, disconnect, schedulePush, refreshSettingsUI};
+})();
+$('#btnDrive').addEventListener('click', ()=>Drive.connect());
+$('#btnDriveOff').addEventListener('click', ()=>{ Drive.disconnect(); toast('Drive déconnecté'); });
+
+/* ============================ démarrage ============================ */
+(async function(){
+  await load();
+  renderChips(); render();
+  Drive.init();
+})();
+</script>
+</body>
+</html>

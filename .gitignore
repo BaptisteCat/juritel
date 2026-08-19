@@ -1,0 +1,7 @@
+# données confidentielles : jamais sur GitHub
+annuaire.json
+annuaire_raw.md
+annuaire_clean.md
+rapport_extraction.md
+*.docx
+.claude/
