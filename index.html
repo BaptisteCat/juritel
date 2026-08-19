@@ -441,6 +441,51 @@ select.mini{
   .entry .elabel{padding-top:0}
 }
 
+
+/* recherche de juridiction compétente par adresse */
+.adrcard{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); padding:14px 16px; margin-bottom:18px;
+}
+.adrtitle{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:700;
+  color:var(--accent); text-transform:uppercase; letter-spacing:.06em; margin-bottom:9px}
+#adr{
+  width:100%; padding:11px 13px; font-size:14.5px; color:var(--ink);
+  border:1.5px solid var(--line); border-radius:11px; background:var(--card-2);
+  outline:none; font-family:inherit; letter-spacing:-.011em; transition:all .18s;
+}
+#adr:focus{border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent)}
+.adrsugg{margin-top:6px}
+.adrsugg button{
+  display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+  padding:9px 11px; border:none; background:none; border-radius:9px;
+  font-size:13.5px; color:var(--ink); cursor:pointer; font-family:inherit;
+  letter-spacing:-.008em;
+}
+.adrsugg button:hover{background:var(--card-2); color:var(--accent)}
+.comprow{
+  display:flex; align-items:center; gap:10px; padding:10px 11px;
+  border-top:1px solid var(--line-2);
+}
+.comprow:first-of-type{margin-top:8px}
+.comprow .ct2{font-size:10.5px; font-weight:700; color:var(--ink-3);
+  text-transform:uppercase; letter-spacing:.05em; width:74px; flex-shrink:0}
+.comprow .cn{flex:1; min-width:0; font-size:13.5px; font-weight:600}
+.comprow .cgo{font-size:12px; font-weight:600; color:var(--accent); cursor:pointer;
+  white-space:nowrap; padding:5px 10px; border-radius:8px; border:1px solid var(--line);
+  background:var(--card-2)}
+.comprow .cgo:hover{border-color:var(--accent)}
+.comprow .cabs{font-size:11.5px; color:var(--ink-3)}
+.compband{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  background:color-mix(in srgb, var(--accent) 8%, var(--card));
+  border:1px solid color-mix(in srgb, var(--accent) 25%, var(--line));
+  border-radius:14px; padding:10px 14px; margin-bottom:12px; font-size:12.5px;
+}
+.compband b{font-weight:650}
+.compband .x{margin-left:auto}
+
 /* ==================== bouton flottant ==================== */
 #fab{
   position:fixed; right:22px; bottom:22px; z-index:30;
@@ -884,6 +929,13 @@ function renderList(){
   const slice = results.slice(0, shownCards);
   let html = '';
   if(!tokens.length && !currentCat){
+    // recherche de compétence par adresse
+    html += `<div class="adrcard">
+      <div class="adrtitle">${icn('pin',13)} Juridiction compétente par adresse</div>
+      <input id="adr" placeholder="Tapez une adresse, un code postal ou une ville en France…"
+        autocomplete="off" spellcheck="false" oninput="adrInput(this.value)">
+      <div class="adrsugg" id="adrsugg"></div>
+    </div>`;
     // accueil : aperçu structuré de toutes les catégories
     const order = ['tj','ca','cassation','penitentiaire','commissariat','cra','prefecture','douane','etranger','commerce','autre'];
     const bycat = {};
@@ -1041,7 +1093,16 @@ function renderFiche(j){
     blocks += renderSvcBlock(j, s, svcMatches(j, s, tokens));
   }
   if(!blocks) blocks = `<div class="vide">Aucun service dans cette catégorie.</div>`;
+  let band = '';
+  if(COMP_LAST && COMP_LAST.tjId===j.id){
+    const parts = COMP_LAST.items.filter(x=>x.type!=='TJ').map(x=>
+      x.jurId ? `<b style="cursor:pointer; color:var(--accent)" onclick="openFiche('${x.jurId}')">${esc(x.nom)}</b>`
+              : `<b>${esc(x.nom)}</b>`).join(' · ');
+    band = `<div class="compband">${icn('pin',13)} <span>Compétent pour <b>${esc(COMP_LAST.adresse)}</b>${parts?' — '+parts:''}</span>
+      <button class="mini x" onclick="COMP_LAST=null;render()">${icn('x',12)}</button></div>`;
+  }
   $('#view').innerHTML = `
+    ${band}
     <div class="fhead">
       <div class="row1">
         <button id="btnback" onclick="goHome()" title="Retour">${icn('left',15)}</button>
@@ -1199,6 +1260,85 @@ window.delJur = id => {
   save(); renderChips(); render(); toast('Juridiction supprimée');
 };
 
+
+
+/* ============================ juridiction compétente par adresse ============================
+   1. géocodage Base Adresse Nationale (Géoplateforme IGN, données officielles)
+   2. table officielle commune -> juridictions (data.gouv.fr, ministère de la Justice)
+   3. ouverture de la fiche correspondante quand elle existe dans l'annuaire */
+let COMP = null, COMP_LAST = null, ADR_FEATS = [], adrTimer = null;
+async function loadComp(){
+  if(COMP) return COMP;
+  try{
+    const r = await fetch('competences.json', {cache:'force-cache'});
+    if(r.ok) COMP = await r.json();
+  }catch(e){}
+  return COMP;
+}
+window.adrInput = v => {
+  clearTimeout(adrTimer);
+  const box = document.getElementById('adrsugg');
+  if(!v || v.trim().length<3){ if(box) box.innerHTML=''; return; }
+  adrTimer = setTimeout(async ()=>{
+    try{
+      const r = await fetch('https://data.geopf.fr/geocodage/search/?limit=5&autocomplete=1&q='+encodeURIComponent(v));
+      if(!r.ok) return;
+      const d = await r.json();
+      ADR_FEATS = d.features||[];
+      const box2 = document.getElementById('adrsugg');
+      if(!box2) return;
+      box2.innerHTML = ADR_FEATS.map((f,i)=>
+        `<button onclick="pickAdr(${i})">${icn('pin',12)} ${esc(f.properties.label)}</button>`).join('');
+    }catch(e){}
+  }, 250);
+  loadComp();
+};
+function normVille(s){
+  return norm(s).replace(/^(tribunal judiciaire|tribunal de proximite|cour d'appel|conseil de prud'hommes|tj|ca|cph)\s*(de la |de l'|des |du |de |d')?/,'')
+    .replace(/-/g,' ').replace(/\s+/g,' ').trim();
+}
+function findJurByName(nom, cats){
+  const cible = normVille(nom);
+  let best = null;
+  for(const j of DATA.juridictions){
+    if(cats && !cats.includes(j.categorie)) continue;
+    const n = normVille(j.nom);
+    if(n===cible) return j;
+    if(!best && (n.startsWith(cible) || cible.startsWith(n)) && Math.min(n.length,cible.length)>=4) best = j;
+  }
+  return best;
+}
+window.pickAdr = async i => {
+  const f = ADR_FEATS[i]; if(!f) return;
+  const box = document.getElementById('adrsugg');
+  if(box) box.innerHTML = '<div class="hint" style="padding:8px 11px">Recherche de la juridiction compétente…</div>';
+  const comp = await loadComp();
+  if(!comp){ toast('Table des compétences indisponible'); return; }
+  const entry = comp.c[f.properties.citycode];
+  if(!entry){ toast('Commune introuvable dans la table officielle'); if(box) box.innerHTML=''; return; }
+  const types = [['CA','ca',['ca']], ['TJ','tj',['tj']], ['Proximité','tprx',['tj','autre']], ['CPH','cph',['autre','commerce']]];
+  const items = [];
+  types.forEach(([label, key, cats], k)=>{
+    const idx = entry[k];
+    if(idx<0) return;
+    const nom = comp[key][idx];
+    const j = findJurByName(nom, key==='ca'?['ca']:key==='tj'?['tj']:null);
+    items.push({type:label, nom, jurId: j? j.id : null});
+  });
+  const tj = items.find(x=>x.type==='TJ');
+  COMP_LAST = {adresse: f.properties.label, items, tjId: tj && tj.jurId};
+  if(tj && tj.jurId){
+    openFiche(tj.jurId);
+    return;
+  }
+  // pas de fiche TJ : afficher le résultat sur place
+  if(box) box.innerHTML = items.map(x=>{
+    const link = x.jurId
+      ? `<span class="cgo" onclick="openFiche('${x.jurId}')">ouvrir la fiche ${icn('right',11)}</span>`
+      : `<span class="cabs">pas de fiche dans l'annuaire</span>`;
+    return `<div class="comprow"><span class="ct2">${x.type}</span><span class="cn">${esc(x.nom)}</span>${link}</div>`;
+  }).join('') || '<div class="hint" style="padding:8px">Aucune juridiction trouvée.</div>';
+};
 
 /* ============================ mode lecture seule / modification ============================ */
 window.toggleModif = () => {
