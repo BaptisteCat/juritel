@@ -144,6 +144,25 @@ main{max-width:1060px; margin:0 auto; padding:14px 16px}
 @media (prefers-color-scheme: dark){
   .b-penitentiaire{background:#3a2a14} .b-commissariat{background:#12303a} .b-cra{background:#123329}
 }
+/* suggestions principales de recherche */
+.sugg{
+  background:var(--card); border:1.5px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); padding:15px 18px; margin-bottom:10px; cursor:pointer;
+  transition:all .15s;
+}
+.sugg:hover{box-shadow:var(--shadow-m); transform:translateY(-1px);
+  border-color:color-mix(in srgb, var(--primary-2) 45%, var(--line))}
+.sugg .stop{display:flex; align-items:center; gap:12px}
+.sugg .snom{font-size:19px; font-weight:750; letter-spacing:-.01em; flex:1; min-width:0}
+.sugg .sadr{font-size:12.5px; color:var(--ink-3); margin-top:2px}
+.schips{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+.schip{
+  border:1px solid var(--line); background:var(--card-2); border-radius:16px;
+  padding:4px 12px; font-size:12.5px; font-weight:550; color:var(--ink-2); cursor:pointer;
+  transition:all .12s;
+}
+.schip:hover{border-color:var(--primary-2); color:var(--primary-2); background:var(--card)}
+.schip .n{color:var(--ink-3); font-weight:600; margin-left:4px; font-size:11px}
 .more{
   display:block; width:100%; padding:13px; margin:14px 0 24px;
   border:1.5px dashed var(--line); background:none; color:var(--primary-2);
@@ -649,12 +668,45 @@ function renderList(){
     $('#view').innerHTML = html;
     return;
   } else {
-    html = '<div class="grid">' + slice.map(r=>cardJur(r, tokens)).join('') + '</div>';
+    // les juridictions dont le NOM correspond passent en grandes suggestions
+    const nameRes = results.filter(r=>r.nameHit>0);
+    const contentRes = results.filter(r=>!r.nameHit);
+    if(nameRes.length){
+      for(const r of nameRes.slice(0,6)) html += suggJur(r);
+      if(nameRes.length>6)
+        html += '<div class="grid">'+nameRes.slice(6, shownCards).map(r=>cardJur(r, tokens)).join('')+'</div>';
+    }
+    if(contentRes.length){
+      html += `<div class="cathead">Trouvé dans le contenu <span class="cnt">· ${contentRes.length}</span></div>`;
+      html += '<div class="grid">'+contentRes.slice(0, shownCards).map(r=>cardJur(r, tokens)).join('')+'</div>';
+      if(contentRes.length > shownCards)
+        html += `<button class="more" onclick="shownCards+=80;render()">Afficher ${contentRes.length-shownCards} fiches de plus</button>`;
+    }
   }
-  if(results.length > shownCards)
-    html += `<button class="more" onclick="shownCards+=80;render()">Afficher ${results.length-shownCards} fiches de plus</button>`;
   V.innerHTML = html;
 }
+
+function suggJur({j, hits}){
+  const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  // raccourcis : les services qui correspondent à la recherche, sinon les premiers
+  const svcs = hits ? hits.map(h=>h.s) : j.services;
+  const chips = svcs.slice(0,5).map(s=>
+    `<button class="schip" onclick="event.stopPropagation();openFicheSvc('${j.id}','${s.id}')">${esc(s.nom)}<span class="n">${s.contacts.length}</span></button>`).join('')
+    + (svcs.length>5 ? `<button class="schip" onclick="event.stopPropagation();openFiche('${j.id}')">+${svcs.length-5} autres…</button>` : '');
+  return `<div class="sugg" onclick="openFiche('${j.id}')">
+    <div class="stop">
+      <div class="snom">${esc(j.nom)}${j.adresse?`<div class="sadr">📍 ${esc(j.adresse)}</div>`:''}</div>
+      <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+      <span class="ncontacts">${nc}</span>
+    </div>
+    <div class="schips">${chips}</div>
+  </div>`;
+}
+window.openFicheSvc = (jid, sid) => {
+  openState[sid] = true;
+  openFiche(jid);
+  setTimeout(()=>document.getElementById('svc-'+sid)?.scrollIntoView({behavior:'smooth', block:'start'}), 60);
+};
 
 function cardJur({j, hits}, tokens){
   const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
