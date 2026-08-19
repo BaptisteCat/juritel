@@ -300,6 +300,7 @@ main{max-width:1060px; margin:0 auto; padding:14px 16px}
 dialog{
   border:none; border-radius:20px; padding:0; max-width:500px; width:calc(100vw - 32px);
   background:var(--card); color:var(--ink); box-shadow:var(--shadow-l); max-height:88vh;
+  margin:auto; overflow-y:auto; /* centrage (le reset global écrase celui du navigateur) */
 }
 dialog::backdrop{background:rgba(10,12,26,.5); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px)}
 .dlg{padding:22px}
@@ -313,6 +314,10 @@ dialog::backdrop{background:rgba(10,12,26,.5); -webkit-backdrop-filter:blur(3px)
   outline:none; font-family:inherit; transition:border-color .15s;
 }
 .dlg input:focus,.dlg select:focus,.dlg textarea:focus{border-color:var(--primary-2)}
+.crow{display:flex; gap:6px; margin:6px 0; align-items:center}
+.crow select{width:auto; flex-shrink:0; padding:10px 6px}
+.crow input{flex:1; min-width:0}
+.crow .delrow{flex-shrink:0}
 .dlgbtns{display:flex; gap:8px; justify-content:flex-end; margin-top:20px}
 .btn{
   padding:10px 18px; border-radius:10px; font-size:14px; font-weight:600;
@@ -382,16 +387,11 @@ hr{border:none; border-top:1px solid var(--line); margin:16px 0}
   <label>Bureau <span class="hint">(facultatif — ex. Bureau d'ordre pénal)</span></label>
   <input id="fGrp" list="listGrp">
   <datalist id="listGrp"></datalist>
-  <label>Type</label>
-  <select id="fType">
-    <option value="tel">📞 Téléphone</option>
-    <option value="email">✉️ Email</option>
-    <option value="fax">📠 Fax</option>
-  </select>
-  <label>Numéro ou adresse mail</label>
-  <input id="fVal" placeholder="01 23 45 67 89 ou greffe@justice.fr" required>
-  <label>Libellé <span class="hint">(à quoi sert ce contact)</span></label>
+  <label>Libellé <span class="hint">(l'intitulé — ex. Greffe de la 3e chambre)</span></label>
   <input id="fLib" placeholder="Greffe de la 3e chambre…">
+  <label>Numéros et adresses mail <span class="hint">(autant que nécessaire)</span></label>
+  <div id="fRows"></div>
+  <button type="button" class="mini" id="btnAddRow" style="margin-top:2px">＋ Ajouter un numéro ou un mail</button>
   <label>Note <span class="hint">(facultatif)</span></label>
   <textarea id="fNote" rows="2" placeholder="Précisions, horaires, interlocuteur…"></textarea>
   <div class="dlgbtns">
@@ -850,9 +850,57 @@ function refreshSvcList(){
   const grps = s ? [...new Set(s.contacts.map(c=>c.groupe).filter(Boolean))] : [];
   $('#listGrp').innerHTML = grps.map(g=>`<option value="${esc(g)}">`).join('');
 }
+/* lignes dynamiques numéro/mail du formulaire */
+function makeRow(type, val){
+  const div = document.createElement('div');
+  div.className = 'crow';
+  div.innerHTML = `<select>
+      <option value="tel">📞</option>
+      <option value="email">✉️</option>
+      <option value="fax">📠</option>
+    </select>
+    <input placeholder="01 23 45 67 89 ou greffe@justice.fr" autocomplete="off">
+    <button type="button" class="mini delrow" title="Retirer">✕</button>`;
+  div.querySelector('select').value = type||'tel';
+  div.querySelector('input').value = val||'';
+  div.querySelector('input').addEventListener('input', e=>{
+    const v = e.target.value, sel = div.querySelector('select');
+    if(v.includes('@')) sel.value = 'email';
+    else if(sel.value==='email' && digits(v).length>=6) sel.value = 'tel';
+  });
+  div.querySelector('.delrow').addEventListener('click', ()=>{
+    div.remove();
+    if(!$('#fRows').children.length) $('#fRows').appendChild(makeRow());
+  });
+  return div;
+}
+function resetRows(rows){
+  const box = $('#fRows'); box.innerHTML = '';
+  for(const r of (rows && rows.length ? rows : [{}]))
+    box.appendChild(makeRow(r.type, r.val));
+}
+function collectRows(){
+  const out = [];
+  for(const div of $('#fRows').children){
+    let val = div.querySelector('input').value.trim();
+    if(!val) continue;
+    let type = div.querySelector('select').value;
+    if(val.includes('@')) type = 'email';
+    if(type!=='email' && digits(val).length===10)
+      val = digits(val).replace(/(\d\d)(?=\d)/g,'$1 ').trim();
+    out.push({type, val});
+  }
+  return out;
+}
+$('#btnAddRow').addEventListener('click', ()=>{
+  const r = makeRow();
+  $('#fRows').appendChild(r);
+  r.querySelector('input').focus();
+});
+
 window.openAdd = (jid, sid) => {
   addCtx = {edit:null};
-  $('#addTitle').textContent = 'Ajouter un contact';
+  $('#addTitle').textContent = 'Ajouter une entrée';
   $('#addOk').textContent = 'Ajouter';
   fillLists();
   const j = (jid && DATA.juridictions.find(x=>x.id===jid)) ||
@@ -860,7 +908,8 @@ window.openAdd = (jid, sid) => {
   $('#fJur').value = j ? j.nom : '';
   const s = j && sid && j.services.find(x=>x.id===sid);
   $('#fSvc').value = s ? s.nom : '';
-  $('#fGrp').value=''; $('#fVal').value=''; $('#fLib').value=''; $('#fNote').value='';
+  $('#fGrp').value=''; $('#fLib').value=''; $('#fNote').value='';
+  resetRows();
   const q = $('#q').value.trim();
   if(!j && q && !/\d|@/.test(q)) $('#fJur').value = q;
   refreshSvcList();
@@ -873,27 +922,24 @@ window.openEdit = id => {
   $('#addOk').textContent = 'Enregistrer';
   fillLists();
   $('#fJur').value = f.j.nom; $('#fSvc').value = f.s.nom;
-  $('#fGrp').value = f.c.groupe||''; $('#fType').value = f.c.type;
-  $('#fVal').value = f.c.valeur; $('#fLib').value = f.c.libelle||'';
+  $('#fGrp').value = f.c.groupe||''; $('#fLib').value = f.c.libelle||'';
   $('#fNote').value = f.c.note||'';
+  resetRows([{type:f.c.type, val:f.c.valeur}]);
   refreshSvcList();
   $('#dlgAdd').showModal();
 };
 $('#fJur').addEventListener('input', refreshSvcList);
 $('#fSvc').addEventListener('input', refreshSvcList);
-$('#fVal').addEventListener('input', e=>{
-  const v = e.target.value;
-  if(v.includes('@')) $('#fType').value='email';
-  else if(digits(v).length>=10 && $('#fType').value==='email') $('#fType').value='tel';
-});
 $('#formAdd').addEventListener('submit', e=>{
   if(e.submitter && e.submitter.value==='cancel') return;
+  const rows = collectRows();
+  if(!rows.length){
+    e.preventDefault();
+    alert('Renseignez au moins un numéro ou une adresse mail.');
+    return;
+  }
   const nomJ = $('#fJur').value.trim();
   const nomS = $('#fSvc').value.trim()||'Général';
-  let val = $('#fVal').value.trim();
-  const type = $('#fType').value;
-  if(type!=='email' && digits(val).length===10)
-    val = digits(val).replace(/(\d\d)(?=\d)/g,'$1 ').trim();
   let j = DATA.juridictions.find(x=>norm(x.nom)===norm(nomJ));
   if(!j){
     j = {id:uid('j'), nom:nomJ, categorie:$('#fCat').value, adresse:'', services:[], u:NOW()};
@@ -902,20 +948,30 @@ $('#formAdd').addEventListener('submit', e=>{
   }
   let s = j.services.find(x=>norm(x.nom)===norm(nomS));
   if(!s){ s = {id:uid('s'), nom:nomS, contacts:[], u:NOW()}; j.services.push(s); }
-  const fields = {type, valeur:val, libelle:$('#fLib').value.trim(),
-    groupe:$('#fGrp').value.trim(), note:$('#fNote').value.trim(), u:NOW()};
+  const libelle = $('#fLib').value.trim();
+  const groupe = $('#fGrp').value.trim();
+  const note = $('#fNote').value.trim();
   if(addCtx.edit){
     const f = findContact(addCtx.edit);
     if(f){
+      const first = rows.shift();
       if(f.s!==s){ f.s.contacts = f.s.contacts.filter(c=>c.id!==addCtx.edit); s.contacts.push(f.c); }
-      Object.assign(f.c, fields);
-      toast('Contact modifié');
+      Object.assign(f.c, {type:first.type, valeur:first.val, libelle, groupe, note, u:NOW()});
     }
+    // lignes supplémentaires ajoutées pendant l'édition → nouveaux contacts de la même entrée
+    for(const r of rows)
+      s.contacts.push({id:uid('c'), type:r.type, valeur:r.val, libelle, groupe,
+        note:'', ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+    toast('Contact modifié');
   } else {
-    s.contacts.push({id:uid('c'), ...fields, ok:0, ko:0, lastOk:null, lastTry:null});
-    toast('Contact ajouté à '+j.nom);
+    rows.forEach((r, i)=>{
+      s.contacts.push({id:uid('c'), type:r.type, valeur:r.val, libelle, groupe,
+        note: i===0 ? note : '', ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+    });
+    toast(rows.length>1 ? rows.length+' contacts ajoutés à '+j.nom : 'Contact ajouté à '+j.nom);
     ficheId = j.id;
     history.replaceState(null,'','#f/'+j.id);
+    openState[s.id] = true;
   }
   buildIndex(); save(); renderChips(); render();
 });
