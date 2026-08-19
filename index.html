@@ -39,7 +39,7 @@
   }
 }
 *{box-sizing:border-box; margin:0}
-html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+html{-webkit-text-size-adjust:100%}
 body{
   font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",Inter,Roboto,sans-serif;
   background:var(--bg); background-image:var(--bg-grad); background-repeat:no-repeat;
@@ -47,24 +47,25 @@ body{
   font-feature-settings:"cv05","tnum";
 }
 button{font-family:inherit}
+a{color:inherit}
 
 /* ==================== en-tête ==================== */
 header{
   position:sticky; top:0; z-index:20; padding:12px 16px 10px;
-  background:color-mix(in srgb, var(--bg) 82%, transparent);
+  background:color-mix(in srgb, var(--bg) 84%, transparent);
   -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
   border-bottom:1px solid var(--line);
 }
-.hwrap{max-width:980px; margin:0 auto}
+.hwrap{max-width:1060px; margin:0 auto}
 .titrebar{display:flex; align-items:center; gap:12px; margin-bottom:10px}
 .logo{
   width:38px; height:38px; border-radius:11px; flex-shrink:0;
   background:linear-gradient(135deg,var(--primary) 0%,var(--primary-2) 100%);
   display:grid; place-items:center; font-size:19px; color:#fff;
-  box-shadow:var(--shadow-s);
+  box-shadow:var(--shadow-s); cursor:pointer;
 }
-.titrebar h1{font-size:17px; font-weight:750; letter-spacing:-.01em; flex:1; min-width:0}
-.titrebar h1 small{display:block; font-size:12px; font-weight:450; color:var(--ink-3); letter-spacing:0}
+.titrebar h1{font-size:17px; font-weight:750; letter-spacing:-.01em; flex:1; min-width:0; cursor:pointer}
+.titrebar h1 small{display:block; font-size:12px; font-weight:450; color:var(--ink-3)}
 #syncstate{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-3);
   padding:5px 10px; border-radius:20px; background:var(--card); border:1px solid var(--line)}
 #syncstate .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
@@ -75,25 +76,22 @@ header{
 .iconbtn{
   width:38px; height:38px; border-radius:11px; border:1px solid var(--line);
   background:var(--card); color:var(--ink-2); font-size:16px; cursor:pointer;
-  display:grid; place-items:center; transition:all .15s;
+  display:grid; place-items:center; transition:all .15s; flex-shrink:0;
 }
 .iconbtn:hover{color:var(--ink); box-shadow:var(--shadow-s); transform:translateY(-1px)}
-
 .searchwrap{position:relative}
 .searchwrap .lens{position:absolute; left:16px; top:50%; transform:translateY(-50%);
   color:var(--ink-3); font-size:15px; pointer-events:none}
 #q{
-  width:100%; padding:14px 44px 14px 44px; font-size:16px; color:var(--ink);
-  border:1.5px solid var(--line); border-radius:16px; background:var(--card);
-  outline:none; box-shadow:var(--shadow-s); transition:border-color .15s, box-shadow .15s;
+  width:100%; padding:13px 44px; font-size:16px; color:var(--ink);
+  border:1.5px solid var(--line); border-radius:15px; background:var(--card);
+  outline:none; box-shadow:var(--shadow-s); transition:all .15s;
 }
 #q::placeholder{color:var(--ink-3)}
 #q:focus{border-color:var(--primary-2); box-shadow:0 0 0 4px color-mix(in srgb, var(--primary-2) 14%, transparent), var(--shadow-s)}
 #clearq{position:absolute; right:8px; top:50%; transform:translateY(-50%);
   border:none; background:var(--line-2); color:var(--ink-2); cursor:pointer;
   width:30px; height:30px; border-radius:50%; font-size:13px; display:none}
-#clearq:hover{background:var(--line)}
-
 .chips{display:flex; gap:7px; overflow-x:auto; padding:10px 2px 2px; scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{
@@ -104,26 +102,36 @@ header{
 .chip:hover{border-color:var(--ink-3)}
 .chip.on{background:var(--chip-on); color:var(--bg); border-color:var(--chip-on)}
 
-/* ==================== contenu ==================== */
-main{max-width:980px; margin:0 auto; padding:14px 16px}
+main{max-width:1060px; margin:0 auto; padding:14px 16px}
 #stats{color:var(--ink-3); font-size:13px; margin:2px 4px 12px; font-weight:500}
 
-.jur{
+/* ==================== vue liste : grille de fiches ==================== */
+.cathead{
+  font-size:13px; font-weight:750; color:var(--ink-2); text-transform:uppercase;
+  letter-spacing:.07em; margin:22px 4px 10px; display:flex; align-items:center; gap:8px;
+}
+.cathead:first-child{margin-top:4px}
+.cathead .cnt{font-weight:550; color:var(--ink-3); letter-spacing:0; text-transform:none}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:10px}
+.jcard{
   background:var(--card); border:1px solid var(--line); border-radius:var(--r);
-  margin-bottom:12px; box-shadow:var(--shadow-s); overflow:hidden;
-  transition:box-shadow .2s;
+  padding:14px 16px; cursor:pointer; box-shadow:var(--shadow-s);
+  transition:all .16s; display:flex; flex-direction:column; gap:6px; min-width:0;
 }
-.jur:hover{box-shadow:var(--shadow-m)}
-.jurhead{
-  display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer;
-  user-select:none;
+.jcard:hover{box-shadow:var(--shadow-m); transform:translateY(-2px); border-color:color-mix(in srgb, var(--primary-2) 35%, var(--line))}
+.jcard .top{display:flex; align-items:center; gap:8px}
+.jcard .nom{font-weight:700; font-size:15px; letter-spacing:-.005em; flex:1; min-width:0}
+.jcard .adr{font-size:12px; color:var(--ink-3);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.jcard .foot{display:flex; align-items:center; gap:10px; font-size:12px; color:var(--ink-3); margin-top:2px}
+.jcard .snip{
+  font-size:12px; color:var(--ink-2); background:var(--card-2); border-radius:8px;
+  padding:6px 9px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
-.jurhead .nom{font-weight:700; font-size:15.5px; flex:1; min-width:0; letter-spacing:-.005em}
-.jurhead .adr{display:block; font-size:12.5px; color:var(--ink-3); font-weight:450; margin-top:1px}
-.jmeta{display:flex; align-items:center; gap:8px; flex-shrink:0}
+.jcard .snip b{color:var(--primary-2); font-weight:650}
 .badge{
   font-size:10.5px; font-weight:700; padding:3.5px 9px; border-radius:8px;
-  letter-spacing:.05em; text-transform:uppercase; white-space:nowrap;
+  letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; flex-shrink:0;
 }
 .b-tj{color:#fff; background:linear-gradient(135deg,var(--primary),var(--primary-2))}
 .b-ca{color:#7a3fc0; background:var(--mail-bg)}
@@ -135,100 +143,130 @@ main{max-width:980px; margin:0 auto; padding:14px 16px}
 @media (prefers-color-scheme: dark){
   .b-penitentiaire{background:#3a2a14} .b-commissariat{background:#12303a} .b-cra{background:#123329}
 }
-.ncontacts{font-size:12px; color:var(--ink-3); font-weight:600; font-variant-numeric:tabular-nums}
-.caret{color:var(--ink-3); font-size:11px; transition:transform .2s; flex-shrink:0}
-.jur.open .caret{transform:rotate(90deg)}
-.jurbody{display:none; border-top:1px solid var(--line-2); background:var(--card-2); padding:6px 10px 10px}
-.jur.open .jurbody{display:block}
-.jurfoot{display:flex; gap:6px; padding:8px 6px 2px}
-
-/* services */
-.svc{background:var(--card); border:1px solid var(--line-2); border-radius:12px;
-  margin:8px 0; overflow:hidden; box-shadow:var(--shadow-s)}
-.svchead{
-  display:flex; align-items:center; gap:8px; padding:10px 14px; cursor:pointer;
-  user-select:none;
-}
-.svchead .n{
-  flex:1; min-width:0; font-size:12.5px; font-weight:750; color:var(--primary);
-  text-transform:uppercase; letter-spacing:.06em;
-}
-.svchead .cnt{font-size:11.5px; color:var(--ink-3); font-weight:600; font-variant-numeric:tabular-nums}
-.svc .caret{font-size:10px}
-.svc.open .caret{transform:rotate(90deg)}
-.svcbody{display:none; padding:0 8px 8px}
-.svc.open .svcbody{display:block}
-
-/* volets (sous-sections) */
-.volet{border:1px solid var(--line-2); border-radius:10px; margin:6px 0; overflow:hidden;
-  background:var(--card)}
-.volethead{
-  display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer;
-  user-select:none; background:var(--card-2);
-}
-.volethead .n{flex:1; min-width:0; font-size:13px; font-weight:650; color:var(--ink)}
-.volethead .cnt{font-size:11px; color:var(--ink-3); font-weight:600}
-.volet .caret{font-size:9px}
-.volet.open .caret{transform:rotate(90deg)}
-.voletbody{display:none}
-.volet.open .voletbody{display:block}
-
-/* lignes de contact */
-.ct{
-  display:flex; align-items:center; gap:10px; padding:9px 10px;
-  border-top:1px solid var(--line-2); position:relative;
-}
-.ct:first-child{border-top:none}
-.ct.dead{opacity:.45}
-.ct .tico{
-  width:32px; height:32px; border-radius:9px; display:grid; place-items:center;
-  font-size:14px; flex-shrink:0;
-}
-.tico.tel{background:var(--tel-bg); color:var(--tel)}
-.tico.email{background:var(--mail-bg); color:var(--mail)}
-.tico.fax{background:var(--fax-bg); color:var(--fax)}
-.ct .info{flex:1; min-width:0}
-.ct .val{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
-.ct .val a{
-  font-weight:650; color:var(--ink); text-decoration:none; font-size:14.5px;
-  font-variant-numeric:tabular-nums; letter-spacing:.01em; word-break:break-all;
-}
-.ct .val a:hover{color:var(--primary-2)}
-.ct .lib{font-size:12.5px; color:var(--ink-2); margin-top:1px;
-  overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
-.ct .note{font-size:12px; color:var(--ink-3); font-style:italic; margin-top:3px;
-  padding:5px 8px; background:var(--card-2); border-radius:7px; display:none}
-.ct.shownote .note{display:block}
-.score{font-size:11px; font-weight:700; border-radius:8px; padding:2.5px 8px;
-  white-space:nowrap; font-variant-numeric:tabular-nums}
-.score.good{color:var(--ok); background:var(--ok-bg)}
-.score.bad{color:var(--ko); background:var(--ko-bg)}
-.ct .acts{display:flex; align-items:center; gap:4px; flex-shrink:0}
-.abtn{
-  width:30px; height:30px; border-radius:8px; border:1px solid transparent;
-  background:none; color:var(--ink-3); cursor:pointer; font-size:13px;
-  display:grid; place-items:center; transition:all .12s;
-}
-.abtn:hover{background:var(--line-2); color:var(--ink)}
-.abtn.rok:hover{background:var(--ok-bg); color:var(--ok); border-color:color-mix(in srgb, var(--ok) 30%, transparent)}
-.abtn.rko:hover{background:var(--ko-bg); color:var(--ko); border-color:color-mix(in srgb, var(--ko) 30%, transparent)}
-@media (hover:hover){
-  .ct .acts .ghost{opacity:0; transition:opacity .15s}
-  .ct:hover .acts .ghost{opacity:1}
-}
-.mini{
-  border:none; background:none; color:var(--ink-3); cursor:pointer; font-size:12.5px;
-  padding:5px 10px; border-radius:8px; font-weight:550;
-}
-.mini:hover{background:var(--line-2); color:var(--ink)}
 .more{
-  display:block; width:100%; padding:13px; margin:4px 0 24px;
+  display:block; width:100%; padding:13px; margin:14px 0 24px;
   border:1.5px dashed var(--line); background:none; color:var(--primary-2);
   border-radius:var(--r); cursor:pointer; font-size:14px; font-weight:600;
 }
 .more:hover{background:var(--card)}
 .vide{text-align:center; color:var(--ink-3); padding:60px 10px}
 .vide .big{font-size:40px; margin-bottom:10px}
+
+/* ==================== vue fiche ==================== */
+.fhead{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); padding:16px 18px; margin-bottom:12px;
+}
+.fhead .row1{display:flex; align-items:center; gap:12px}
+#btnback{
+  width:36px; height:36px; border-radius:10px; border:1px solid var(--line);
+  background:var(--card-2); color:var(--ink); font-size:16px; cursor:pointer; flex-shrink:0;
+}
+#btnback:hover{box-shadow:var(--shadow-s)}
+.fhead h2{font-size:19px; font-weight:750; letter-spacing:-.01em; flex:1; min-width:0}
+.fhead .adr{font-size:13px; color:var(--ink-2); margin:8px 0 0 48px}
+.fhead .facts{display:flex; gap:6px; margin:10px 0 0 48px; flex-wrap:wrap}
+.mini{
+  border:none; background:none; color:var(--ink-3); cursor:pointer; font-size:12.5px;
+  padding:5px 10px; border-radius:8px; font-weight:550;
+}
+.mini:hover{background:var(--line-2); color:var(--ink)}
+
+.flayout{display:grid; grid-template-columns:230px 1fr; gap:14px; align-items:start}
+.toc{
+  position:sticky; top:130px; background:var(--card); border:1px solid var(--line);
+  border-radius:var(--r); box-shadow:var(--shadow-s); padding:8px; max-height:calc(100vh - 150px);
+  overflow-y:auto;
+}
+.toc a{
+  display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:9px;
+  font-size:13px; font-weight:550; color:var(--ink-2); text-decoration:none; cursor:pointer;
+}
+.toc a:hover{background:var(--card-2); color:var(--ink)}
+.toc a .cnt{margin-left:auto; font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.toc a.here{background:color-mix(in srgb, var(--primary-2) 10%, transparent); color:var(--primary-2)}
+@media (max-width:800px){
+  .flayout{display:block}
+  .toc{position:static; max-height:none; display:flex; overflow-x:auto; gap:4px;
+    padding:6px; margin-bottom:12px; scrollbar-width:none}
+  .toc::-webkit-scrollbar{display:none}
+  .toc a{white-space:nowrap; flex-shrink:0}
+  .toc a .cnt{margin-left:6px}
+  .fhead .adr,.fhead .facts{margin-left:0}
+}
+
+.svcblock{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); margin-bottom:14px; overflow:hidden; scroll-margin-top:140px;
+}
+.svcblock>h3{
+  display:flex; align-items:center; gap:10px; padding:13px 16px;
+  font-size:13.5px; font-weight:750; color:var(--primary); text-transform:uppercase;
+  letter-spacing:.06em; border-bottom:1px solid var(--line-2); background:var(--card-2);
+}
+.svcblock>h3 .cnt{font-size:11.5px; color:var(--ink-3); font-weight:600}
+.svcblock>h3 .sp{flex:1}
+.bureau{padding:4px 0}
+.bureau>h4{
+  display:flex; align-items:center; gap:8px;
+  padding:10px 16px 4px; font-size:13.5px; font-weight:700; color:var(--ink);
+}
+.bureau>h4::before{content:''; width:4px; height:15px; border-radius:2px;
+  background:linear-gradient(180deg,var(--primary-2),var(--primary)); flex-shrink:0}
+.bureau>h4 .cnt{font-size:11px; color:var(--ink-3); font-weight:600}
+
+/* entrée = un interlocuteur avec tous ses canaux regroupés */
+.entry{
+  display:grid; grid-template-columns:minmax(140px, 2fr) 3fr; gap:4px 16px;
+  padding:10px 16px; border-top:1px solid var(--line-2); align-items:start;
+}
+.bureau .entry{padding-left:28px}
+.entry:first-child{border-top:none}
+.entry .elabel{font-size:13.5px; font-weight:600; color:var(--ink); padding-top:5px;
+  overflow-wrap:break-word}
+.entry .elabel .enote{display:block; font-size:12px; font-weight:450; color:var(--ink-3);
+  font-style:italic; margin-top:3px}
+.entry.nolabel{grid-template-columns:1fr}
+.chans{display:flex; flex-direction:column; gap:2px; min-width:0}
+.chan{
+  display:flex; align-items:center; gap:9px; padding:4px 6px; border-radius:10px;
+  transition:background .12s; position:relative; min-width:0;
+}
+.chan:hover{background:var(--card-2)}
+.chan.dead{opacity:.45}
+.tico{width:28px; height:28px; border-radius:8px; display:grid; place-items:center;
+  font-size:12.5px; flex-shrink:0}
+.tico.tel{background:var(--tel-bg); color:var(--tel)}
+.tico.email{background:var(--mail-bg); color:var(--mail)}
+.tico.fax{background:var(--fax-bg); color:var(--fax)}
+.chan a.v{
+  font-weight:650; font-size:14px; text-decoration:none; color:var(--ink);
+  font-variant-numeric:tabular-nums; letter-spacing:.01em; word-break:break-all; min-width:0;
+}
+.chan a.v:hover{color:var(--primary-2)}
+.score{font-size:10.5px; font-weight:700; border-radius:7px; padding:2px 7px;
+  white-space:nowrap; font-variant-numeric:tabular-nums; flex-shrink:0}
+.score.good{color:var(--ok); background:var(--ok-bg)}
+.score.bad{color:var(--ko); background:var(--ko-bg)}
+.chan .acts{display:flex; align-items:center; gap:2px; margin-left:auto; flex-shrink:0}
+.abtn{
+  width:28px; height:28px; border-radius:8px; border:1px solid transparent;
+  background:none; color:var(--ink-3); cursor:pointer; font-size:12.5px;
+  display:grid; place-items:center; transition:all .12s;
+}
+.abtn:hover{background:var(--line-2); color:var(--ink)}
+.abtn.rok:hover{background:var(--ok-bg); color:var(--ok)}
+.abtn.rko:hover{background:var(--ko-bg); color:var(--ko)}
+@media (hover:hover){
+  .chan .ghost{opacity:0; transition:opacity .15s}
+  .chan:hover .ghost{opacity:1}
+}
+@media (max-width:640px){
+  .entry{grid-template-columns:1fr; gap:2px; padding:9px 12px}
+  .bureau .entry{padding-left:20px}
+  .entry .elabel{padding-top:0}
+}
+.svcfoot{padding:8px 12px; border-top:1px solid var(--line-2)}
 
 /* ==================== bouton flottant ==================== */
 #fab{
@@ -241,16 +279,16 @@ main{max-width:980px; margin:0 auto; padding:14px 16px}
 }
 #fab:hover{transform:translateY(-2px) scale(1.02)}
 #fab span{font-size:22px; font-weight:400; line-height:1}
+@media (max-width:560px){ #fab{padding:0; width:54px; justify-content:center} #fab b{display:none} }
 
 /* ==================== dialogues ==================== */
 dialog{
   border:none; border-radius:20px; padding:0; max-width:500px; width:calc(100vw - 32px);
-  background:var(--card); color:var(--ink); box-shadow:var(--shadow-l);
-  max-height:88vh;
+  background:var(--card); color:var(--ink); box-shadow:var(--shadow-l); max-height:88vh;
 }
 dialog::backdrop{background:rgba(10,12,26,.5); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px)}
 .dlg{padding:22px}
-.dlg h2{font-size:17px; font-weight:750; margin-bottom:16px; letter-spacing:-.01em}
+.dlg h2{font-size:17px; font-weight:750; margin-bottom:16px}
 .dlg label{display:block; font-size:12px; font-weight:650; margin:12px 0 5px;
   color:var(--ink-2); text-transform:uppercase; letter-spacing:.05em}
 .dlg label .hint{text-transform:none; letter-spacing:0; font-weight:450}
@@ -267,39 +305,25 @@ dialog::backdrop{background:rgba(10,12,26,.5); -webkit-backdrop-filter:blur(3px)
   transition:all .15s;
 }
 .btn:hover{box-shadow:var(--shadow-s)}
-.btn.primary{
-  background:linear-gradient(135deg,var(--primary),var(--primary-2));
-  color:#fff; border:none;
-}
-.btn.danger{color:var(--ko); border-color:color-mix(in srgb, var(--ko) 40%, transparent)}
+.btn.primary{background:linear-gradient(135deg,var(--primary),var(--primary-2)); color:#fff; border:none}
 .setrow{display:flex; align-items:center; gap:8px; margin:8px 0}
 .setrow .btn{flex:1}
 hr{border:none; border-top:1px solid var(--line); margin:16px 0}
 .hint{font-size:12px; color:var(--ink-3); line-height:1.5}
-
 #toast{
   position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(8px);
   background:var(--ink); color:var(--bg); padding:11px 20px; border-radius:12px;
   font-size:14px; font-weight:550; opacity:0; pointer-events:none;
-  transition:all .25s; z-index:40; max-width:90vw; text-align:center;
-  box-shadow:var(--shadow-l);
+  transition:all .25s; z-index:40; max-width:90vw; text-align:center; box-shadow:var(--shadow-l);
 }
 #toast.show{opacity:.97; transform:translateX(-50%) translateY(0)}
-
-@media (max-width:560px){
-  .titrebar h1 small{display:none}
-  .jurhead{padding:12px 12px}
-  .ct{padding:8px 6px}
-  #fab{padding:0; width:54px; justify-content:center}
-  #fab b{display:none}
-}
 </style>
 </head>
 <body>
 <header><div class="hwrap">
   <div class="titrebar">
-    <div class="logo">⚖️</div>
-    <h1>Annuaire Justice<small id="count"></small></h1>
+    <div class="logo" onclick="goHome()">⚖️</div>
+    <h1 onclick="goHome()">Annuaire Justice<small id="count"></small></h1>
     <div id="syncstate" title="Synchronisation"><span class="dot"></span><span id="synctxt">local</span></div>
     <button class="iconbtn" id="btnsettings" title="Réglages">⚙</button>
   </div>
@@ -314,13 +338,12 @@ hr{border:none; border-top:1px solid var(--line); margin:16px 0}
 
 <main>
   <div id="stats"></div>
-  <div id="results"></div>
+  <div id="view"></div>
 </main>
 
 <button id="fab" title="Ajouter un contact"><span>＋</span><b>Ajouter</b></button>
 <div id="toast"></div>
 
-<!-- ============ dialogue ajout / édition ============ -->
 <dialog id="dlgAdd"><form class="dlg" method="dialog" id="formAdd">
   <h2 id="addTitle">Ajouter un contact</h2>
   <label>Juridiction</label>
@@ -338,11 +361,11 @@ hr{border:none; border-top:1px solid var(--line); margin:16px 0}
     <option value="douane">Douanes</option>
     <option value="autre">Autre</option>
   </select>
-  <label>Service / greffe</label>
+  <label>Service</label>
   <input id="fSvc" list="listSvc" placeholder="Greffe correctionnel, Parquet, JAF…">
   <datalist id="listSvc"></datalist>
-  <label>Bureau / volet <span class="hint">(facultatif — ex. Bureau d'ordre pénal)</span></label>
-  <input id="fGrp" list="listGrp" placeholder="">
+  <label>Bureau <span class="hint">(facultatif — ex. Bureau d'ordre pénal)</span></label>
+  <input id="fGrp" list="listGrp">
   <datalist id="listGrp"></datalist>
   <label>Type</label>
   <select id="fType">
@@ -362,7 +385,6 @@ hr{border:none; border-top:1px solid var(--line); margin:16px 0}
   </div>
 </form></dialog>
 
-<!-- ============ réglages ============ -->
 <dialog id="dlgSettings"><div class="dlg">
   <h2>Réglages</h2>
   <div class="setrow"><button class="btn" id="btnExport">⬇️ Exporter les données (JSON)</button></div>
@@ -383,8 +405,6 @@ hr{border:none; border-top:1px solid var(--line); margin:16px 0}
 'use strict';
 /* ============================================================
    CONFIG — synchronisation Google Drive
-   Renseigner CLIENT_ID (console Google Cloud, identifiant OAuth
-   « application Web ») pour activer la synchronisation.
    ============================================================ */
 const CLIENT_ID = '1002386733501-oeq2g899a2dlgcttg0qem8a7ugvsh847.apps.googleusercontent.com';
 const DRIVE_FILENAME = 'annuaire-justice-data.json';
@@ -395,15 +415,15 @@ const LS_FILEID = 'annuaireJustice.driveFileId';
 /* ============================ état ============================ */
 let DATA = null;
 let currentCat = '';
-let shownGroups = 30;
-const openState = {};      // id -> bool (juridictions, services, volets)
+let shownCards = 60;
+let ficheId = null;          // juridiction affichée en fiche (null = liste)
 const $ = s => document.querySelector(s);
 
 const CATS = {
-  tj:'Tribunaux judiciaires', ca:"Cours d'appel", cassation:'Cassation',
-  penitentiaire:'Pénitentiaire', commissariat:'Commissariats', cra:'CRA',
+  tj:'Tribunaux judiciaires', ca:"Cours d'appel", cassation:'Cour de cassation',
+  penitentiaire:'Établissements pénitentiaires', commissariat:'Commissariats', cra:'CRA',
   prefecture:'Préfectures', douane:'Douanes', etranger:'Étranger',
-  commerce:'Commerce', autre:'Autres'
+  commerce:'Tribunaux de commerce', autre:'Autres'
 };
 const CAT_LABEL = {
   tj:'TJ', ca:'CA', cassation:'Cass.', penitentiaire:'Prison',
@@ -421,10 +441,7 @@ function toast(msg){
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
   clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2600);
 }
-function fmtDate(ts){
-  if(!ts) return '';
-  return new Date(ts).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'2-digit'});
-}
+const fmtDate = ts => ts ? new Date(ts).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'2-digit'}) : '';
 
 /* ============================ persistance ============================ */
 function save(){
@@ -464,7 +481,7 @@ function buildIndex(){
   }
 }
 
-/* ============================ notation / tri ============================ */
+/* ============================ notation ============================ */
 const NOW = () => Date.now();
 const J90 = 90*24*3600*1000;
 function score(c){
@@ -474,7 +491,41 @@ function score(c){
   return s;
 }
 const isDead = c => (c.ko||0)>=3 && !(c.ok>0);
-const sortContacts = list => [...list].sort((a,b)=>score(b)-score(a));
+
+/* ============================ regroupement en entrées ============================
+   Une « entrée » = un interlocuteur (libellé) avec tous ses canaux
+   (téléphones, mails, fax) regroupés. Les entrées sont elles-mêmes
+   rangées par bureau (champ groupe). */
+function structureService(contacts){
+  const bureaux = new Map();   // clé normalisée -> {nom, entries:Map}
+  const rootKey = '';
+  const gkeys = new Set(contacts.filter(c=>c.groupe).map(c=>norm(c.groupe)));
+  for(const c of contacts){
+    let gk = c.groupe ? norm(c.groupe) : '';
+    let gnom = c.groupe || '';
+    // un libellé identique au nom d'un bureau rejoint ce bureau
+    if(!gk && gkeys.has(norm(c.libelle||''))){ gk = norm(c.libelle); gnom = c.libelle; }
+    if(!bureaux.has(gk)) bureaux.set(gk, {nom:gnom, entries:new Map()});
+    const b = bureaux.get(gk);
+    let lib = c.libelle||'';
+    if(gk && norm(lib)===gk) lib = '';         // pas de répétition bureau/libellé
+    const ek = norm(lib);
+    if(!b.entries.has(ek)) b.entries.set(ek, {lib, chans:[], note:''});
+    const e = b.entries.get(ek);
+    e.chans.push(c);
+    if(c.note && !e.note) e.note = c.note;
+  }
+  // tri des canaux d'une entrée : tél d'abord (les mieux notés en tête), puis mail, fax
+  const rank = {tel:0, email:1, fax:2};
+  for(const b of bureaux.values())
+    for(const e of b.entries.values())
+      e.chans.sort((a,c)=> (rank[a.type]-rank[c.type]) || (score(c)-score(a)) );
+  // racine d'abord, puis bureaux dans l'ordre du document
+  const out = [];
+  if(bureaux.has(rootKey)) out.push(bureaux.get(rootKey));
+  for(const [k,b] of bureaux) if(k!==rootKey) out.push(b);
+  return out;
+}
 
 /* ============================ recherche ============================ */
 function search(){
@@ -482,130 +533,182 @@ function search(){
   const results = [];
   for(const j of DATA.juridictions){
     if(currentCat && j.categorie!==currentCat) continue;
-    if(!tokens.length){ results.push({j, svcs:null}); continue; }
+    if(!tokens.length){ results.push({j, hits:null, nameHit:0}); continue; }
     const rest = tokens.filter(t=>!j._txt.includes(t));
-    if(!rest.length){ results.push({j, svcs:null}); continue; }
-    const svcs = [];
+    const nameHit = tokens.length - rest.length;
+    if(!rest.length){ results.push({j, hits:null, nameHit}); continue; }
+    const hits = [];
     for(const s of j.services){
       const rest2 = rest.filter(t=>!s._txt.includes(t));
       const cts = s.contacts.filter(c =>
         rest2.every(t => c._txt.includes(t) ||
           (c._dig && digits(t).length>=4 && c._dig.includes(digits(t)))));
-      if(cts.length) svcs.push({s, cts});
+      if(cts.length) hits.push({s, cts});
     }
-    if(svcs.length) results.push({j, svcs});
+    if(hits.length) results.push({j, hits, nameHit});
   }
+  results.sort((a,b)=> (b.nameHit-a.nameHit) ||
+    (b.j.services.reduce((m,s)=>m+s.contacts.length,0) - a.j.services.reduce((m,s)=>m+s.contacts.length,0)));
   return {results, tokens};
 }
 
+/* ============================ navigation ============================ */
+function goHome(){ ficheId = null; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
+window.goHome = goHome;
+window.openFiche = id => {
+  ficheId = id;
+  history.pushState(null,'','#f/'+id);
+  render(); window.scrollTo(0,0);
+};
+window.addEventListener('popstate', ()=>{
+  const m = location.hash.match(/^#f\/(.+)$/);
+  ficheId = m ? m[1] : null;
+  render();
+});
+
 /* ============================ rendu ============================ */
 function render(){
-  const {results, tokens} = search();
-  const R = $('#results');
   const total = DATA.juridictions.length;
   const nc = DATA.juridictions.reduce((n,j)=>n+j.services.reduce((m,s)=>m+s.contacts.length,0),0);
   $('#count').textContent = `${total} juridictions · ${nc.toLocaleString('fr-FR')} contacts`;
-  $('#stats').textContent = tokens.length||currentCat ?
-    `${results.length} juridiction${results.length>1?'s':''} trouvée${results.length>1?'s':''}` :
-    `Tapez une ville, un service, un numéro ou un mail pour rechercher`;
   $('#clearq').style.display = $('#q').value ? 'block':'none';
+  if(ficheId){
+    const j = DATA.juridictions.find(x=>x.id===ficheId);
+    if(j){ renderFiche(j); return; }
+    ficheId = null;
+  }
+  renderList();
+}
 
+/* ---------- vue liste ---------- */
+function renderList(){
+  const {results, tokens} = search();
+  const V = $('#view');
+  $('#stats').textContent = tokens.length||currentCat ?
+    `${results.length} juridiction${results.length>1?'s':''} — cliquez sur une fiche pour l'ouvrir` :
+    `Tapez une recherche ou parcourez les fiches par catégorie`;
   if(!results.length){
-    R.innerHTML = `<div class="vide"><div class="big">🔍</div>Aucun résultat.<br><br>
+    V.innerHTML = `<div class="vide"><div class="big">🔍</div>Aucun résultat.<br><br>
       <button class="btn primary" onclick="openAdd()">＋ Ajouter ce contact</button></div>`;
     return;
   }
-  const searching = tokens.length>0;
+  const slice = results.slice(0, shownCards);
   let html = '';
-  for(const r of results.slice(0, shownGroups)) html += renderJur(r, searching);
-  R.innerHTML = html;
-  if(results.length > shownGroups)
-    R.innerHTML += `<button class="more" onclick="shownGroups+=40;render()">Afficher ${results.length-shownGroups} juridictions de plus</button>`;
+  if(!tokens.length && !currentCat){
+    // accueil : aperçu structuré de toutes les catégories
+    const order = ['tj','ca','cassation','penitentiaire','commissariat','cra','prefecture','douane','etranger','commerce','autre'];
+    const bycat = {};
+    for(const r of results) (bycat[r.j.categorie] = bycat[r.j.categorie]||[]).push(r);
+    const CAP = 9;
+    for(const cat of order){
+      const list = bycat[cat]; if(!list) continue;
+      html += `<div class="cathead">${CATS[cat]||cat} <span class="cnt">· ${list.length}</span>`;
+      if(list.length>CAP) html += `<button class="mini" onclick="setCat('${cat}')">tout afficher →</button>`;
+      html += `</div><div class="grid">`;
+      for(const r of list.slice(0,CAP)) html += cardJur(r, null);
+      html += '</div>';
+    }
+    $('#view').innerHTML = html;
+    return;
+  } else {
+    html = '<div class="grid">' + slice.map(r=>cardJur(r, tokens)).join('') + '</div>';
+  }
+  if(results.length > shownCards)
+    html += `<button class="more" onclick="shownCards+=80;render()">Afficher ${results.length-shownCards} fiches de plus</button>`;
+  V.innerHTML = html;
 }
 
-function isOpen(id, dflt){ return openState[id]!==undefined ? openState[id] : dflt; }
-
-function renderJur({j, svcs}, searching){
+function cardJur({j, hits}, tokens){
   const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
-  const open = isOpen(j.id, searching);
-  let body = '';
-  if(open){
-    const list = svcs || j.services.map(s=>({s, cts:s.contacts}));
-    for(const {s, cts} of list) body += renderSvc(j, s, cts, searching, list.length===1);
-    body = `<div class="jurbody">${body}
-      <div class="jurfoot">
-        <button class="mini" onclick="openAdd('${j.id}')">＋ Ajouter un contact</button>
-        <button class="mini" onclick="delJur('${j.id}')">Supprimer la juridiction</button>
-      </div></div>`;
+  let snips = '';
+  if(hits){
+    for(const h of hits.slice(0,3)){
+      const c = h.cts[0];
+      const what = c.libelle || c.groupe || h.s.nom;
+      snips += `<div class="snip"><b>${esc(h.s.nom)}</b> — ${esc(what)} · ${esc(c.valeur)}${h.cts.length>1?` <span style="color:var(--ink-3)">+${h.cts.length-1}</span>`:''}</div>`;
+    }
   }
-  return `<div class="jur ${open?'open':''}">
-    <div class="jurhead" onclick="tgl('${j.id}', ${searching})">
-      <span class="caret">▶</span>
-      <span class="nom">${esc(j.nom)}${j.adresse?`<span class="adr">${esc(j.adresse)}</span>`:''}</span>
-      <span class="jmeta">
+  return `<div class="jcard" onclick="openFiche('${j.id}')">
+    <div class="top">
+      <span class="nom">${esc(j.nom)}</span>
+      <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+    </div>
+    ${j.adresse?`<div class="adr">📍 ${esc(j.adresse)}</div>`:''}
+    ${snips}
+    <div class="foot"><span>${j.services.length} service${j.services.length>1?'s':''}</span><span>·</span><span>${nc} contacts</span></div>
+  </div>`;
+}
+
+/* ---------- vue fiche ---------- */
+function renderFiche(j){
+  const {tokens} = (()=>({tokens: norm($('#q').value.trim()).split(/\s+/).filter(Boolean)}))();
+  const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  $('#stats').textContent = '';
+  let toc = '', blocks = '';
+  for(const s of j.services){
+    const anchor = 'svc-'+s.id;
+    toc += `<a onclick="document.getElementById('${anchor}').scrollIntoView({behavior:'smooth'})">${esc(s.nom)}<span class="cnt">${s.contacts.length}</span></a>`;
+    blocks += renderSvcBlock(j, s, anchor);
+  }
+  $('#view').innerHTML = `
+    <div class="fhead">
+      <div class="row1">
+        <button id="btnback" onclick="goHome()" title="Retour">←</button>
+        <h2>${esc(j.nom)}</h2>
         <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
-        <span class="ncontacts">${nc}</span>
-      </span>
-    </div>${body}</div>`;
+      </div>
+      ${j.adresse?`<div class="adr">📍 ${esc(j.adresse)} <button class="mini" onclick="copyVal('${esc(j.adresse)}')">⧉ copier</button></div>`:''}
+      <div class="facts">
+        <button class="mini" onclick="openAdd('${j.id}')">＋ Ajouter un contact</button>
+        <button class="mini" onclick="delJur('${j.id}')">🗑 Supprimer la juridiction</button>
+        <span class="mini" style="cursor:default">${j.services.length} services · ${nc} contacts</span>
+      </div>
+    </div>
+    <div class="flayout">
+      <nav class="toc">${toc}</nav>
+      <div>${blocks}</div>
+    </div>`;
 }
 
-function renderSvc(j, s, cts, searching, solo){
-  const open = isOpen(s.id, searching || solo || cts.length<=8);
-  let body = '';
-  if(open){
-    // regrouper par volet (champ groupe) ; les libellés identiques à un
-    // groupe existant rejoignent ce volet
-    const groups = new Map(); const root = [];
-    const gkeys = new Set(cts.filter(c=>c.groupe).map(c=>norm(c.groupe)));
-    for(const c of cts){
-      const gk = c.groupe ? norm(c.groupe) : (gkeys.has(norm(c.libelle||'')) ? norm(c.libelle) : '');
-      if(gk){
-        if(!groups.has(gk)) groups.set(gk, {nom:c.groupe||c.libelle, rows:[]});
-        groups.get(gk).rows.push(c);
-      } else root.push(c);
-    }
-    for(const c of sortContacts(root)) body += renderContact(j, s, c, false);
-    for(const [gk, g] of groups){
-      const vid = s.id+'|'+gk;
-      const vopen = isOpen(vid, searching || groups.size<=2);
-      let rows = '';
-      if(vopen) for(const c of sortContacts(g.rows)) rows += renderContact(j, s, c, true, g.nom);
-      body += `<div class="volet ${vopen?'open':''}">
-        <div class="volethead" onclick="tgl('${esc(vid)}', ${vopen})">
-          <span class="caret">▶</span><span class="n">${esc(g.nom)}</span>
-          <span class="cnt">${g.rows.length}</span>
-        </div><div class="voletbody">${rows}</div></div>`;
-    }
-    body = `<div class="svcbody">${body}</div>`;
+function renderSvcBlock(j, s, anchor){
+  const bureaux = structureService(s.contacts);
+  let inner = '';
+  for(const b of bureaux){
+    let rows = '';
+    for(const e of b.entries.values()) rows += renderEntry(e);
+    if(b.nom){
+      const n = [...b.entries.values()].reduce((m,e)=>m+e.chans.length,0);
+      inner += `<div class="bureau"><h4>${esc(b.nom)} <span class="cnt">${n}</span></h4>${rows}</div>`;
+    } else inner += rows;
   }
-  return `<div class="svc ${open?'open':''}">
-    <div class="svchead" onclick="tgl('${s.id}', ${open})">
-      <span class="caret">▶</span>
-      <span class="n">${esc(s.nom)}</span>
-      <span class="cnt">${cts.length}</span>
-      <button class="mini" title="Ajouter ici" onclick="event.stopPropagation();openAdd('${j.id}','${s.id}')">＋</button>
-      <button class="mini" title="Supprimer ce service" onclick="event.stopPropagation();delService('${j.id}','${s.id}')">🗑</button>
-    </div>${body}</div>`;
+  return `<section class="svcblock" id="${anchor}">
+    <h3>${esc(s.nom)} <span class="cnt">${s.contacts.length}</span><span class="sp"></span>
+      <button class="mini" onclick="openAdd('${j.id}','${s.id}')">＋</button>
+      <button class="mini" onclick="delService('${j.id}','${s.id}')">🗑</button>
+    </h3>
+    ${inner}
+  </section>`;
 }
 
-function renderContact(j, s, c, inVolet, voletNom){
+function renderEntry(e){
+  let chans = '';
+  for(const c of e.chans) chans += renderChan(c);
+  const label = e.lib ? `<div class="elabel">${esc(e.lib)}${e.note?`<span class="enote">${esc(e.note)}</span>`:''}</div>` : (e.note?`<div class="elabel"><span class="enote">${esc(e.note)}</span></div>`:'');
+  return `<div class="entry ${label?'':'nolabel'}">${label}<div class="chans">${chans}</div></div>`;
+}
+
+function renderChan(c){
   const href = c.type==='email' ? 'mailto:'+c.valeur :
     'tel:'+(digits(c.valeur).length===10 ? '+33'+digits(c.valeur).slice(1) : digits(c.valeur));
   const ic = c.type==='email' ? '✉️' : c.type==='fax' ? '📠' : '📞';
   let badge = '';
-  if(c.ok>0) badge = `<span class="score good" title="${c.ok} appel(s) réussi(s)${c.lastOk?', dernier le '+fmtDate(c.lastOk):''}">✓ ${c.ok}${c.lastOk?' · '+fmtDate(c.lastOk):''}</span>`;
+  if(c.ok>0) badge = `<span class="score good" title="${c.ok} appel(s) réussi(s)">✓ ${c.ok}${c.lastOk?' · '+fmtDate(c.lastOk):''}</span>`;
   else if(c.ko>0) badge = `<span class="score bad" title="${c.ko} échec(s)">✗ ${c.ko}</span>`;
-  let lib = c.libelle||'';
-  if(inVolet && norm(lib)===norm(voletNom||'')) lib = '';
-  return `<div class="ct ${isDead(c)?'dead':''}" id="ct-${c.id}">
+  return `<div class="chan ${isDead(c)?'dead':''}" id="ct-${c.id}">
     <span class="tico ${c.type}">${ic}</span>
-    <div class="info">
-      <div class="val"><a href="${href}" ${c.type==='fax'?'onclick="return false"':''}>${esc(c.valeur)}</a>${badge}</div>
-      ${lib?`<div class="lib">${esc(lib)}</div>`:''}
-      ${c.note?`<div class="note">${esc(c.note)}</div>`:''}
-    </div>
+    <a class="v" href="${href}" ${c.type==='fax'?'onclick="return false"':''}>${esc(c.valeur)}</a>
+    ${badge}
     <div class="acts">
-      ${c.note?`<button class="abtn ghost" title="Note" onclick="this.closest('.ct').classList.toggle('shownote')">ℹ</button>`:''}
       <button class="abtn ghost" title="Copier" onclick="copyVal('${esc(c.valeur)}')">⧉</button>
       <button class="abtn ghost" title="Modifier" onclick="openEdit('${c.id}')">✎</button>
       <button class="abtn ghost" title="Supprimer" onclick="delContact('${c.id}')">🗑</button>
@@ -627,8 +730,7 @@ function renderChips(){
 }
 
 /* ============================ interactions ============================ */
-window.setCat = c => { currentCat=c; shownGroups=30; renderChips(); render(); };
-window.tgl = (id, cur) => { openState[id] = !cur; render(); };
+window.setCat = c => { currentCat=c; shownCards=60; ficheId=null; renderChips(); render(); };
 window.copyVal = v => { navigator.clipboard?.writeText(v).then(()=>toast('Copié : '+v)); };
 
 function findContact(id){
@@ -666,6 +768,7 @@ window.delJur = id => {
   for(const s of j.services){ for(const c of s.contacts) DATA.tombstones[c.id]=NOW(); DATA.tombstones[s.id]=NOW(); }
   DATA.tombstones[id]=NOW();
   DATA.juridictions = DATA.juridictions.filter(x=>x.id!==id);
+  if(ficheId===id) ficheId=null;
   save(); renderChips(); render(); toast('Juridiction supprimée');
 };
 
@@ -683,17 +786,18 @@ function refreshSvcList(){
   $('#listGrp').innerHTML = grps.map(g=>`<option value="${esc(g)}">`).join('');
 }
 window.openAdd = (jid, sid) => {
-  addCtx = {jid, sid, edit:null};
+  addCtx = {edit:null};
   $('#addTitle').textContent = 'Ajouter un contact';
   $('#addOk').textContent = 'Ajouter';
   fillLists();
-  const j = jid && DATA.juridictions.find(x=>x.id===jid);
+  const j = (jid && DATA.juridictions.find(x=>x.id===jid)) ||
+            (ficheId && DATA.juridictions.find(x=>x.id===ficheId));
   $('#fJur').value = j ? j.nom : '';
   const s = j && sid && j.services.find(x=>x.id===sid);
   $('#fSvc').value = s ? s.nom : '';
   $('#fGrp').value=''; $('#fVal').value=''; $('#fLib').value=''; $('#fNote').value='';
   const q = $('#q').value.trim();
-  if(!jid && q && !/\d|@/.test(q)) $('#fJur').value = q;
+  if(!j && q && !/\d|@/.test(q)) $('#fJur').value = q;
   refreshSvcList();
   $('#dlgAdd').showModal();
 };
@@ -743,10 +847,10 @@ $('#formAdd').addEventListener('submit', e=>{
       toast('Contact modifié');
     }
   } else {
-    const c = {id:uid('c'), ...fields, ok:0, ko:0, lastOk:null, lastTry:null};
-    s.contacts.push(c);
+    s.contacts.push({id:uid('c'), ...fields, ok:0, ko:0, lastOk:null, lastTry:null});
     toast('Contact ajouté à '+j.nom);
-    openState[j.id]=true; openState[s.id]=true;
+    ficheId = j.id;
+    history.replaceState(null,'','#f/'+j.id);
   }
   buildIndex(); save(); renderChips(); render();
 });
@@ -786,13 +890,18 @@ $('#fileImport').addEventListener('change', async e=>{
 let qTimer;
 $('#q').addEventListener('input', ()=>{
   clearTimeout(qTimer);
-  qTimer = setTimeout(()=>{ shownGroups=30; render(); }, 90);
+  qTimer = setTimeout(()=>{
+    shownCards = 60;
+    if(ficheId){ ficheId = null; history.pushState(null,'',location.pathname+location.search); }
+    render();
+  }, 90);
 });
-$('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownGroups=30; render(); $('#q').focus(); });
+$('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownCards=60; render(); $('#q').focus(); });
 document.addEventListener('keydown', e=>{
   if(e.key==='/' && document.activeElement!==$('#q') && !document.querySelector('dialog[open]')){
     e.preventDefault(); $('#q').focus(); $('#q').select();
   }
+  if(e.key==='Escape' && ficheId && !document.querySelector('dialog[open]')) goHome();
 });
 
 /* ============================================================
@@ -810,7 +919,7 @@ const Drive = (() => {
   function refreshSettingsUI(){
     if(!enabled()){
       $('#btnDrive').style.display='none'; $('#rowDriveOff').style.display='none';
-      $('#driveHint').textContent = 'Synchronisation Google Drive non configurée. Les données restent sur cet appareil ; utilisez Exporter/Importer pour les transférer.';
+      $('#driveHint').textContent = 'Synchronisation Google Drive non configurée.';
       return;
     }
     $('#btnDrive').style.display = on()?'none':'flex';
@@ -819,7 +928,6 @@ const Drive = (() => {
       'Connecté : le fichier « '+DRIVE_FILENAME+' » de votre Drive est synchronisé automatiquement entre vos appareils.' :
       'Vos données seront stockées dans un fichier de votre Google Drive et synchronisées entre tous vos appareils.';
   }
-
   async function ensureToken(interactive){
     if(!enabled()) return null;
     if(token && token.exp > Date.now()+60000) return token.v;
@@ -863,8 +971,6 @@ const Drive = (() => {
     const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=version,modifiedTime`,{headers:H(t)});
     return r.ok ? r.json() : null;
   }
-
-  /* fusion : union par id, plus récent gagne, tombstones appliquées */
   function mergeData(remote){
     if(!remote || !Array.isArray(remote.juridictions)) return false;
     const tomb = {...(remote.tombstones||{}), ...DATA.tombstones};
@@ -904,7 +1010,6 @@ const Drive = (() => {
     DATA.tombstones = tomb;
     return true;
   }
-
   async function pull(interactive){
     if(!on()) return;
     const t = await ensureToken(interactive); if(!t){ setState('err','hors ligne'); return; }
@@ -926,7 +1031,6 @@ const Drive = (() => {
       } else setState('err','erreur lecture');
     } finally { busy = false; }
   }
-
   async function push(skipCheck){
     if(!on() || !fileId) return;
     const t = await ensureToken(false); if(!t){ setState('err','reconnexion requise'); return; }
@@ -940,7 +1044,6 @@ const Drive = (() => {
     if(r.ok){ lastRemoteRev = (await r.json()).version; setState('on','synchronisé'); }
     else setState('err','erreur envoi');
   }
-
   function schedulePush(){
     if(!on()) return;
     clearTimeout(pushTimer);
@@ -979,6 +1082,8 @@ $('#btnDriveOff').addEventListener('click', ()=>{ Drive.disconnect(); toast('Dri
 /* ============================ démarrage ============================ */
 (async function(){
   await load();
+  const m = location.hash.match(/^#f\/(.+)$/);
+  if(m && DATA.juridictions.some(j=>j.id===m[1])) ficheId = m[1];
   renderChips(); render();
   Drive.init();
 })();
