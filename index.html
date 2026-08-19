@@ -27,21 +27,38 @@
   --fax:#585d75; --fax-bg:#eef0f4;
 }
 @media (prefers-color-scheme: dark){
-  :root{
-    --bg:#0b0c12; --card:#14151e; --card-2:#191a25;
-    --ink:#f2f3f8; --ink-2:#a3a7bc; --ink-3:#666b81;
-    --line:#242633; --line-2:#1e202c;
-    --accent:#8b96ff; --accent-2:#7d89ff;
-    --cta:#f2f3f8; --cta-ink:#0d0f1e;
-    --gold:#d9b45a;
-    --ok:#3ecf7d; --ok-bg:#10331f; --ko:#ff7379; --ko-bg:#3a161a;
+  :root:not([data-theme="light"]){
+    --bg:#0e1014; --card:#15181f; --card-2:#1b1e27;
+    --ink:#edeff4; --ink-2:#a2a8b8; --ink-3:#5f6675;
+    --line:#252935; --line-2:#1f222c;
+    --accent:#d9b56a; --accent-2:#cfa855;
+    --cta:#d9b56a; --cta-ink:#171309;
+    --gold:#d9b56a;
+    --ok:#43cf7f; --ok-bg:#11301e; --ko:#ff6f75; --ko-bg:#391317;
     --shadow-s:0 1px 2px rgba(0,0,0,.5);
-    --shadow-m:0 2px 8px rgba(0,0,0,.45), 0 14px 36px rgba(0,0,0,.4);
-    --shadow-l:0 14px 44px rgba(0,0,0,.6);
-    --tel:#8b96ff; --tel-bg:#1d2140; --mail:#c4a1f7; --mail-bg:#2c2044;
-    --fax:#a3a7bc; --fax-bg:#20222e;
+    --shadow-m:0 2px 8px rgba(0,0,0,.45), 0 16px 40px rgba(0,0,0,.42);
+    --shadow-l:0 16px 48px rgba(0,0,0,.62);
+    --tel:#aab6d9; --tel-bg:#1f2433; --mail:#c0a8e8; --mail-bg:#282138;
+    --fax:#a2a8b8; --fax-bg:#20232e;
+    --btj-ink:#171309;
   }
 }
+:root[data-theme="dark"]{
+    --bg:#0e1014; --card:#15181f; --card-2:#1b1e27;
+    --ink:#edeff4; --ink-2:#a2a8b8; --ink-3:#5f6675;
+    --line:#252935; --line-2:#1f222c;
+    --accent:#d9b56a; --accent-2:#cfa855;
+    --cta:#d9b56a; --cta-ink:#171309;
+    --gold:#d9b56a;
+    --ok:#43cf7f; --ok-bg:#11301e; --ko:#ff6f75; --ko-bg:#391317;
+    --shadow-s:0 1px 2px rgba(0,0,0,.5);
+    --shadow-m:0 2px 8px rgba(0,0,0,.45), 0 16px 40px rgba(0,0,0,.42);
+    --shadow-l:0 16px 48px rgba(0,0,0,.62);
+    --tel:#aab6d9; --tel-bg:#1f2433; --mail:#c0a8e8; --mail-bg:#282138;
+    --fax:#a2a8b8; --fax-bg:#20232e;
+    --btj-ink:#171309;
+}
+
 *{box-sizing:border-box; margin:0}
 html{-webkit-text-size-adjust:100%}
 body{
@@ -159,8 +176,8 @@ main{max-width:1080px; margin:0 auto; padding:16px 18px}
   font-size:10px; font-weight:700; padding:4px 9px; border-radius:7px;
   letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; flex-shrink:0;
 }
-.b-tj{color:#fff; background:var(--accent)}
-@media (prefers-color-scheme: dark){ .b-tj{color:#0d0f1e} }
+.b-tj{color:var(--btj-ink,#fff); background:var(--accent)}
+
 .b-ca{color:var(--mail); background:var(--mail-bg)}
 .b-cassation{color:var(--gold); background:color-mix(in srgb, var(--gold) 13%, transparent)}
 .b-penitentiaire{color:#b45f19; background:color-mix(in srgb, #c47121 13%, transparent)}
@@ -413,6 +430,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <div class="logo" onclick="goHome()" data-ic="scale" data-s="19"></div>
     <h1 onclick="goHome()">Annuaire Justice<small id="count"></small></h1>
     <div id="syncstate" title="Synchronisation"><span class="dot"></span><span id="synctxt">local</span></div>
+    <button class="iconbtn" id="btntheme" title="Thème"></button>
     <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
   </div>
   <div class="searchwrap">
@@ -526,6 +544,9 @@ const ICONS = {
   cloud:'<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
   down2:'<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
   up2:'<path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/>',
+  moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  contrast:'<circle cx="12" cy="12" r="10"/><path d="M12 18a6 6 0 0 0 0-12v12z"/>',
 };
 const icn = (n, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||''}</svg>`;
 
@@ -1608,9 +1629,31 @@ $('#syncstate').addEventListener('click', ()=>{
   if($('#syncstate').classList.contains('err')) Drive.connect();
 });
 
+
+/* ============================ thème ============================ */
+const LS_THEME = 'annuaireJustice.theme';
+const THEME_LABEL = {auto:'automatique', dark:'sombre', light:'clair'};
+function applyTheme(){
+  const t = localStorage.getItem(LS_THEME)||'auto';
+  if(t==='auto') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = t;
+  const el = document.getElementById('btntheme');
+  el.innerHTML = icn({auto:'contrast', dark:'moon', light:'sun'}[t], 17);
+  el.title = 'Thème : '+THEME_LABEL[t];
+}
+document.getElementById('btntheme').addEventListener('click', ()=>{
+  const order = ['auto','dark','light'];
+  const cur = localStorage.getItem(LS_THEME)||'auto';
+  const next = order[(order.indexOf(cur)+1)%3];
+  localStorage.setItem(LS_THEME, next);
+  applyTheme();
+  toast('Thème '+THEME_LABEL[next]);
+});
+
 /* ============================ démarrage ============================ */
 (async function(){
   document.querySelectorAll('[data-ic]').forEach(el=>{el.innerHTML = icn(el.dataset.ic, +(el.dataset.s||16));});
+  applyTheme();
   await load();
   const m = location.hash.match(/^#f\/(.+)$/);
   if(m && DATA.juridictions.some(j=>j.id===m[1])) ficheId = m[1];
