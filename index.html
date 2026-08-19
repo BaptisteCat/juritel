@@ -973,6 +973,18 @@ const Drive = (() => {
   }
   function mergeData(remote){
     if(!remote || !Array.isArray(remote.juridictions)) return false;
+    // base régénérée (dataset différent) : on adopte la plus récente au lieu
+    // de fusionner, sinon les identifiants différents créeraient des doublons
+    if((remote.dataset||'') !== (DATA.dataset||'')){
+      if((remote.updatedAt||0) > (DATA.updatedAt||0)){
+        DATA.juridictions = remote.juridictions;
+        DATA.tombstones = remote.tombstones||{};
+        DATA.dataset = remote.dataset;
+        DATA.updatedAt = remote.updatedAt;
+        toast('Nouvelle version de la base adoptée');
+      }
+      return true; // sinon : notre base est plus récente, le push l'imposera
+    }
     const tomb = {...(remote.tombstones||{}), ...DATA.tombstones};
     const byId = arr => Object.fromEntries(arr.map(x=>[x.id,x]));
     const newer = (a,b) => (a.u||0)>=(b.u||0) ? a : b;
