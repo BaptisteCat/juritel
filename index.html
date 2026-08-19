@@ -185,6 +185,14 @@ main{max-width:1060px; margin:0 auto; padding:14px 16px}
 .toc a:hover{background:var(--card-2); color:var(--ink)}
 .toc a .cnt{margin-left:auto; font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
 .toc a.here{background:color-mix(in srgb, var(--primary-2) 10%, transparent); color:var(--primary-2)}
+.tochead{
+  font-size:10.5px; font-weight:750; color:var(--ink-3); text-transform:uppercase;
+  letter-spacing:.09em; padding:10px 10px 3px; user-select:none;
+}
+.tochead:first-child{padding-top:4px}
+@media (max-width:800px){
+  .tochead{display:flex; align-items:center; padding:8px 4px; white-space:nowrap; flex-shrink:0}
+}
 @media (max-width:800px){
   .flayout{display:block}
   .toc{position:static; max-height:none; display:flex; overflow-x:auto; gap:4px;
@@ -202,8 +210,13 @@ main{max-width:1060px; margin:0 auto; padding:14px 16px}
 .svcblock>h3{
   display:flex; align-items:center; gap:10px; padding:13px 16px;
   font-size:13.5px; font-weight:750; color:var(--primary); text-transform:uppercase;
-  letter-spacing:.06em; border-bottom:1px solid var(--line-2); background:var(--card-2);
+  letter-spacing:.06em; background:var(--card-2); cursor:pointer; user-select:none;
 }
+.svcblock.open>h3{border-bottom:1px solid var(--line-2)}
+.svcblock>h3 .caret{color:var(--ink-3); font-size:10px; transition:transform .2s}
+.svcblock.open>h3 .caret{transform:rotate(90deg)}
+.svcblock .svcinner{display:none}
+.svcblock.open .svcinner{display:block}
 .svcblock>h3 .cnt{font-size:11.5px; color:var(--ink-3); font-weight:600}
 .svcblock>h3 .sp{flex:1}
 .bureau{padding:4px 0}
@@ -417,6 +430,7 @@ let DATA = null;
 let currentCat = '';
 let shownCards = 60;
 let ficheId = null;          // juridiction affichée en fiche (null = liste)
+const openState = {};        // id -> ouvert/fermé (services, volets)
 const $ = s => document.querySelector(s);
 
 const CATS = {
@@ -640,15 +654,33 @@ function cardJur({j, hits}, tokens){
 }
 
 /* ---------- vue fiche ---------- */
+const DOMAIN_LABEL = {general:'Général', civil:'Civil', penal:'Pénal',
+  famille:'Famille', autres:'Autres'};
+
+function isOpen(id, dflt){ return openState[id]!==undefined ? openState[id] : dflt; }
+
+function svcMatches(j, s, tokens){
+  if(!tokens.length) return false;
+  const rest = tokens.filter(t=>!j._txt.includes(t));
+  if(!rest.length) return false;
+  const rest2 = rest.filter(t=>!s._txt.includes(t));
+  if(!rest2.length) return true;
+  return s.contacts.some(c => rest2.every(t => c._txt.includes(t) ||
+    (c._dig && digits(t).length>=4 && c._dig.includes(digits(t)))));
+}
+
 function renderFiche(j){
-  const {tokens} = (()=>({tokens: norm($('#q').value.trim()).split(/\s+/).filter(Boolean)}))();
+  const tokens = norm($('#q').value.trim()).split(/\s+/).filter(Boolean);
   const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
   $('#stats').textContent = '';
-  let toc = '', blocks = '';
+  let toc = '', blocks = '', lastDom = null;
   for(const s of j.services){
-    const anchor = 'svc-'+s.id;
-    toc += `<a onclick="document.getElementById('${anchor}').scrollIntoView({behavior:'smooth'})">${esc(s.nom)}<span class="cnt">${s.contacts.length}</span></a>`;
-    blocks += renderSvcBlock(j, s, anchor);
+    if(s.domaine && s.domaine!==lastDom){
+      toc += `<div class="tochead">${DOMAIN_LABEL[s.domaine]||s.domaine}</div>`;
+      lastDom = s.domaine;
+    }
+    toc += `<a onclick="gotoSvc('${s.id}')">${esc(s.nom)}<span class="cnt">${s.contacts.length}</span></a>`;
+    blocks += renderSvcBlock(j, s, svcMatches(j, s, tokens));
   }
   $('#view').innerHTML = `
     <div class="fhead">
@@ -670,25 +702,36 @@ function renderFiche(j){
     </div>`;
 }
 
-function renderSvcBlock(j, s, anchor){
-  const bureaux = structureService(s.contacts);
+function renderSvcBlock(j, s, matchOpen){
+  const open = isOpen(s.id, !!matchOpen);
   let inner = '';
-  for(const b of bureaux){
-    let rows = '';
-    for(const e of b.entries.values()) rows += renderEntry(e);
-    if(b.nom){
-      const n = [...b.entries.values()].reduce((m,e)=>m+e.chans.length,0);
-      inner += `<div class="bureau"><h4>${esc(b.nom)} <span class="cnt">${n}</span></h4>${rows}</div>`;
-    } else inner += rows;
+  if(open){
+    const bureaux = structureService(s.contacts);
+    for(const b of bureaux){
+      let rows = '';
+      for(const e of b.entries.values()) rows += renderEntry(e);
+      if(b.nom){
+        const n = [...b.entries.values()].reduce((m,e)=>m+e.chans.length,0);
+        inner += `<div class="bureau"><h4>${esc(b.nom)} <span class="cnt">${n}</span></h4>${rows}</div>`;
+      } else inner += rows;
+    }
+    inner = `<div class="svcinner">${inner}</div>`;
   }
-  return `<section class="svcblock" id="${anchor}">
-    <h3>${esc(s.nom)} <span class="cnt">${s.contacts.length}</span><span class="sp"></span>
-      <button class="mini" onclick="openAdd('${j.id}','${s.id}')">＋</button>
-      <button class="mini" onclick="delService('${j.id}','${s.id}')">🗑</button>
+  return `<section class="svcblock ${open?'open':''}" id="svc-${s.id}">
+    <h3 onclick="tgl('${s.id}', ${open})">
+      <span class="caret">▶</span>
+      ${esc(s.nom)} <span class="cnt">${s.contacts.length}</span><span class="sp"></span>
+      <button class="mini" onclick="event.stopPropagation();openAdd('${j.id}','${s.id}')">＋</button>
+      <button class="mini" onclick="event.stopPropagation();delService('${j.id}','${s.id}')">🗑</button>
     </h3>
     ${inner}
   </section>`;
 }
+window.gotoSvc = sid => {
+  openState[sid] = true;
+  render();
+  document.getElementById('svc-'+sid)?.scrollIntoView({behavior:'smooth', block:'start'});
+};
 
 function renderEntry(e){
   let chans = '';
@@ -731,6 +774,7 @@ function renderChips(){
 
 /* ============================ interactions ============================ */
 window.setCat = c => { currentCat=c; shownCards=60; ficheId=null; renderChips(); render(); };
+window.tgl = (id, cur) => { openState[id] = !cur; render(); };
 window.copyVal = v => { navigator.clipboard?.writeText(v).then(()=>toast('Copié : '+v)); };
 
 function findContact(id){
