@@ -163,6 +163,18 @@ main{max-width:1060px; margin:0 auto; padding:14px 16px}
 }
 .schip:hover{border-color:var(--primary-2); color:var(--primary-2); background:var(--card)}
 .schip .n{color:var(--ink-3); font-weight:600; margin-left:4px; font-size:11px}
+/* résultats concrets affichés directement dans la recherche */
+.isvc{border:1px solid var(--line-2); border-radius:10px; margin-top:10px; overflow:hidden;
+  background:var(--card)}
+.isvchead{
+  display:flex; align-items:center; gap:8px; padding:9px 13px; background:var(--card-2);
+  font-size:12.5px; font-weight:750; color:var(--primary); text-transform:uppercase;
+  letter-spacing:.05em; cursor:pointer;
+}
+.isvchead:hover{background:var(--line-2)}
+.isvchead .cnt{font-size:11px; color:var(--ink-3)}
+.isvchead .goto{margin-left:auto; font-size:11px; color:var(--ink-3); font-weight:550;
+  text-transform:none; letter-spacing:0}
 .more{
   display:block; width:100%; padding:13px; margin:14px 0 24px;
   border:1.5px dashed var(--line); background:none; color:var(--primary-2);
@@ -271,6 +283,10 @@ select.mini{border:1px solid var(--line); background:var(--card); border-radius:
 }
 .chan:hover{background:var(--line-2); border-color:var(--line)}
 .chan.dead{opacity:.45}
+.chan[draggable="true"]{cursor:grab}
+.chan[draggable="true"]:active{cursor:grabbing}
+.dropover{outline:2px dashed var(--primary-2); outline-offset:-2px;
+  background:color-mix(in srgb, var(--primary-2) 8%, transparent) !important}
 .tico{width:24px; height:24px; border-radius:7px; display:grid; place-items:center;
   font-size:11.5px; flex-shrink:0}
 .tico.tel{background:var(--tel-bg); color:var(--tel)}
@@ -668,6 +684,14 @@ function renderList(){
     $('#view').innerHTML = html;
     return;
   } else {
+    // recherche discriminante : afficher directement les contacts trouvés
+    const withHits = results.filter(r=>r.hits);
+    const totalMatched = withHits.reduce((n,r)=>n+r.hits.reduce((m,h)=>m+h.cts.length,0),0);
+    if(withHits.length && results.length<=12 && totalMatched<=80){
+      for(const r of results) html += r.hits ? suggInline(r) : suggJur(r);
+      V.innerHTML = html;
+      return;
+    }
     // les juridictions dont le NOM correspond passent en grandes suggestions
     const nameRes = results.filter(r=>r.nameHit>0);
     const contentRes = results.filter(r=>!r.nameHit);
@@ -700,6 +724,34 @@ function suggJur({j, hits}){
       <span class="ncontacts">${nc}</span>
     </div>
     <div class="schips">${chips}</div>
+  </div>`;
+}
+function suggInline({j, hits}){
+  const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  let inner = '';
+  for(const h of hits.slice(0,5)){
+    const bureaux = structureService(h.cts);
+    let rows = '';
+    for(const b of bureaux){
+      let er = '';
+      for(const e of b.entries.values()) er += renderEntry(j, h.s, e);
+      rows += b.nom ? `<div class="bureau"><h4>${esc(b.nom)}</h4>${er}</div>` : er;
+    }
+    inner += `<div class="isvc">
+      <div class="isvchead" onclick="openFicheSvc('${j.id}','${h.s.id}')">
+        ${esc(h.s.nom)} <span class="cnt">${h.cts.length}</span>
+        <span class="goto">fiche complète →</span>
+      </div>${rows}</div>`;
+  }
+  if(hits.length>5)
+    inner += `<button class="schip" style="margin-top:8px" onclick="openFiche('${j.id}')">+${hits.length-5} autres services…</button>`;
+  return `<div class="sugg" style="cursor:default">
+    <div class="stop" style="cursor:pointer" onclick="openFiche('${j.id}')">
+      <div class="snom">${esc(j.nom)}${j.adresse?`<div class="sadr">📍 ${esc(j.adresse)}</div>`:''}</div>
+      <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+      <span class="ncontacts">${nc}</span>
+    </div>
+    ${inner}
   </div>`;
 }
 window.openFicheSvc = (jid, sid) => {
@@ -809,7 +861,8 @@ function renderSvcBlock(j, s, matchOpen){
           <button class="mini" title="Renommer le bureau" onclick="renameBureau('${j.id}','${s.id}',${bIdx})">✏️</button>
           <button class="mini" title="Déplacer le bureau vers un autre service" onclick="moveBureau('${j.id}','${s.id}',${bIdx})">➜</button>
           <button class="mini" title="Dissoudre (les contacts restent, sans bureau)" onclick="dissolveBureau('${j.id}','${s.id}',${bIdx})">⌫</button>` : '';
-        inner += `<div class="bureau"><h4>${esc(b.nom)} <span class="cnt">${n}</span>${bctl}</h4>${rows}</div>`;
+        const bdrop = editMode ? ` ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropTo(event,'${j.id}','${s.id}',${bIdx})"` : '';
+        inner += `<div class="bureau"${bdrop}><h4>${esc(b.nom)} <span class="cnt">${n}</span>${bctl}</h4>${rows}</div>`;
       } else inner += rows;
     });
     inner = `<div class="svcinner">${inner}</div>`;
@@ -823,7 +876,8 @@ function renderSvcBlock(j, s, matchOpen){
     <button class="mini" title="Renommer le service" onclick="event.stopPropagation();renameSvc('${j.id}','${s.id}')">✏️</button>
     <button class="mini" title="Monter" onclick="event.stopPropagation();svcShift('${j.id}','${s.id}',-1)">↑</button>
     <button class="mini" title="Descendre" onclick="event.stopPropagation();svcShift('${j.id}','${s.id}',1)">↓</button>` : '';
-  return `<section class="svcblock ${open?'open':''}" id="svc-${s.id}">
+  const sdrop = editMode ? ` ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropTo(event,'${j.id}','${s.id}',-1)"` : '';
+  return `<section class="svcblock ${open?'open':''}" id="svc-${s.id}"${sdrop}>
     <h3 onclick="${editMode?'':`tgl('${s.id}', ${open})`}">
       <span class="caret">▶</span>
       ${esc(s.nom)} <span class="cnt">${s.contacts.length}</span><span class="sp"></span>
@@ -859,7 +913,8 @@ function renderChan(c){
   let badge = '';
   if(c.ok>0) badge = `<span class="score good" title="${c.ok} appel(s) réussi(s)">✓ ${c.ok}${c.lastOk?' · '+fmtDate(c.lastOk):''}</span>`;
   else if(c.ko>0) badge = `<span class="score bad" title="${c.ko} échec(s)">✗ ${c.ko}</span>`;
-  return `<div class="chan ${isDead(c)?'dead':''}" id="ct-${c.id}">
+  const drag = editMode ? ` draggable="true" ondragstart="dragC(event,'${c.id}')" title="Glissez vers un autre bureau ou service"` : '';
+  return `<div class="chan ${isDead(c)?'dead':''}" id="ct-${c.id}"${drag}>
     <span class="tico ${c.type}">${ic}</span>
     <a class="v" href="${href}" ${c.type==='fax'?'onclick="return false"':''}>${esc(c.valeur)}</a>
     ${badge}
@@ -980,6 +1035,41 @@ window.dissolveBureau = (jid, sid, bIdx) => {
   for(const c of f.s.contacts)
     if(norm(c.groupe||'')===key){ c.groupe = ''; c.u = NOW(); }
   buildIndex(); save(); render();
+};
+
+/* glisser-déposer d'un contact (mode réorganisation) */
+window.dragC = (ev, id) => {
+  ev.dataTransfer.setData('text/plain', id);
+  ev.dataTransfer.effectAllowed = 'move';
+};
+window.dragOver = ev => {
+  ev.preventDefault(); ev.stopPropagation();
+  ev.dataTransfer.dropEffect = 'move';
+  ev.currentTarget.classList.add('dropover');
+};
+window.dragLeave = ev => ev.currentTarget.classList.remove('dropover');
+window.dropTo = (ev, jid, sid, bIdx) => {
+  ev.preventDefault(); ev.stopPropagation();
+  ev.currentTarget.classList.remove('dropover');
+  const id = ev.dataTransfer.getData('text/plain'); if(!id) return;
+  const j = DATA.juridictions.find(x=>x.id===jid); if(!j) return;
+  const tgt = j.services.find(x=>x.id===sid); if(!tgt) return;
+  let grp = '';
+  if(bIdx>=0){ const b = structureService(tgt.contacts)[bIdx]; grp = (b && b.nom)||''; }
+  let src=null, c=null;
+  for(const s of j.services){
+    const i = s.contacts.findIndex(x=>x.id===id);
+    if(i>=0){ src=s; c=s.contacts.splice(i,1)[0]; break; }
+  }
+  if(!c) return;
+  c.groupe = grp; c.u = NOW();
+  tgt.contacts.push(c);
+  if(src!==tgt && !src.contacts.length){
+    DATA.tombstones[src.id]=NOW();
+    j.services = j.services.filter(x=>x.id!==src.id);
+  }
+  buildIndex(); save(); render();
+  toast('Déplacé vers '+tgt.nom+(grp?' › '+grp:''));
 };
 
 /* déplacement d'une entrée ou d'un bureau entier */
