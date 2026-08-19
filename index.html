@@ -71,6 +71,7 @@ header{
 #syncstate .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
 #syncstate.on .dot{background:var(--ok)}
 #syncstate.err .dot{background:var(--ko)}
+#syncstate.err{cursor:pointer}
 #syncstate.work .dot{background:var(--accent); animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.25}}
 .iconbtn{
@@ -972,7 +973,10 @@ document.addEventListener('keydown', e=>{
    SYNCHRONISATION GOOGLE DRIVE (scope drive.file)
    ============================================================ */
 const Drive = (() => {
+  const LS_TOKEN = 'annuaireJustice.tok';
+  const LS_HINT = 'annuaireJustice.hint';
   let token=null, tokenClient=null, fileId=localStorage.getItem(LS_FILEID)||null;
+  try{ token = JSON.parse(localStorage.getItem(LS_TOKEN)||'null'); }catch(e){}
   let pushTimer=null, busy=false, lastRemoteRev=null;
   const enabled = () => !!CLIENT_ID;
   const on = () => enabled() && localStorage.getItem(LS_DRIVE)==='1';
@@ -992,23 +996,42 @@ const Drive = (() => {
       'Connecté : le fichier « '+DRIVE_FILENAME+' » de votre Drive est synchronisé automatiquement entre vos appareils.' :
       'Vos données seront stockées dans un fichier de votre Google Drive et synchronisées entre tous vos appareils.';
   }
+  async function saveHint(t){
+    // mémorise l'adresse du compte pour les reconnexions silencieuses
+    if(localStorage.getItem(LS_HINT)) return;
+    try{
+      const r = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)',{headers:H(t)});
+      if(r.ok){
+        const d = await r.json();
+        if(d.user?.emailAddress) localStorage.setItem(LS_HINT, d.user.emailAddress);
+      }
+    }catch(e){}
+  }
   async function ensureToken(interactive){
     if(!enabled()) return null;
+    // jeton persistant : un rafraîchissement de page ne redemande rien
     if(token && token.exp > Date.now()+60000) return token.v;
     if(!window.google?.accounts?.oauth2){ setState('err','lib Google absente'); return null; }
     if(!tokenClient){
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id:CLIENT_ID, scope:'https://www.googleapis.com/auth/drive.file',
-        callback:()=>{}});
+        callback:()=>{}, error_callback:()=>{}});
     }
     return new Promise(resolve=>{
       tokenClient.callback = resp=>{
         if(resp.access_token){
-          token = {v:resp.access_token, exp:Date.now()+(resp.expires_in-30)*1000};
+          token = {v:resp.access_token, exp:Date.now()+(resp.expires_in-60)*1000};
+          try{ localStorage.setItem(LS_TOKEN, JSON.stringify(token)); }catch(e){}
+          saveHint(token.v);
           resolve(token.v);
         } else resolve(null);
       };
-      try{ tokenClient.requestAccessToken({prompt: interactive?'consent':''}); }
+      tokenClient.error_callback = ()=>resolve(null);
+      // prompt:'' = interaction minimale : le consentement ne réapparaît que
+      // si Google l'exige ; avec le compte mémorisé en indice, la reprise de
+      // session est silencieuse
+      const hint = localStorage.getItem(LS_HINT)||undefined;
+      try{ tokenClient.requestAccessToken({prompt:'', hint}); }
       catch(e){ resolve(null); }
     });
   }
@@ -1135,6 +1158,7 @@ const Drive = (() => {
   }
   function disconnect(){
     localStorage.removeItem(LS_DRIVE); localStorage.removeItem(LS_FILEID);
+    localStorage.removeItem(LS_TOKEN); localStorage.removeItem(LS_HINT);
     fileId=null; token=null;
     setState('','local'); refreshSettingsUI();
   }
@@ -1154,6 +1178,10 @@ const Drive = (() => {
 })();
 $('#btnDrive').addEventListener('click', ()=>Drive.connect());
 $('#btnDriveOff').addEventListener('click', ()=>{ Drive.disconnect(); toast('Drive déconnecté'); });
+// l'indicateur de synchronisation sert de bouton de reconnexion en cas d'erreur
+$('#syncstate').addEventListener('click', ()=>{
+  if($('#syncstate').classList.contains('err')) Drive.connect();
+});
 
 /* ============================ démarrage ============================ */
 (async function(){
