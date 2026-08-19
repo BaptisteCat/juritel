@@ -701,7 +701,7 @@ const CAT_LABEL = {
 };
 
 /* ============================ utilitaires ============================ */
-const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’‘´`]/g, "'");
 const digits = s => (s||'').replace(/\D/g,'');
 const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const esc = s => (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
