@@ -449,6 +449,21 @@ select.mini{
   box-shadow:0 12px 34px var(--glow), var(--shadow-l)}
 @media (max-width:560px){ #fab{padding:0; width:52px; justify-content:center} #fab b{display:none} }
 
+
+#fabmod{
+  position:fixed; right:22px; bottom:86px; z-index:30; width:52px; height:44px;
+  border-radius:22px; border:1px solid var(--line); background:var(--card);
+  color:var(--ink-2); cursor:pointer; display:grid; place-items:center;
+  box-shadow:var(--shadow-m); transition:all .22s cubic-bezier(.2,.6,.3,1);
+}
+#fabmod:hover{transform:translateY(-2px); color:var(--ink)}
+#fabmod.on{
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
+  color:var(--cta-ink); border-color:transparent;
+  box-shadow:0 8px 26px var(--glow);
+}
+@media (max-width:560px){ #fabmod{right:22px} }
+
 /* ==================== dialogues ==================== */
 dialog{
   border:none; border-radius:22px; padding:0; max-width:500px; width:calc(100vw - 32px);
@@ -528,6 +543,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   <div id="view"></div>
 </main>
 
+<button id="fabmod" title="Mode modification"></button>
 <button id="fab" title="Ajouter un contact"><span data-ic="plus" data-s="17"></span><b>Ajouter</b></button>
 <div id="toast"></div>
 
@@ -665,6 +681,7 @@ let shownCards = 60;
 let ficheId = null;          // juridiction affichée en fiche (null = liste)
 let ficheDom = '';           // filtre de domaine dans la fiche ('' = tout)
 let editMode = false;        // mode réorganisation de la fiche
+let modifMode = false;       // false = lecture seule (défaut)
 const openState = {};        // id -> ouvert/fermé (services, volets)
 const $ = s => document.querySelector(s);
 
@@ -1012,9 +1029,9 @@ function renderFiche(j){
       </div>
       ${j.adresse?`<div class="adr">${icn('pin',11)} ${esc(j.adresse)} <button class="mini" onclick="copyVal('${esc(j.adresse)}')">${icn('copy',11)} copier</button></div>`:''}
       <div class="facts">
-        <button class="mini" onclick="openAdd('${j.id}')">${icn('plus',13)} Ajouter un contact</button>
+        ${modifMode ? `<button class="mini" onclick="openAdd('${j.id}')">${icn('plus',13)} Ajouter un contact</button>
         <button class="mini ${editMode?'editon':''}" onclick="toggleEdit()">${editMode?icn('check',13)+' Terminer la réorganisation':icn('pen',13)+' Réorganiser'}</button>
-        <button class="mini" onclick="delJur('${j.id}')">${icn('trash',13)} Supprimer la juridiction</button>
+        <button class="mini" onclick="delJur('${j.id}')">${icn('trash',13)} Supprimer la juridiction</button>` : ''}
         <span class="mini" style="cursor:default">${j.services.length} services · ${nc} contacts</span>
       </div>
     </div>
@@ -1060,8 +1077,8 @@ function renderSvcBlock(j, s, matchOpen){
       <span class="caret">${icn('chev',12)}</span>
       ${esc(s.nom)} <span class="cnt">${s.contacts.length}</span><span class="sp"></span>
       ${ectl}
-      <button class="mini" onclick="event.stopPropagation();openAdd('${j.id}','${s.id}')">${icn('plus',13)}</button>
-      <button class="mini" onclick="event.stopPropagation();delService('${j.id}','${s.id}')">${icn('trash',13)}</button>
+      ${modifMode ? `<button class="mini" onclick="event.stopPropagation();openAdd('${j.id}','${s.id}')">${icn('plus',13)}</button>
+      <button class="mini" onclick="event.stopPropagation();delService('${j.id}','${s.id}')">${icn('trash',13)}</button>` : ''}
     </h3>
     ${inner}
   </section>`;
@@ -1097,11 +1114,11 @@ function renderChan(c){
     <a class="v" href="${href}" ${c.type==='fax'?'onclick="return false"':''}>${esc(c.valeur)}</a>
     ${badge}
     <div class="acts">
-      <button class="abtn ghost" title="Copier" onclick="copyVal('${esc(c.valeur)}')">${icn('copy',13)}</button>
-      <button class="abtn ghost" title="Modifier" onclick="openEdit('${c.id}')">${icn('pen',13)}</button>
-      <button class="abtn ghost" title="Supprimer" onclick="delContact('${c.id}')">${icn('trash',13)}</button>
-      <button class="abtn rok" title="Ça a répondu" onclick="rate('${c.id}',1)">${icn('check',13)}</button>
-      <button class="abtn rko" title="Ne répond pas" onclick="rate('${c.id}',0)">${icn('x',13)}</button>
+      ${c.type!=='tel' ? `<button class="abtn ghost" title="Copier" onclick="copyVal('${esc(c.valeur)}')">${icn('copy',13)}</button>` : ''}
+      ${modifMode ? `<button class="abtn ghost" title="Modifier" onclick="openEdit('${c.id}')">${icn('pen',13)}</button>
+      <button class="abtn ghost" title="Supprimer" onclick="delContact('${c.id}')">${icn('trash',13)}</button>` : ''}
+      ${c.type==='tel' ? `<button class="abtn rok" title="Ça a répondu" onclick="rate('${c.id}',1)">${icn('check',13)}</button>
+      <button class="abtn rko" title="Ne répond pas" onclick="rate('${c.id}',0)">${icn('x',13)}</button>` : ''}
     </div>
   </div>`;
 }
@@ -1159,6 +1176,16 @@ window.delJur = id => {
   DATA.juridictions = DATA.juridictions.filter(x=>x.id!==id);
   if(ficheId===id) ficheId=null;
   save(); renderChips(); render(); toast('Juridiction supprimée');
+};
+
+
+/* ============================ mode lecture seule / modification ============================ */
+window.toggleModif = () => {
+  modifMode = !modifMode;
+  if(!modifMode) editMode = false;
+  document.getElementById('fabmod').classList.toggle('on', modifMode);
+  toast(modifMode ? 'Mode modification activé' : 'Mode lecture seule');
+  render();
 };
 
 /* ============================ mode réorganisation ============================ */
@@ -1766,6 +1793,9 @@ document.getElementById('btntheme').addEventListener('click', ()=>{
 /* ============================ démarrage ============================ */
 (async function(){
   document.querySelectorAll('[data-ic]').forEach(el=>{el.innerHTML = icn(el.dataset.ic, +(el.dataset.s||16));});
+  const fm = document.getElementById('fabmod');
+  fm.innerHTML = icn('pen',16);
+  fm.addEventListener('click', toggleModif);
   applyTheme();
   await load();
   const m = location.hash.match(/^#f\/(.+)$/);
