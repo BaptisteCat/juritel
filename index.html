@@ -645,6 +645,34 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 }
 #tools.docked .thead .iconbtn{display:none}
 
+
+/* porte d'entrée (authentification) */
+#gate{
+  position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
+  background-color:var(--bg); background-image:var(--bg-image); padding:20px;
+}
+#gate.off{display:none}
+.gcard{
+  width:min(400px, 94vw); background:var(--card); border:1px solid var(--line);
+  border-radius:22px; box-shadow:var(--shadow-l); padding:30px 28px; text-align:center;
+}
+.glogo{
+  width:52px; height:52px; border-radius:15px; margin:0 auto 12px;
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b)); color:var(--cta-ink);
+  display:grid; place-items:center; box-shadow:0 6px 20px var(--glow);
+}
+.gcard h2{font-size:21px; font-weight:750; letter-spacing:-.02em; margin-bottom:4px;
+  background:var(--title-grad); -webkit-background-clip:text; background-clip:text; color:var(--title-color)}
+.gcard input{
+  width:100%; padding:11px 13px; font-size:14.5px; color:var(--ink); margin-bottom:8px;
+  border:1.5px solid var(--line); border-radius:11px; background:var(--card-2);
+  outline:none; font-family:inherit;
+}
+.gcard input:focus{border-color:var(--accent)}
+.gcard .btn{width:100%; margin-bottom:8px}
+.gsep{display:flex; align-items:center; gap:10px; color:var(--ink-3); font-size:12px; margin:6px 0 12px}
+.gsep::before,.gsep::after{content:''; flex:1; border-top:1px solid var(--line)}
+
 /* ==================== bouton flottant ==================== */
 #fab{
   position:fixed; right:22px; bottom:22px; z-index:30;
@@ -730,6 +758,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 }
 #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <header><div class="hwrap">
@@ -757,6 +786,29 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <div id="toolsdock"></div>
   </div>
 </main>
+
+<div id="gate">
+  <div class="gcard">
+    <div class="glogo" data-ic="scale" data-s="26"></div>
+    <h2>Juritel</h2>
+    <p class="hint" style="margin-bottom:14px">Annuaire des juridictions — accès réservé.</p>
+    <div id="gforms">
+      <input id="gmail" type="email" placeholder="adresse@exemple.fr" autocomplete="username">
+      <input id="gpass" type="password" placeholder="mot de passe" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')sbLogin()">
+      <button class="btn primary" onclick="sbLogin()">Se connecter</button>
+      <button class="btn" onclick="sbSignup()">Créer un compte</button>
+      <div class="gsep"><span>ou</span></div>
+      <button class="btn" onclick="sbGoogle()">Continuer avec Google</button>
+      <p class="hint" id="gmsg" style="margin-top:10px"></p>
+    </div>
+    <div id="gdenied" style="display:none">
+      <p style="margin:10px 0">Le compte <b id="gwho"></b> n'est pas autorisé.<br>
+      <span class="hint">Demandez l'accès au propriétaire de l'annuaire, puis reconnectez-vous.</span></p>
+      <button class="btn" onclick="sbLogout()">Changer de compte</button>
+    </div>
+  </div>
+</div>
 
 <div id="toolsback" onclick="closeTools()"></div>
 <aside id="tools">
@@ -849,7 +901,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   <div class="setrow"><button class="btn" id="btnImport"><span data-ic="up2" data-s="15"></span> Importer un fichier JSON</button>
     <input type="file" id="fileImport" accept=".json" hidden></div>
   <hr>
-  <div id="driveBox">
+  <div id="driveBox" style="display:none">
     <div class="setrow"><button class="btn primary" id="btnDrive"><span data-ic="cloud" data-s="15"></span> Connecter Google Drive</button></div>
     <div class="setrow" style="display:none" id="rowDriveOff"><button class="btn" id="btnDriveOff">Déconnecter Google Drive</button></div>
     <p class="hint" id="driveHint"></p>
@@ -864,6 +916,21 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     </div>
     <div class="setrow"><button class="btn" id="btnJoin"><span data-ic="up2" data-s="15"></span> Rejoindre une base partagée…</button></div>
     <p class="hint" id="joinHint"></p>
+  </div>
+  <hr>
+  <div id="accBox">
+    <p class="hint" id="accInfo"></p>
+    <div class="setrow"><button class="btn" id="btnLogoutS">Se déconnecter</button></div>
+    <div id="wlBox" style="display:none">
+      <label style="display:block; font-size:11px; font-weight:650; margin:12px 0 5px; color:var(--ink-2); text-transform:uppercase; letter-spacing:.06em">Liste blanche — qui peut accéder à l'annuaire</label>
+      <div id="wlList"></div>
+      <div class="setrow">
+        <input id="wlMail" placeholder="adresse@exemple.fr" autocomplete="off"
+          style="flex:1; padding:10px 12px; font-size:14px; border:1.5px solid var(--line); border-radius:10px; background:var(--card-2); color:var(--ink); outline:none; font-family:inherit">
+        <button class="btn" id="btnWlAdd" style="flex:0 0 auto">Autoriser</button>
+      </div>
+      <p class="hint">La personne se connecte sur la même adresse web (Google ou e-mail/mot de passe) et accède à tout l'annuaire. Retirez-la pour couper l'accès.</p>
+    </div>
   </div>
   <hr>
   <p class="hint" id="metaInfo"></p>
@@ -931,6 +998,8 @@ const icn = (n, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fi
 const CLIENT_ID = '1002386733501-oeq2g899a2dlgcttg0qem8a7ugvsh847.apps.googleusercontent.com';
 const DRIVE_FILENAME = 'juritel-data.json';
 const PICKER_API_KEY = 'AIzaSyD2vs6f-XvU6yvxi84Us2nvD-IhbfoVywg';   // clé API Google (console) pour « Rejoindre une base partagée »
+const SUPA_URL = 'https://qkjpzwfucnjawhbfkydh.supabase.co';
+const SUPA_KEY = 'sb_publishable_olObFO7aa5oGUgxilfdStA_iC1F67rz';
 const LS_KEY = 'juritel.data';
 const LS_DRIVE = 'juritel.driveOn';
 const LS_FILEID = 'juritel.driveFileId';
@@ -991,7 +1060,7 @@ function save(){
   DATA.updatedAt = Date.now();
   try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }
   catch(e){ toast('Stockage local plein : '+e.message); }
-  Drive.schedulePush();
+  sbSchedulePush();
 }
 async function load(){
   const raw = localStorage.getItem(LS_KEY);
@@ -2526,7 +2595,7 @@ $('#btnsettings').addEventListener('click', ()=>{
   const nc = DATA.juridictions.reduce((n,j)=>n+j.services.reduce((m,s)=>m+s.contacts.length,0),0);
   $('#metaInfo').textContent = `${DATA.juridictions.length} juridictions, ${nc.toLocaleString('fr-FR')} contacts. `+
     `Dernière modification : ${new Date(DATA.updatedAt).toLocaleString('fr-FR')}.`;
-  Drive.refreshSettingsUI();
+  sbAccountUI();
   $('#dlgSettings').showModal();
 });
 $('#btnCloseSettings').addEventListener('click', ()=>$('#dlgSettings').close());
@@ -2759,6 +2828,7 @@ const Drive = (() => {
     DATA.tombstones = tomb;
     return true;
   }
+  window.mergeRemote = mergeData;
   async function pull(interactive){
     if(!on()) return;
     const t = await ensureToken(interactive); if(!t){ setState('err','hors ligne'); return; }
@@ -2930,6 +3000,154 @@ window.driveJoin = async () => {
   picker.setVisible(true);
 };
 
+
+/* ============================ compte, liste blanche et synchronisation (Supabase) ============================ */
+let sb = null, sbUser = null, sbAdmis = false, sbTimer = null, sbBusy = false, sbTs = null;
+const sbClean = () => JSON.parse(JSON.stringify(DATA, (k,v)=>k.startsWith('_')?undefined:v));
+function sbState(cls, txt){ const el=$('#syncstate'); el.className=cls; $('#synctxt').textContent=txt; }
+
+async function sbGateUpdate(){
+  const gate = document.getElementById('gate');
+  if(!sbUser){
+    sbAdmis = false;
+    gate.classList.remove('off');
+    document.getElementById('gforms').style.display = '';
+    document.getElementById('gdenied').style.display = 'none';
+    sbState('', 'hors connexion');
+    return;
+  }
+  let admis = false;
+  try{
+    const {data, error} = await sb.rpc('est_admis');
+    admis = !error && data === true;
+  }catch(e){}
+  sbAdmis = admis;
+  if(!admis){
+    gate.classList.remove('off');
+    document.getElementById('gforms').style.display = 'none';
+    document.getElementById('gdenied').style.display = '';
+    document.getElementById('gwho').textContent = sbUser.email||'';
+    sbState('err', 'non autorisé');
+    return;
+  }
+  gate.classList.add('off');
+  sbPull();
+}
+
+window.sbLogin = async () => {
+  const email = document.getElementById('gmail').value.trim();
+  const password = document.getElementById('gpass').value;
+  if(!email || !password){ document.getElementById('gmsg').textContent = 'Renseignez e-mail et mot de passe.'; return; }
+  document.getElementById('gmsg').textContent = 'Connexion…';
+  const {error} = await sb.auth.signInWithPassword({email, password});
+  document.getElementById('gmsg').textContent = error ? 'Échec : '+error.message : '';
+};
+window.sbSignup = async () => {
+  const email = document.getElementById('gmail').value.trim();
+  const password = document.getElementById('gpass').value;
+  if(!email || !password){ document.getElementById('gmsg').textContent = 'Renseignez e-mail et mot de passe (6 caractères min.).'; return; }
+  const {data, error} = await sb.auth.signUp({email, password});
+  document.getElementById('gmsg').textContent = error ? 'Échec : '+error.message
+    : (data.session ? '' : 'Compte créé — vérifiez votre boîte mail pour confirmer, puis connectez-vous.');
+};
+window.sbGoogle = async () => {
+  const {error} = await sb.auth.signInWithOAuth({provider:'google',
+    options:{redirectTo: location.origin + location.pathname}});
+  if(error) document.getElementById('gmsg').textContent =
+    'Connexion Google non disponible ('+error.message+') — utilisez e-mail/mot de passe.';
+};
+window.sbLogout = async () => { await sb.auth.signOut(); location.reload(); };
+
+async function sbPull(){
+  if(!sbAdmis || sbBusy) return;
+  sbBusy = true; sbState('work','sync…');
+  try{
+    const {data, error} = await sb.from('base').select('data,updated_at').eq('id',1).maybeSingle();
+    if(error){ sbState('err','erreur lecture'); return; }
+    if(data && data.data && (data.data.juridictions||[]).length){
+      mergeRemote(data.data);
+      buildIndex();
+      try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }catch(e){}
+      renderChips(); render();
+    }
+    sbTs = data ? data.updated_at : null;
+    // première synchro du propriétaire : la base locale pleine remplit le serveur
+    if(DATA.juridictions.length && (!data || !(data.data && (data.data.juridictions||[]).length)))
+      await sbPush(true);
+    sbState('on','synchronisé');
+  } finally { sbBusy = false; }
+}
+async function sbPush(skipCheck){
+  if(!sbAdmis) return;
+  if(!skipCheck && sbTs){
+    const {data} = await sb.from('base').select('updated_at').eq('id',1).maybeSingle();
+    if(data && data.updated_at !== sbTs){ await sbPull(); }
+  }
+  sbState('work','envoi…');
+  const now = new Date().toISOString();
+  const {data, error} = await sb.from('base')
+    .upsert({id:1, data: sbClean(), updated_at: now})
+    .select('updated_at').single();
+  if(error){ sbState('err','erreur envoi'); return; }
+  sbTs = data ? data.updated_at : now;
+  sbState('on','synchronisé');
+}
+window.sbSchedulePush = () => {
+  if(!sbAdmis) return;
+  clearTimeout(sbTimer);
+  sbTimer = setTimeout(()=>{ if(!sbBusy) sbPush(false); }, 2500);
+};
+
+async function sbAccountUI(){
+  const info = document.getElementById('accInfo');
+  if(!sbUser){ info.textContent = 'Non connecté.'; return; }
+  info.textContent = 'Connecté : ' + (sbUser.email||'');
+  // propriétaire ? (seul lui peut lire la liste blanche)
+  const wl = document.getElementById('wlBox');
+  const {data, error} = await sb.from('acces').select('email,role').order('email');
+  if(error || !data){ wl.style.display = 'none'; return; }
+  wl.style.display = 'block';
+  document.getElementById('wlList').innerHTML = data.map(r=>
+    `<div class="setrow" style="margin:4px 0">
+      <span style="flex:1; font-size:13.5px">${esc(r.email)} ${r.role==='owner'?'<span class="hint">(propriétaire)</span>':''}</span>
+      ${r.role==='owner'?'':`<button class="mini" onclick="sbWlDel('${esc(r.email)}')">${icn('trash',12)} retirer</button>`}
+    </div>`).join('');
+}
+window.sbWlAdd = async () => {
+  const mail = (document.getElementById('wlMail').value||'').trim().toLowerCase();
+  if(!mail.includes('@')){ toast('Adresse invalide'); return; }
+  const {error} = await sb.from('acces').insert({email: mail});
+  if(error){ toast('Échec : '+error.message); return; }
+  document.getElementById('wlMail').value = '';
+  toast(mail+' autorisé');
+  sbAccountUI();
+};
+window.sbWlDel = async mail => {
+  if(!confirm('Retirer l\'accès de '+mail+' ?')) return;
+  const {error} = await sb.from('acces').delete().eq('email', mail);
+  if(error){ toast('Échec : '+error.message); return; }
+  toast('Accès retiré');
+  sbAccountUI();
+};
+
+async function sbInit(){
+  if(!window.supabase){ sbState('err','lib manquante'); return; }
+  sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+  sb.auth.onAuthStateChange((_e, session)=>{
+    const u = session ? session.user : null;
+    if((u&&u.id) !== (sbUser&&sbUser.id)){ sbUser = u; sbGateUpdate(); }
+  });
+  const {data:{session}} = await sb.auth.getSession();
+  sbUser = session ? session.user : null;
+  await sbGateUpdate();
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden && sbAdmis && !sbBusy) sbPull();
+  });
+  setInterval(()=>{ if(sbAdmis && !sbBusy && !document.hidden) sbPull(); }, 5*60*1000);
+}
+document.getElementById('btnLogoutS').addEventListener('click', ()=>sbLogout());
+document.getElementById('btnWlAdd').addEventListener('click', ()=>sbWlAdd());
+
 /* ============================ démarrage ============================ */
 (async function(){
   document.querySelectorAll('[data-ic]').forEach(el=>{el.innerHTML = icn(el.dataset.ic, +(el.dataset.s||16));});
@@ -2945,7 +3163,7 @@ window.driveJoin = async () => {
   if(!ficheId && sp){ spState = {type:sp[1], nom:decodeURIComponent(sp[2]), loading:true}; spResolve(); }
   if(location.hash==='#carte') mapState = {level:'fr'};
   renderChips(); render();
-  Drive.init();
+  sbInit();
   setTimeout(loadOfficiel, 2000);   // préchargement du dataset officiel
 })();
 </script>
