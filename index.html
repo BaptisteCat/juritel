@@ -1519,7 +1519,13 @@ window.carteGo = (level, code) => {
   mapState = level==='fr' ? {level:'fr'} : {level, code};
   render();
 };
-const caColor = i => i<0 ? 'var(--ink-3)' : `hsl(${(i*137.508)%360} 62% 55%)`;
+const typeColor = t => t==='ca' ? 'var(--mail)' : t==='tprx' ? 'var(--ok)' : 'var(--accent)';
+function mapTypesFor(level){
+  if(!currentCat) return level==='dep' ? ['tj','ca','tprx'] : ['tj','ca'];
+  if(currentCat==='tj') return level==='dep' ? ['tj','tprx'] : ['tj'];
+  if(currentCat==='ca') return ['ca'];
+  return [];   // catégorie non cartographiée
+}
 const jurShort = n => n.replace(/^Tribunal judiciaire de /,'TJ ')
   .replace(/^Tribunal de proximité (de |d')/,'Prox. ')
   .replace(/^Cour d'Appel (de |d')/,'CA ');
@@ -1558,7 +1564,8 @@ function renderCarte(){
     const dd = MAPD.d.filter(d=>d.r===st.code);
     feats = dd.map(d=>({p:d.p, lbl:d.c, tip:d.n, cls:'mdep', click:`carteDep('${d.c}')`}));
     const dset = new Set(dd.map(d=>d.c));
-    dots = MAPD.j.map((j,i)=>({j,i})).filter(x=>dset.has(x.j.d) && x.j.t!=='tprx');
+    const tset = new Set(mapTypesFor('reg'));
+    dots = MAPD.j.map((j,i)=>({j,i})).filter(x=>dset.has(x.j.d) && tset.has(x.j.t));
   } else {
     const dep = MAPD.d.find(d=>d.c===st.code);
     const reg = MAPD.r.find(r=>r.c===dep.r);
@@ -1567,10 +1574,11 @@ function renderCarte(){
       `<span class="mcrumb" onclick="carteGo('reg','${reg.c}')">${esc(reg.n)}</span><span>›</span>`+
       `<span class="mcrumb on">${esc(dep.n)}</span>`;
     feats = [{p:dep.p, lbl:'', tip:dep.n, cls:'mdep nohover', click:''}];
-    dots = MAPD.j.map((j,i)=>({j,i})).filter(x=>x.j.d===st.code);
+    const tsetd = new Set(mapTypesFor('dep'));
+    dots = MAPD.j.map((j,i)=>({j,i})).filter(x=>x.j.d===st.code && tsetd.has(x.j.t));
     showDotLbl = true;
     sousListe = '<div class="mjlist">'+dots.map(x=>
-      `<button class="schip" onclick="carteJur(${x.i})"><span class="sw" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${caColor(x.j.c)};margin-right:2px"></span>${esc(jurShort(x.j.n))}</button>`).join('')+'</div>';
+      `<button class="schip" onclick="carteJur(${x.i})"><span class="sw" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${typeColor(x.j.t)};margin-right:2px"></span>${esc(jurShort(x.j.n))}</button>`).join('')+'</div>';
   }
   // projection (équirectangulaire corrigée en longitude, figurative)
   const pts = feats.flatMap(f=>f.p);
@@ -1595,7 +1603,7 @@ function renderCarte(){
     svg += `<text class="mlbl" x="${(cx/f.p.length).toFixed(0)}" y="${(cy/f.p.length).toFixed(0)}" font-size="11">${esc(f.lbl)}</text>`;
   }
   for(const {j,i} of dots){
-    const x = fx(j.x).toFixed(1), y = fy(j.y).toFixed(1), col = caColor(j.c);
+    const x = fx(j.x).toFixed(1), y = fy(j.y).toFixed(1), col = typeColor(j.t);
     const tip = `<title>${esc(j.n)}</title>`;
     if(j.t==='ca')
       svg += `<circle class="mdot" cx="${x}" cy="${y}" r="${showDotLbl?10:8}" fill="none" stroke="${col}" stroke-width="3.2" onclick="carteJur(${i})">${tip}</circle>`;
@@ -1606,13 +1614,17 @@ function renderCarte(){
     if(showDotLbl)
       svg += `<text class="mdotlbl" x="${x}" y="${(+y)-12}" font-size="11">${esc(jurShort(j.n))}</text>`;
   }
-  // légende : cours d'appel présentes + formes
-  const caSet = [...new Set(dots.map(x=>x.j.c).filter(c=>c>=0))];
+  // légende par type de juridiction
   let legend = '';
   if(st.level!=='fr'){
-    legend = '<div class="mlegend">'+
-      caSet.map(c=>`<span class="it" onclick="carteCa(${c})"><span class="sw" style="background:${caColor(c)}"></span>${esc(MAPD.cas[c].replace(/^Cour d'Appel (de |d')/,''))}</span>`).join('')+
-      `<span class="shape">● TJ&nbsp;&nbsp;◯ Cour d'appel${st.level==='dep'?'&nbsp;&nbsp;▪ proximité':''}</span></div>`;
+    const ts = new Set(dots.map(x=>x.j.t));
+    const items = [];
+    if(ts.has('tj')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:var(--accent)"></span>● Tribunal judiciaire</span>`);
+    if(ts.has('ca')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:var(--mail)"></span>◯ Cour d'appel</span>`);
+    if(ts.has('tprx')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:var(--ok)"></span>▪ Tribunal de proximité</span>`);
+    if(currentCat && !mapTypesFor(st.level==='dep'?'dep':'reg').length)
+      items.push(`<span class="shape">Le filtre « ${esc((CATS[currentCat]||currentCat))} » n'est pas cartographié — choisissez Tout, Tribunaux judiciaires ou Cours d'appel.</span>`);
+    legend = '<div class="mlegend">'+items.join('')+'</div>';
   }
   $('#view').innerHTML = `<div class="mapcard">
     <div class="maphead">
@@ -1623,7 +1635,7 @@ function renderCarte(){
     <div class="mcrumbs">${crumbs}</div>
     <div class="mapwrap"><svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${svg}</svg></div>
     ${legend}${sousListe}
-    <p class="hint" style="margin-top:10px">${st.level==='fr'?'Cliquez sur une région.':st.level==='reg'?'Cliquez sur un département ou directement sur une juridiction. Couleurs = ressorts de cour d\'appel.':'Cliquez sur une juridiction pour ouvrir sa fiche.'}</p>
+    <p class="hint" style="margin-top:10px">${st.level==='fr'?'Cliquez sur une région.':st.level==='reg'?'Cliquez sur un département ou directement sur une juridiction. Les filtres en haut de page s\'appliquent à la carte.':'Cliquez sur une juridiction pour ouvrir sa fiche.'}</p>
   </div>`;
 }
 window.carteCa = c => {
