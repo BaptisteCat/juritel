@@ -2046,9 +2046,38 @@ function renderCarte(){
   // anneaux des CA dessinés d'abord : les disques TJ restent cliquables au-dessus
   // anneaux (cours d'appel) dessinés d'abord, disques par-dessus
   dots.sort((a,b)=>((a.j.t==='ca'||a.j.t==='caa')?0:1)-((b.j.t==='ca'||b.j.t==='caa')?0:1));
+  // vue département : éclatement en éventail des tribunaux d'une même ville
+  const dpos = new Map();
+  if(showDotLbl){
+    const groups = [];
+    for(const x of dots){
+      const px = fx(x.j.x), py = fy(x.j.y);
+      let g = groups.find(G=>Math.hypot(G.cx-px, G.cy-py) < 34);
+      if(!g){ g = {sx:0, sy:0, cx:px, cy:py, items:[]}; groups.push(g); }
+      g.items.push({i:x.i, px, py});
+      g.sx += px; g.sy += py;
+      g.cx = g.sx/g.items.length; g.cy = g.sy/g.items.length;
+    }
+    for(const g of groups){
+      if(g.items.length === 1){
+        dpos.set(g.items[0].i, {x:g.items[0].px, y:g.items[0].py});
+        continue;
+      }
+      const R = Math.max(28, 12 + g.items.length*7);
+      // ancrage de la ville + traits de liaison
+      svg += `<circle cx="${g.cx.toFixed(1)}" cy="${g.cy.toFixed(1)}" r="3" fill="var(--ink-3)" opacity=".55"/>`;
+      g.items.forEach((it, k)=>{
+        const a = -Math.PI/2 + k*2*Math.PI/g.items.length;
+        const X = g.cx + R*Math.cos(a), Y = g.cy + R*Math.sin(a);
+        svg += `<line x1="${g.cx.toFixed(1)}" y1="${g.cy.toFixed(1)}" x2="${X.toFixed(1)}" y2="${Y.toFixed(1)}" stroke="var(--ink-3)" stroke-width="1" opacity=".38"/>`;
+        dpos.set(it.i, {x:X, y:Y});
+      });
+    }
+  }
   const lblPlaced = [];
   for(const {j,i} of dots){
-    const px = fx(j.x), py = fy(j.y), col = typeColor(j.t);
+    const sp = dpos.get(i);
+    const px = sp ? sp.x : fx(j.x), py = sp ? sp.y : fy(j.y), col = typeColor(j.t);
     const x = px.toFixed(1), y = py.toFixed(1);
     const tip = `<title>${esc(j.n)}</title>`;
     const on = `onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)"`;
