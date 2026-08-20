@@ -694,13 +694,16 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 @media (max-width:560px){ #fab{padding:0; width:52px; justify-content:center} #fab b{display:none} }
 
 
-#fabmod{
-  position:fixed; right:22px; bottom:86px; z-index:30; width:52px; height:44px;
-  border-radius:22px; border:1px solid var(--line); background:var(--card);
+#fabmod, #fabtools{
+  position:fixed; right:22px; z-index:30; width:52px; height:44px;
+  border-radius:22px; border:1px solid var(--line);
+  background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--card)), var(--card));
   color:var(--ink-2); cursor:pointer; display:grid; place-items:center;
   box-shadow:var(--shadow-m); transition:all .22s cubic-bezier(.2,.6,.3,1);
 }
-#fabmod:hover{transform:translateY(-2px); color:var(--ink)}
+#fabmod{bottom:86px}
+#fabtools{bottom:140px}
+#fabmod:hover, #fabtools:hover{transform:translateY(-2px); color:var(--ink)}
 #fabmod.on{
   background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
   color:var(--cta-ink); border-color:transparent;
@@ -777,7 +780,6 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <div class="logo" onclick="goHome()" data-ic="scale" data-s="19"></div>
     <h1 onclick="goHome()">Juritel<small id="count"></small></h1>
     <div id="syncstate" title="Synchronisation"><span class="dot"></span><span id="synctxt">local</span></div>
-    <button class="iconbtn" id="btntools" title="Outils" data-ic="tool" data-s="16"></button>
     <button class="iconbtn" id="btntheme" title="Thème"></button>
     <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
   </div>
@@ -841,6 +843,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   </div>
 </aside>
 
+<button id="fabtools" title="Outils"></button>
 <button id="fabmod" title="Mode modification"></button>
 <button id="fab" title="Ajouter un contact"><span data-ic="plus" data-s="17"></span><b>Ajouter</b></button>
 <div id="toast"></div>
@@ -1581,8 +1584,8 @@ function updateToolsDock(){
   const wantDock = window.innerWidth >= 1080 && !ficheId && !mapState;
   document.body.classList.toggle('toolsdocked', wantDock);
   tools.classList.toggle('docked', wantDock);
-  const btn = document.getElementById('btntools');
-  if(btn) btn.style.display = wantDock ? 'none' : '';
+  const ft = document.getElementById('fabtools');
+  if(ft) ft.style.display = wantDock ? 'none' : '';
   if(wantDock){
     if(tools.parentElement !== dock) dock.appendChild(tools);
     tools.classList.add('show');
@@ -3232,7 +3235,9 @@ document.getElementById('btnWlAdd').addEventListener('click', ()=>sbWlAdd());
   const fm = document.getElementById('fabmod');
   fm.innerHTML = icn('pen',16);
   fm.addEventListener('click', toggleModif);
-  document.getElementById('btntools').addEventListener('click', openTools);
+  const ft = document.getElementById('fabtools');
+  ft.innerHTML = icn('tool',16);
+  ft.addEventListener('click', ()=>openTools());
   applyTheme();
   await load();
   const m = location.hash.match(/^#f\/(.+)$/);
