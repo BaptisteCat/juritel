@@ -443,12 +443,38 @@ select.mini{
 
 
 /* recherche de juridiction compétente par adresse */
-.adrcard{
-  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
-  box-shadow:var(--shadow-s); padding:14px 16px; margin-bottom:18px;
+#toolsback{
+  position:fixed; inset:0; z-index:38; background:rgba(8,9,18,.45);
+  -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  opacity:0; pointer-events:none; transition:opacity .25s;
 }
-.adrtitle{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:700;
-  color:var(--accent); text-transform:uppercase; letter-spacing:.06em; margin-bottom:9px}
+#toolsback.show{opacity:1; pointer-events:auto}
+#tools{
+  position:fixed; top:0; right:0; bottom:0; z-index:39; width:min(390px, 94vw);
+  background:var(--card); border-left:1px solid var(--line); box-shadow:var(--shadow-l);
+  transform:translateX(105%); transition:transform .3s cubic-bezier(.2,.6,.3,1);
+  padding:16px; overflow-y:auto;
+}
+#tools.show{transform:none}
+.thead{display:flex; align-items:center; gap:10px; margin-bottom:16px}
+.thead .tt{width:34px; height:34px; border-radius:10px; display:grid; place-items:center;
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b)); color:var(--cta-ink)}
+.thead b{flex:1; font-size:16px; font-weight:750; letter-spacing:-.02em}
+.toolitem{
+  display:flex; align-items:center; gap:11px; padding:12px 13px;
+  border:1px solid var(--line); border-radius:14px; background:var(--card-2);
+  cursor:pointer; user-select:none; transition:all .16s; margin-bottom:8px;
+}
+.toolitem:hover{border-color:color-mix(in srgb, var(--accent) 35%, var(--line));
+  box-shadow:var(--shadow-s); transform:translateY(-1px)}
+.toolitem .tico{width:32px; height:32px; border-radius:10px}
+.toolitem .ti{flex:1; min-width:0}
+.toolitem .ti b{display:block; font-size:13.5px; font-weight:650; letter-spacing:-.01em}
+.toolitem .ti small{display:block; font-size:11.5px; color:var(--ink-3); margin-top:1px}
+.toolitem .caret{color:var(--ink-3); transition:transform .2s}
+.toolitem.open .caret{transform:rotate(90deg)}
+.tbody{display:none; padding:4px 2px 14px}
+.tbody.open{display:block; animation:reveal .25s cubic-bezier(.2,.6,.3,1)}
 #adr{
   width:100%; padding:11px 13px; font-size:14.5px; color:var(--ink);
   border:1.5px solid var(--line); border-radius:11px; background:var(--card-2);
@@ -578,6 +604,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <div class="logo" onclick="goHome()" data-ic="scale" data-s="19"></div>
     <h1 onclick="goHome()">Juritel<small id="count"></small></h1>
     <div id="syncstate" title="Synchronisation"><span class="dot"></span><span id="synctxt">local</span></div>
+    <button class="iconbtn" id="btntools" title="Outils" data-ic="tool" data-s="16"></button>
     <button class="iconbtn" id="btntheme" title="Thème"></button>
     <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
   </div>
@@ -594,6 +621,26 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   <div id="stats"></div>
   <div id="view"></div>
 </main>
+
+<div id="toolsback" onclick="closeTools()"></div>
+<aside id="tools">
+  <div class="thead">
+    <span class="tt" data-ic="tool" data-s="15"></span>
+    <b>Outils</b>
+    <button class="iconbtn" onclick="closeTools()" title="Fermer" data-ic="x" data-s="14"></button>
+  </div>
+  <div class="toolitem" onclick="tglTool('t-adr')">
+    <span class="tico tel" data-ic="pin" data-s="13"></span>
+    <div class="ti"><b>Juridiction compétente</b><small>À partir de n'importe quelle adresse en France</small></div>
+    <span class="caret" data-ic="chev" data-s="12"></span>
+  </div>
+  <div class="tbody" id="t-adr">
+    <input id="adr" placeholder="Adresse, code postal ou ville…"
+      autocomplete="off" spellcheck="false" oninput="adrInput(this.value)">
+    <div class="adrsugg" id="adrsugg"></div>
+    <p class="hint" style="margin-top:8px">Géocodage Base Adresse Nationale · compétences officielles du ministère de la Justice (data.gouv.fr).</p>
+  </div>
+</aside>
 
 <button id="fabmod" title="Mode modification"></button>
 <button id="fab" title="Ajouter un contact"><span data-ic="plus" data-s="17"></span><b>Ajouter</b></button>
@@ -696,6 +743,7 @@ const ICONS = {
   moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
   contrast:'<circle cx="12" cy="12" r="10"/><path d="M12 18a6 6 0 0 0 0-12v12z"/>',
+  tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
 };
 const icn = (n, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||''}</svg>`;
 
@@ -929,13 +977,6 @@ function renderList(){
   const slice = results.slice(0, shownCards);
   let html = '';
   if(!tokens.length && !currentCat){
-    // recherche de compétence par adresse
-    html += `<div class="adrcard">
-      <div class="adrtitle">${icn('pin',13)} Juridiction compétente par adresse</div>
-      <input id="adr" placeholder="Tapez une adresse, un code postal ou une ville en France…"
-        autocomplete="off" spellcheck="false" oninput="adrInput(this.value)">
-      <div class="adrsugg" id="adrsugg"></div>
-    </div>`;
     // accueil : aperçu structuré de toutes les catégories
     const order = ['tj','ca','cassation','penitentiaire','commissariat','cra','prefecture','douane','etranger','commerce','autre'];
     const bycat = {};
@@ -1262,6 +1303,28 @@ window.delJur = id => {
 
 
 
+
+/* panneau latéral d'outils */
+window.openTools = () => {
+  document.getElementById('tools').classList.add('show');
+  document.getElementById('toolsback').classList.add('show');
+};
+window.closeTools = () => {
+  document.getElementById('tools').classList.remove('show');
+  document.getElementById('toolsback').classList.remove('show');
+};
+window.tglTool = id => {
+  const item = document.querySelector(`.toolitem[onclick*="${id}"]`);
+  const body = document.getElementById(id);
+  const open = body.classList.toggle('open');
+  item.classList.toggle('open', open);
+  if(open){
+    const inp = body.querySelector('input');
+    if(inp){ inp.focus(); }
+    loadComp();
+  }
+};
+
 /* ============================ juridiction compétente par adresse ============================
    1. géocodage Base Adresse Nationale (Géoplateforme IGN, données officielles)
    2. table officielle commune -> juridictions (data.gouv.fr, ministère de la Justice)
@@ -1328,13 +1391,14 @@ window.pickAdr = async i => {
   const tj = items.find(x=>x.type==='TJ');
   COMP_LAST = {adresse: f.properties.label, items, tjId: tj && tj.jurId};
   if(tj && tj.jurId){
+    closeTools();
     openFiche(tj.jurId);
     return;
   }
   // pas de fiche TJ : afficher le résultat sur place
   if(box) box.innerHTML = items.map(x=>{
     const link = x.jurId
-      ? `<span class="cgo" onclick="openFiche('${x.jurId}')">ouvrir la fiche ${icn('right',11)}</span>`
+      ? `<span class="cgo" onclick="closeTools();openFiche('${x.jurId}')">ouvrir la fiche ${icn('right',11)}</span>`
       : `<span class="cabs">pas de fiche dans l'annuaire</span>`;
     return `<div class="comprow"><span class="ct2">${x.type}</span><span class="cn">${esc(x.nom)}</span>${link}</div>`;
   }).join('') || '<div class="hint" style="padding:8px">Aucune juridiction trouvée.</div>';
@@ -1683,6 +1747,9 @@ document.addEventListener('keydown', e=>{
   if(e.key==='/' && document.activeElement!==$('#q') && !document.querySelector('dialog[open]')){
     e.preventDefault(); $('#q').focus(); $('#q').select();
   }
+  if(e.key==='Escape' && document.getElementById('tools').classList.contains('show')){
+    closeTools(); return;
+  }
   if(e.key==='Escape' && ficheId && !document.querySelector('dialog[open]')) goHome();
 });
 
@@ -1957,6 +2024,7 @@ document.getElementById('btntheme').addEventListener('click', ()=>{
   const fm = document.getElementById('fabmod');
   fm.innerHTML = icn('pen',16);
   fm.addEventListener('click', toggleModif);
+  document.getElementById('btntools').addEventListener('click', openTools);
   applyTheme();
   await load();
   const m = location.hash.match(/^#f\/(.+)$/);
