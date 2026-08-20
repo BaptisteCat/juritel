@@ -715,7 +715,7 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 /* mobile : usage à une main — recherche en bas, outils empilés depuis le bas */
 @media (max-width:760px){
   .searchwrap{
-    position:fixed; left:10px; right:10px; bottom:10px; z-index:35;
+    position:fixed; left:10px; right:10px; bottom:22px; z-index:35;
     background:color-mix(in srgb, var(--bg) 55%, transparent);
     -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
     border-radius:17px;
@@ -725,21 +725,37 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
   /* en sombre, --grad-a est blanc : halo adouci */
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]) .searchwrap{
-      box-shadow:0 0 0 1px color-mix(in srgb, var(--grad-a) 14%, transparent),
-                 0 14px 34px -8px rgba(0,0,0,.6);
+      box-shadow:0 0 0 1px color-mix(in srgb, var(--grad-a) 18%, transparent),
+               0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
+               0 6px 18px rgba(0,0,0,.5);
     }
   }
   :root[data-theme="dark"] .searchwrap{
-    box-shadow:0 0 0 1px color-mix(in srgb, var(--grad-a) 14%, transparent),
-               0 14px 34px -8px rgba(0,0,0,.6);
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--grad-a) 18%, transparent),
+               0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
+               0 6px 18px rgba(0,0,0,.5);
   }
-  body{padding-bottom:158px}
-  body.mapmode{padding-bottom:158px}
-  #fab{bottom:76px}
-  #fabmod{bottom:140px}
-  #fabtools{bottom:194px}
-  #toast{bottom:186px}
-  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start; padding-bottom:134px}
+  body{padding-bottom:170px}
+  body.mapmode{padding-bottom:170px}
+  #fab{bottom:88px}
+  #fabmod{bottom:152px}
+  #fabtools{bottom:206px}
+  #toast{bottom:198px}
+  .searchwrap:focus-within #q{
+    background-image:linear-gradient(100deg,
+      transparent 22%,
+      color-mix(in srgb, var(--bar-a) 15%, transparent) 40%,
+      color-mix(in srgb, var(--accent) 20%, transparent) 50%,
+      color-mix(in srgb, var(--bar-b) 15%, transparent) 60%,
+      transparent 78%);
+    background-size:260% 100%; background-repeat:no-repeat;
+    animation:qsweep 2.8s ease-in-out infinite;
+  }
+  @keyframes qsweep{
+    0%{background-position:130% 0}
+    100%{background-position:-130% 0}
+  }
+  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start; padding-bottom:146px}
   #tools .thead{margin-bottom:0; margin-top:14px}
 }
 
