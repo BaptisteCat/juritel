@@ -1948,22 +1948,34 @@ window.carteGo = (level, code) => {
   mapState = level==='fr' ? {level:'fr'} : {level, code};
   render();
 };
-const typeColor = t => t==='ca' ? 'var(--mail)' : t==='tprx' ? 'var(--ok)' : 'var(--accent)';
+const typeColor = t => t==='ca' ? 'var(--mail)' : t==='tprx' ? 'var(--ok)'
+  : t==='cph' ? '#e59a3c' : t==='commerce' ? '#2fb7a5'
+  : (t==='ta'||t==='caa') ? '#e26d8f' : 'var(--accent)';
 function mapTypesFor(level){
-  if(!currentCat) return level==='dep' ? ['tj','ca','tprx'] : ['tj','ca'];
+  if(!currentCat) return level==='dep'
+    ? ['tj','ca','tprx','cph','commerce','ta','caa'] : ['tj','ca'];
   if(currentCat==='tj') return level==='dep' ? ['tj','tprx'] : ['tj'];
   if(currentCat==='ca') return ['ca'];
+  if(currentCat==='commerce') return level==='dep' ? ['commerce'] : [];
   return [];   // catégorie non cartographiée
 }
 const jurShort = n => n.replace(/^Tribunal judiciaire de /,'TJ ')
   .replace(/^Tribunal de proximité (de |d')/,'Prox. ')
-  .replace(/^Cour d'Appel (de |d')/,'CA ');
+  .replace(/^Cour d'Appel (de |d')/i,'CA ')
+  .replace(/^Conseil de Prud'hommes (de |d')/i,'CPH ')
+  .replace(/^Tribunal de Commerce (de |d')/i,'T.Com ')
+  .replace(/^Tribunal Administratif (de |d')/i,'TA ')
+  .replace(/^Cour administrative d'appel (de |d')/i,'CAA ');
 
 window.carteJur = i => {
   const j = MAPD.j[i];
   const f = j.t==='tj' ? findJurByName(j.n, ['tj'])
     : j.t==='ca' ? findJurByName(j.n, ['ca'])
-    : findJurByName(j.n, null, 'proximit');
+    : j.t==='tprx' ? findJurByName(j.n, null, 'proximit')
+    : j.t==='cph' ? findJurByName(j.n, null, 'prud')
+    : j.t==='commerce' ? findJurByName(j.n, null, 'commerc')
+    : j.t==='ta' ? findJurByName(j.n, null, 'administratif')
+    : findJurByName(j.n, null, 'administrative');
   if(f) openFiche(f.id);
   else openFicheSP(j.t, j.n);   // pas de fiche locale : fiche générée via l'annuaire officiel
 };
@@ -2032,18 +2044,29 @@ function renderCarte(){
     svg += `<text class="mlbl" x="${(cx/f.p.length).toFixed(0)}" y="${(cy/f.p.length).toFixed(0)}" font-size="15">${esc(f.lbl)}</text>`;
   }
   // anneaux des CA dessinés d'abord : les disques TJ restent cliquables au-dessus
-  dots.sort((a,b)=>(a.j.t==='ca'?0:1)-(b.j.t==='ca'?0:1));
+  // anneaux (cours d'appel) dessinés d'abord, disques par-dessus
+  dots.sort((a,b)=>((a.j.t==='ca'||a.j.t==='caa')?0:1)-((b.j.t==='ca'||b.j.t==='caa')?0:1));
+  const lblPlaced = [];
   for(const {j,i} of dots){
-    const x = fx(j.x).toFixed(1), y = fy(j.y).toFixed(1), col = typeColor(j.t);
+    const px = fx(j.x), py = fy(j.y), col = typeColor(j.t);
+    const x = px.toFixed(1), y = py.toFixed(1);
     const tip = `<title>${esc(j.n)}</title>`;
-    if(j.t==='ca')
-      svg += `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?12:10}" fill="none" stroke="${col}" stroke-width="3.8" onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)">${tip}</circle>`;
-    else if(j.t==='tj')
-      svg += `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?9:7}" fill="${col}" stroke="var(--card)" stroke-width="1.8" onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)">${tip}</circle>`;
+    const on = `onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)"`;
+    if(j.t==='ca'||j.t==='caa')
+      svg += `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?12:10}" fill="none" stroke="${col}" stroke-width="3.8" ${on}>${tip}</circle>`;
+    else if(j.t==='tprx')
+      svg += `<rect class="mdot" id="mj-${i}" x="${(px-5.5).toFixed(1)}" y="${(py-5.5).toFixed(1)}" width="11" height="11" rx="3.5" fill="${col}" stroke="var(--card)" stroke-width="1.4" ${on}>${tip}</rect>`;
     else
-      svg += `<rect class="mdot" id="mj-${i}" x="${x-5.5}" y="${y-5.5}" width="11" height="11" rx="3.5" fill="${col}" stroke="var(--card)" stroke-width="1.4" onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)">${tip}</rect>`;
-    if(showDotLbl)
-      svg += `<text class="mdotlbl" id="ml-${i}" x="${x}" y="${(+y)-16}" font-size="14">${esc(jurShort(j.n))}</text>`;
+      svg += `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?9:7}" fill="${col}" stroke="var(--card)" stroke-width="1.8" ${on}>${tip}</circle>`;
+    if(showDotLbl){
+      // placement d'étiquette sans chevauchement (essais autour du point)
+      let ly = py - 16;
+      for(const cand of [py-16, py+27, py-34, py+45, py-52, py+63]){
+        if(!lblPlaced.some(q=>Math.abs(q.x-px)<108 && Math.abs(q.y-cand)<15)){ ly = cand; break; }
+      }
+      lblPlaced.push({x:px, y:ly});
+      svg += `<text class="mdotlbl" id="ml-${i}" x="${x}" y="${ly.toFixed(1)}" font-size="14">${esc(jurShort(j.n))}</text>`;
+    }
   }
   // légende par type de juridiction
   let legend = '';
@@ -2053,6 +2076,10 @@ function renderCarte(){
     if(ts.has('tj')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:var(--accent)"></span>● Tribunal judiciaire</span>`);
     if(ts.has('ca')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:var(--mail)"></span>◯ Cour d'appel</span>`);
     if(ts.has('tprx')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:var(--ok)"></span>▪ Tribunal de proximité</span>`);
+    if(ts.has('cph')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:#e59a3c"></span>● Prud'hommes</span>`);
+    if(ts.has('commerce')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:#2fb7a5"></span>● Trib. de commerce</span>`);
+    if(ts.has('ta')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:#e26d8f"></span>● Trib. administratif</span>`);
+    if(ts.has('caa')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:#e26d8f"></span>◯ Cour adm. d'appel</span>`);
     if(currentCat && !mapTypesFor(st.level==='dep'?'dep':'reg').length)
       items.push(`<span class="shape">Le filtre « ${esc((CATS[currentCat]||currentCat))} » n'est pas cartographié — choisissez Tout, Tribunaux judiciaires ou Cours d'appel.</span>`);
     legend = '<div class="mlegend">'+items.join('')+'</div>';
