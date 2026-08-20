@@ -1425,7 +1425,7 @@ let COMP = null, COMP_LAST = null, ADR_FEATS = [], adrTimer = null;
 async function loadComp(){
   if(COMP) return COMP;
   try{
-    const r = await fetch('competences.json', {cache:'force-cache'});
+    const r = await fetch('competences.json', {cache:'no-cache'});
     if(r.ok) COMP = await r.json();
   }catch(e){}
   return COMP;
@@ -1502,7 +1502,7 @@ let MAPD = null;
 async function loadCarte(){
   if(MAPD) return MAPD;
   try{
-    const r = await fetch('carte.json', {cache:'force-cache'});
+    const r = await fetch('carte.json', {cache:'no-cache'});
     if(r.ok) MAPD = await r.json();
   }catch(e){}
   return MAPD;
