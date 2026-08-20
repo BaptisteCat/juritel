@@ -32,7 +32,7 @@
   --r:18px;
   --tel:#3542d8; --tel-bg:#eceeff; --mail:#7c3aed; --mail-bg:#f3edfd;
   --fax:#585d75; --fax-bg:#eef0f4;
-  --btj-grad:linear-gradient(135deg,#4353ff,#7c3aed); --btj-ink:#fff;
+  --btj-grad:linear-gradient(135deg,#181b30,#33395f); --btj-ink:#fff;
   --bar-a:#4353ff; --bar-b:#7c3aed;
   --title-grad:none; --title-color:var(--ink);
 }
@@ -2620,22 +2620,24 @@ $('#syncstate').addEventListener('click', ()=>{
 
 /* ============================ thème ============================ */
 const LS_THEME = 'juritel.theme';
-const THEME_LABEL = {auto:'automatique', dark:'sombre', light:'clair'};
+function currentTheme(){
+  const t = localStorage.getItem(LS_THEME);
+  if(t==='dark' || t==='light') return t;
+  // premier passage : on part du réglage système, puis le choix est mémorisé
+  return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
 function applyTheme(){
-  const t = localStorage.getItem(LS_THEME)||'auto';
-  if(t==='auto') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = t;
+  const t = currentTheme();
+  document.documentElement.dataset.theme = t;
   const el = document.getElementById('btntheme');
-  el.innerHTML = icn({auto:'contrast', dark:'moon', light:'sun'}[t], 17);
-  el.title = 'Thème : '+THEME_LABEL[t];
+  el.innerHTML = icn(t==='dark' ? 'moon' : 'sun', 17);
+  el.title = 'Thème '+(t==='dark' ? 'sombre' : 'clair')+' — cliquer pour basculer';
 }
 document.getElementById('btntheme').addEventListener('click', ()=>{
-  const order = ['auto','dark','light'];
-  const cur = localStorage.getItem(LS_THEME)||'auto';
-  const next = order[(order.indexOf(cur)+1)%3];
+  const next = currentTheme()==='dark' ? 'light' : 'dark';
   localStorage.setItem(LS_THEME, next);
   applyTheme();
-  toast('Thème '+THEME_LABEL[next]);
+  toast('Thème '+(next==='dark' ? 'sombre' : 'clair'));
 });
 
 /* ============================ démarrage ============================ */
