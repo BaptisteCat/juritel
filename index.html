@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Juritel</title>
 <meta name="theme-color" content="#0d0f1e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -710,6 +710,25 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
   box-shadow:0 8px 26px var(--glow);
 }
 @media (max-width:560px){ #fabmod{right:22px} }
+
+
+/* mobile : usage à une main — recherche en bas, outils empilés depuis le bas */
+@media (max-width:760px){
+  .searchwrap{
+    position:fixed; left:10px; right:10px; bottom:10px; z-index:35;
+    background:color-mix(in srgb, var(--bg) 55%, transparent);
+    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+    border-radius:17px;
+  }
+  body{padding-bottom:158px}
+  body.mapmode{padding-bottom:158px}
+  #fab{bottom:76px}
+  #fabmod{bottom:140px}
+  #fabtools{bottom:194px}
+  #toast{bottom:186px}
+  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start}
+  #tools .thead{margin-bottom:0; margin-top:14px}
+}
 
 /* ==================== dialogues ==================== */
 dialog{
@@ -1580,6 +1599,18 @@ function updateToolsDock(){
   const tools = document.getElementById('tools');
   const dock = document.getElementById('toolsdock');
   if(!tools || !dock) return;
+  // mobile : la barre de recherche sort de l en-tête (le backdrop-filter du
+  // header ferait référence pour position:fixed) et se fixe en bas de l écran
+  const sw = document.querySelector('.searchwrap');
+  if(sw){
+    const mobile = window.innerWidth < 760;
+    if(mobile && sw.parentElement !== document.body){
+      document.body.appendChild(sw);
+    } else if(!mobile && sw.parentElement === document.body){
+      const hw = document.querySelector('.hwrap');
+      hw.insertBefore(sw, hw.querySelector('.chips'));
+    }
+  }
   const wantDock = window.innerWidth >= 1080 && !ficheId && !mapState;
   document.body.classList.toggle('toolsdocked', wantDock);
   tools.classList.toggle('docked', wantDock);
