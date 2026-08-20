@@ -2917,6 +2917,7 @@ window.driveJoin = async () => {
     .setQuery(DRIVE_FILENAME);
   const picker = new google.picker.PickerBuilder()
     .setOAuthToken(t).setDeveloperKey(PICKER_API_KEY)
+    .setAppId(CLIENT_ID.split('-')[0])   // enregistre le droit d'accès drive.file au fichier choisi
     .setTitle('Choisissez le fichier juritel-data.json partagé avec vous')
     .addView(shared).addView(view)
     .setCallback(data=>{
