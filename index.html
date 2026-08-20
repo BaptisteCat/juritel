@@ -606,6 +606,10 @@ select.mini{
 .mapwrap svg.hovering .mdotlbl:not(.hl){opacity:.12}
 .mdot.hl{transform:scale(1.5)}
 .mdotlbl.hl{font-weight:750}
+.mjlist.hovering .schip:not(.hl){opacity:.35}
+.mjlist .schip{transition:all .16s}
+.mjlist .schip.hl{border-color:var(--accent); color:var(--accent); background:var(--card);
+  transform:translateY(-1px); box-shadow:var(--shadow-s)}
 .mdot:hover{transform:scale(1.35)}
 .mlegend{display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:11px; align-items:center}
 .mlegend .sw{width:10px; height:10px; border-radius:50%; flex-shrink:0}
@@ -1893,7 +1897,7 @@ function renderCarte(){
     dots = MAPD.j.map((j,i)=>({j,i})).filter(x=>x.j.d===st.code && tsetd.has(x.j.t));
     showDotLbl = true;
     sousListe = '<div class="mjlist">'+dots.map(x=>
-      `<button class="schip" onclick="carteJur(${x.i})" onmouseenter="hlJur(${x.i})" onmouseleave="hlJur(null)"><span class="sw" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${typeColor(x.j.t)};margin-right:2px"></span>${esc(jurShort(x.j.n))}</button>`).join('')+'</div>';
+      `<button class="schip" id="mc-${x.i}" onclick="carteJur(${x.i})" onmouseenter="hlJur(${x.i})" onmouseleave="hlJur(null)"><span class="sw" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${typeColor(x.j.t)};margin-right:2px"></span>${esc(jurShort(x.j.n))}</button>`).join('')+'</div>';
   }
   // projection (équirectangulaire corrigée en longitude, figurative)
   const pts = feats.flatMap(f=>f.p);
@@ -1923,11 +1927,11 @@ function renderCarte(){
     const x = fx(j.x).toFixed(1), y = fy(j.y).toFixed(1), col = typeColor(j.t);
     const tip = `<title>${esc(j.n)}</title>`;
     if(j.t==='ca')
-      svg += `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?12:10}" fill="none" stroke="${col}" stroke-width="3.8" onclick="carteJur(${i})">${tip}</circle>`;
+      svg += `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?12:10}" fill="none" stroke="${col}" stroke-width="3.8" onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)">${tip}</circle>`;
     else if(j.t==='tj')
-      svg += `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?9:7}" fill="${col}" stroke="var(--card)" stroke-width="1.8" onclick="carteJur(${i})">${tip}</circle>`;
+      svg += `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?9:7}" fill="${col}" stroke="var(--card)" stroke-width="1.8" onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)">${tip}</circle>`;
     else
-      svg += `<rect class="mdot" id="mj-${i}" x="${x-5.5}" y="${y-5.5}" width="11" height="11" rx="3.5" fill="${col}" stroke="var(--card)" stroke-width="1.4" onclick="carteJur(${i})">${tip}</rect>`;
+      svg += `<rect class="mdot" id="mj-${i}" x="${x-5.5}" y="${y-5.5}" width="11" height="11" rx="3.5" fill="${col}" stroke="var(--card)" stroke-width="1.4" onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)">${tip}</rect>`;
     if(showDotLbl)
       svg += `<text class="mdotlbl" id="ml-${i}" x="${x}" y="${(+y)-16}" font-size="14">${esc(jurShort(j.n))}</text>`;
   }
@@ -1969,6 +1973,16 @@ window.hlJur = i => {
     const d = document.getElementById('mj-'+i), l = document.getElementById('ml-'+i);
     if(d) d.classList.add('hl');
     if(l) l.classList.add('hl');
+  }
+};
+window.hlChip = i => {
+  const list = document.querySelector('.mside .mjlist');
+  if(!list) return;
+  list.classList.toggle('hovering', i!==null);
+  list.querySelectorAll('.hl').forEach(e=>e.classList.remove('hl'));
+  if(i!==null){
+    const c = document.getElementById('mc-'+i);
+    if(c){ c.classList.add('hl'); c.scrollIntoView({block:'nearest'}); }
   }
 };
 window.carteCa = c => {
