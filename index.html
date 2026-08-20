@@ -600,7 +600,7 @@ select.mini{
 .mdotlbl{fill:var(--ink); font-family:inherit; font-weight:600; pointer-events:none;
   text-anchor:middle; paint-order:stroke; stroke:var(--card); stroke-width:3px;
   stroke-linejoin:round}
-.mdot{cursor:pointer; transition:transform .15s, opacity .18s; transform-box:fill-box; transform-origin:center}
+.mdot{cursor:pointer; pointer-events:all; transition:transform .15s, opacity .18s; transform-box:fill-box; transform-origin:center}
 .mdotlbl{transition:opacity .18s}
 .mapwrap svg.hovering .mdot:not(.hl){opacity:.15}
 .mapwrap svg.hovering .mdotlbl:not(.hl){opacity:.12}
@@ -1917,6 +1917,8 @@ function renderCarte(){
     for(const [x,y] of f.p){ cx+=fx(x); cy+=fy(y); }
     svg += `<text class="mlbl" x="${(cx/f.p.length).toFixed(0)}" y="${(cy/f.p.length).toFixed(0)}" font-size="15">${esc(f.lbl)}</text>`;
   }
+  // anneaux des CA dessinés d'abord : les disques TJ restent cliquables au-dessus
+  dots.sort((a,b)=>(a.j.t==='ca'?0:1)-(b.j.t==='ca'?0:1));
   for(const {j,i} of dots){
     const x = fx(j.x).toFixed(1), y = fy(j.y).toFixed(1), col = typeColor(j.t);
     const tip = `<title>${esc(j.n)}</title>`;
