@@ -405,6 +405,10 @@ select.mini{
 .chan.dead{opacity:.42}
 .chan[draggable="true"]{cursor:grab}
 .chan[draggable="true"]:active{cursor:grabbing}
+/* mobile : au niveau région, les points laissent passer le clic vers le département */
+@media (hover:none), (max-width:760px){
+  .mapwrap svg.mlvl-reg .mdot{pointer-events:none; cursor:default}
+}
 .dropover{outline:2px dashed var(--accent); outline-offset:-2px;
   background:color-mix(in srgb, var(--accent) 7%, transparent) !important}
 .tico{width:26px; height:26px; border-radius:8px; display:grid; place-items:center; flex-shrink:0}
@@ -1985,7 +1989,7 @@ function renderCarte(){
     </div>
     <div class="mcrumbs">${crumbs}</div>
     <div class="maplayout">
-      <div class="mapwrap"><svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${svg}</svg></div>
+      <div class="mapwrap"><svg class="mlvl-${st.level}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${svg}</svg></div>
       <div class="mside">
         ${legend?'<div class="msidetitle">Légende</div>'+legend:''}
         ${sousListe?'<div class="msidetitle">Juridictions</div>'+sousListe:''}
