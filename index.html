@@ -1121,9 +1121,6 @@ window.addEventListener('popstate', ()=>{
 
 /* ============================ rendu ============================ */
 function render(){
-  const total = DATA.juridictions.length;
-  const nc = DATA.juridictions.reduce((n,j)=>n+j.services.reduce((m,s)=>m+s.contacts.length,0),0);
-  $('#count').textContent = `${total} juridictions · ${nc.toLocaleString('fr-FR')} contacts`;
   $('#clearq').style.display = $('#q').value ? 'grid':'none';
   document.body.classList.toggle('mapmode', !!mapState && !ficheId);
   updateToolsDock();
@@ -2634,17 +2631,19 @@ const Drive = (() => {
 
   async function findOrCreate(t){
     if(fileId) return fileId;
-    let r = await fetch('https://www.googleapis.com/drive/v3/files?q='+
-      encodeURIComponent(`name='${DRIVE_FILENAME}' and trashed=false`)+'&fields=files(id)',{headers:H(t)});
-    if(r.ok){ const d = await r.json(); if(d.files?.length) fileId = d.files[0].id; }
-    if(!fileId){
-      // migration : ancien fichier « annuaire-justice-data.json » renommé sur place
-      r = await fetch('https://www.googleapis.com/drive/v3/files?q='+
-        encodeURIComponent("name='annuaire-justice-data.json' and trashed=false")+'&fields=files(id)',{headers:H(t)});
-      if(r.ok){
-        const d = await r.json();
-        if(d.files?.length){
-          fileId = d.files[0].id;
+    // chercher sous le nom actuel ET l'ancien ; s'il existe plusieurs fichiers
+    // (doublon créé par un poste vierge), prendre le plus gros puis le plus récent
+    const r = await fetch('https://www.googleapis.com/drive/v3/files?q='+
+      encodeURIComponent(`(name='${DRIVE_FILENAME}' or name='annuaire-justice-data.json') and trashed=false`)+
+      '&fields=files(id,name,size,modifiedTime)',{headers:H(t)});
+    if(r.ok){
+      const d = await r.json();
+      const fs = d.files||[];
+      if(fs.length){
+        fs.sort((a,b)=>((+b.size||0)-(+a.size||0)) ||
+          String(b.modifiedTime||'').localeCompare(String(a.modifiedTime||'')));
+        fileId = fs[0].id;
+        if(fs[0].name !== DRIVE_FILENAME){
           await fetch('https://www.googleapis.com/drive/v3/files/'+fileId,{
             method:'PATCH', headers:{...H(t),'Content-Type':'application/json'},
             body:JSON.stringify({name:DRIVE_FILENAME})});
@@ -2671,14 +2670,27 @@ const Drive = (() => {
     // base régénérée (dataset différent) : on adopte la plus récente au lieu
     // de fusionner, sinon les identifiants différents créeraient des doublons
     if((remote.dataset||'') !== (DATA.dataset||'')){
-      if((remote.updatedAt||0) > (DATA.updatedAt||0)){
+      const remotePleine = (remote.juridictions||[]).length > 0;
+      const localePleine = DATA.juridictions.length > 0;
+      // règle d'or : une base vide ne l'emporte jamais sur une base pleine
+      const adopter = remotePleine &&
+        (!localePleine || (remote.updatedAt||0) > (DATA.updatedAt||0));
+      if(adopter){
         DATA.juridictions = remote.juridictions;
         DATA.tombstones = remote.tombstones||{};
         DATA.dataset = remote.dataset;
         DATA.updatedAt = remote.updatedAt;
-        toast('Nouvelle version de la base adoptée');
+        toast('Base de données chargée depuis votre Drive');
       }
-      return true; // sinon : notre base est plus récente, le push l'imposera
+      return true; // sinon : notre base (pleine) est conservée, le push l'imposera
+    }
+    // même génération : si la distante est pleine et la locale vide, adopter telle quelle
+    if(!DATA.juridictions.length && (remote.juridictions||[]).length){
+      DATA.juridictions = remote.juridictions;
+      DATA.tombstones = remote.tombstones||{};
+      DATA.updatedAt = remote.updatedAt||Date.now();
+      toast('Base de données chargée depuis votre Drive');
+      return true;
     }
     const tomb = {...(remote.tombstones||{}), ...DATA.tombstones};
     const byId = arr => Object.fromEntries(arr.map(x=>[x.id,x]));
@@ -2778,7 +2790,10 @@ const Drive = (() => {
     localStorage.setItem(LS_DRIVE,'1');
     refreshSettingsUI();
     await pull(false);
-    toast('Google Drive connecté');
+    if(!DATA.juridictions.length)
+      toast('Drive connecté, mais aucune base trouvée — vérifiez que c\'est le même compte Google que sur votre poste principal');
+    else
+      toast('Google Drive connecté');
   }
   function disconnect(){
     localStorage.removeItem(LS_DRIVE); localStorage.removeItem(LS_FILEID);
