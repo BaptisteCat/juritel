@@ -814,7 +814,8 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   <h2>Juridiction compétente</h2>
   <p class="hint" style="margin:-8px 0 12px">Tapez une adresse, un code postal ou une ville : Juritel identifie les juridictions compétentes et ouvre la fiche du tribunal judiciaire.</p>
   <input id="adr" placeholder="Adresse, code postal ou ville…"
-    autocomplete="off" spellcheck="false" oninput="adrInput(this.value)">
+    autocomplete="off" spellcheck="false" oninput="adrInput(this.value)"
+    onkeydown="if(event.key==='Enter'){event.preventDefault();adrEnter(this.value);}">
   <div class="adrsugg" id="adrsugg"></div>
   <p class="hint" style="margin-top:12px">Sources officielles : Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</p>
   <div class="dlgbtns"><button class="btn" onclick="document.getElementById('dlgAdr').close()">Fermer</button></div>
@@ -1848,23 +1849,31 @@ async function loadComp(){
   }catch(e){}
   return COMP;
 }
+async function adrFetch(v, autopick){
+  try{
+    const r = await fetch('https://data.geopf.fr/geocodage/search/?limit=5&autocomplete=1&q='+encodeURIComponent(v));
+    if(!r.ok) return;
+    const d = await r.json();
+    ADR_FEATS = d.features||[];
+    if(autopick && ADR_FEATS.length){ pickAdr(0); return; }
+    const box = document.getElementById('adrsugg');
+    if(!box) return;
+    box.innerHTML = ADR_FEATS.map((f,i)=>
+      `<button onclick="pickAdr(${i})">${icn('pin',12)} ${esc(f.properties.label)}</button>`).join('');
+  }catch(e){}
+}
 window.adrInput = v => {
   clearTimeout(adrTimer);
+  ADR_FEATS = [];
   const box = document.getElementById('adrsugg');
   if(!v || v.trim().length<3){ if(box) box.innerHTML=''; return; }
-  adrTimer = setTimeout(async ()=>{
-    try{
-      const r = await fetch('https://data.geopf.fr/geocodage/search/?limit=5&autocomplete=1&q='+encodeURIComponent(v));
-      if(!r.ok) return;
-      const d = await r.json();
-      ADR_FEATS = d.features||[];
-      const box2 = document.getElementById('adrsugg');
-      if(!box2) return;
-      box2.innerHTML = ADR_FEATS.map((f,i)=>
-        `<button onclick="pickAdr(${i})">${icn('pin',12)} ${esc(f.properties.label)}</button>`).join('');
-    }catch(e){}
-  }, 250);
+  adrTimer = setTimeout(()=>adrFetch(v, false), 250);
   loadComp();
+};
+window.adrEnter = v => {
+  clearTimeout(adrTimer);
+  if(ADR_FEATS.length){ pickAdr(0); return; }   // suggestion la plus haute
+  if(v && v.trim().length>=3) adrFetch(v, true); // recherche immédiate puis sélection
 };
 function normVille(s){
   return norm(s).replace(/\(.*\)/g,'')
