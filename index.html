@@ -526,6 +526,52 @@ select.mini{
   font-size:11.5px; font-weight:650; color:var(--ok); margin-top:2px}
 .compcell .cabs{font-size:11.5px; color:var(--ink-3); margin-top:2px}
 
+
+/* carte de France interactive */
+.mapcard{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); padding:16px 18px; margin-bottom:14px;
+}
+.maphead{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+.maphead h2{font-size:18px; font-weight:750; letter-spacing:-.02em; flex:1;
+  background:var(--title-grad); -webkit-background-clip:text; background-clip:text;
+  color:var(--title-color)}
+.mcrumbs{display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600;
+  color:var(--ink-3); margin-bottom:10px; flex-wrap:wrap}
+.mcrumb{cursor:pointer; padding:3px 9px; border-radius:8px; transition:all .13s}
+.mcrumb:hover{background:var(--line-2); color:var(--ink)}
+.mcrumb.on{color:var(--accent); cursor:default; background:color-mix(in srgb, var(--accent) 9%, transparent)}
+.mapwrap{
+  border-radius:14px; overflow:hidden; border:1px solid var(--line-2);
+  background:
+    radial-gradient(120% 90% at 20% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 55%),
+    radial-gradient(120% 90% at 90% 100%, color-mix(in srgb, var(--mail) 7%, transparent), transparent 55%),
+    var(--card-2);
+}
+.mapwrap svg{display:block; width:100%; height:auto}
+.mreg, .mdep{
+  fill:color-mix(in srgb, var(--accent) 7%, var(--card));
+  stroke:color-mix(in srgb, var(--accent) 30%, var(--line));
+  stroke-width:1.1; cursor:pointer; transition:fill .15s;
+}
+.mreg:hover, .mdep:hover{fill:color-mix(in srgb, var(--accent) 22%, var(--card))}
+.mdep.nohover{cursor:default}
+.mdep.nohover:hover{fill:color-mix(in srgb, var(--accent) 7%, var(--card))}
+.mlbl{fill:var(--ink-2); font-family:inherit; font-weight:650; pointer-events:none;
+  text-anchor:middle; letter-spacing:-.01em}
+.mdotlbl{fill:var(--ink); font-family:inherit; font-weight:600; pointer-events:none;
+  text-anchor:middle; paint-order:stroke; stroke:var(--card); stroke-width:3px;
+  stroke-linejoin:round}
+.mdot{cursor:pointer; transition:transform .12s; transform-box:fill-box; transform-origin:center}
+.mdot:hover{transform:scale(1.35)}
+.mlegend{display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:11px; align-items:center}
+.mlegend .sw{width:10px; height:10px; border-radius:50%; flex-shrink:0}
+.mlegend .it{display:inline-flex; align-items:center; gap:6px; font-size:11.5px;
+  font-weight:600; color:var(--ink-2); cursor:pointer; padding:3px 8px; border-radius:8px}
+.mlegend .it:hover{background:var(--line-2); color:var(--ink)}
+.mlegend .shape{font-size:11.5px; color:var(--ink-3); font-weight:550}
+.mjlist{display:flex; flex-wrap:wrap; gap:7px; margin-top:12px}
+
 /* ==================== bouton flottant ==================== */
 #fab{
   position:fixed; right:22px; bottom:22px; z-index:30;
@@ -654,6 +700,11 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <div class="adrsugg" id="adrsugg"></div>
     <p class="hint" style="margin-top:8px">Géocodage Base Adresse Nationale · compétences officielles du ministère de la Justice (data.gouv.fr).</p>
   </div>
+  <div class="toolitem" onclick="closeTools();openCarte()">
+    <span class="tico email" data-ic="map" data-s="13"></span>
+    <div class="ti"><b>Carte de France</b><small>Trouver une juridiction par navigation géographique</small></div>
+    <span class="caret" data-ic="right" data-s="12"></span>
+  </div>
 </aside>
 
 <button id="fabmod" title="Mode modification"></button>
@@ -758,6 +809,7 @@ const ICONS = {
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
   contrast:'<circle cx="12" cy="12" r="10"/><path d="M12 18a6 6 0 0 0 0-12v12z"/>',
   tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  map:'<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/>',
 };
 const icn = (n, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||''}</svg>`;
 
@@ -795,6 +847,7 @@ let shownCards = 60;
 let ficheId = null;          // juridiction affichée en fiche (null = liste)
 let ficheDom = '';           // filtre de domaine dans la fiche ('' = tout)
 let editMode = false;        // mode réorganisation de la fiche
+let mapState = null;         // carte interactive : null | {level:'fr'|'reg'|'dep', code}
 let modifMode = false;       // false = lecture seule (défaut)
 const openState = {};        // id -> ouvert/fermé (services, volets)
 const $ = s => document.querySelector(s);
@@ -947,10 +1000,11 @@ function search(){
 }
 
 /* ============================ navigation ============================ */
-function goHome(){ ficheId = null; editMode = false; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
+function goHome(){ ficheId = null; editMode = false; mapState = null; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
 window.goHome = goHome;
 window.openFiche = id => {
   if(id!==ficheId){ ficheDom = ''; editMode = false; }
+  mapState = null;
   ficheId = id;
   history.pushState(null,'','#f/'+id);
   render(); window.scrollTo(0,0);
@@ -959,6 +1013,8 @@ window.setFicheDom = d => { ficheDom = d; render(); };
 window.addEventListener('popstate', ()=>{
   const m = location.hash.match(/^#f\/(.+)$/);
   ficheId = m ? m[1] : null;
+  mapState = location.hash==='#carte' ? (mapState||{level:'fr'}) : null;
+  if(ficheId) mapState = null;
   render();
 });
 
@@ -973,6 +1029,7 @@ function render(){
     if(j){ renderFiche(j); return; }
     ficheId = null;
   }
+  if(mapState){ renderCarte(); return; }
   renderList();
 }
 
@@ -1437,6 +1494,139 @@ window.pickAdr = async i => {
   // pas de fiche TJ : afficher la carte de compétence sur place
   if(box) box.innerHTML = items.length ? compCard(COMP_LAST, null, true)
     : '<div class="hint" style="padding:8px">Aucune juridiction trouvée.</div>';
+};
+
+
+/* ============================ carte de France interactive ============================ */
+let MAPD = null;
+async function loadCarte(){
+  if(MAPD) return MAPD;
+  try{
+    const r = await fetch('carte.json', {cache:'force-cache'});
+    if(r.ok) MAPD = await r.json();
+  }catch(e){}
+  return MAPD;
+}
+window.openCarte = () => {
+  mapState = {level:'fr'};
+  ficheId = null;
+  if(location.hash!=='#carte') history.pushState(null,'','#carte');
+  render(); window.scrollTo(0,0);
+};
+window.carteGo = (level, code) => {
+  mapState = level==='fr' ? {level:'fr'} : {level, code};
+  render();
+};
+const caColor = i => i<0 ? 'var(--ink-3)' : `hsl(${(i*137.508)%360} 62% 55%)`;
+const jurShort = n => n.replace(/^Tribunal judiciaire de /,'TJ ')
+  .replace(/^Tribunal de proximité (de |d')/,'Prox. ')
+  .replace(/^Cour d'Appel (de |d')/,'CA ');
+
+window.carteJur = i => {
+  const j = MAPD.j[i];
+  const f = j.t==='tj' ? findJurByName(j.n, ['tj'])
+    : j.t==='ca' ? findJurByName(j.n, ['ca'])
+    : findJurByName(j.n, null, 'proximit');
+  if(f) openFiche(f.id);
+  else toast('Pas de fiche dans l\'annuaire pour ' + jurShort(j.n));
+};
+window.carteDep = code => {
+  const js = MAPD.j.map((j,i)=>({j,i})).filter(x=>x.j.d===code);
+  if(!js.length){ toast('Aucune juridiction recensée dans ce département'); return; }
+  if(js.length===1){ carteJur(js[0].i); return; }
+  carteGo('dep', code);
+};
+
+function renderCarte(){
+  $('#stats').textContent = '';
+  if(!MAPD){
+    $('#view').innerHTML = '<div class="vide">Chargement de la carte…</div>';
+    loadCarte().then(()=>{ if(mapState) render(); });
+    return;
+  }
+  const st = mapState;
+  let titre='France', crumbs='', feats=[], dots=[], showDotLbl=false, sousListe='';
+  if(st.level==='fr'){
+    crumbs = `<span class="mcrumb on">France</span>`;
+    feats = MAPD.r.map(r=>({p:r.p, lbl:'', tip:r.n, cls:'mreg', click:`carteGo('reg','${r.c}')`}));
+  } else if(st.level==='reg'){
+    const reg = MAPD.r.find(r=>r.c===st.code) || MAPD.r[0];
+    titre = reg.n;
+    crumbs = `<span class="mcrumb" onclick="carteGo('fr')">France</span><span>›</span><span class="mcrumb on">${esc(reg.n)}</span>`;
+    const dd = MAPD.d.filter(d=>d.r===st.code);
+    feats = dd.map(d=>({p:d.p, lbl:d.c, tip:d.n, cls:'mdep', click:`carteDep('${d.c}')`}));
+    const dset = new Set(dd.map(d=>d.c));
+    dots = MAPD.j.map((j,i)=>({j,i})).filter(x=>dset.has(x.j.d) && x.j.t!=='tprx');
+  } else {
+    const dep = MAPD.d.find(d=>d.c===st.code);
+    const reg = MAPD.r.find(r=>r.c===dep.r);
+    titre = dep.n;
+    crumbs = `<span class="mcrumb" onclick="carteGo('fr')">France</span><span>›</span>`+
+      `<span class="mcrumb" onclick="carteGo('reg','${reg.c}')">${esc(reg.n)}</span><span>›</span>`+
+      `<span class="mcrumb on">${esc(dep.n)}</span>`;
+    feats = [{p:dep.p, lbl:'', tip:dep.n, cls:'mdep nohover', click:''}];
+    dots = MAPD.j.map((j,i)=>({j,i})).filter(x=>x.j.d===st.code);
+    showDotLbl = true;
+    sousListe = '<div class="mjlist">'+dots.map(x=>
+      `<button class="schip" onclick="carteJur(${x.i})"><span class="sw" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${caColor(x.j.c)};margin-right:2px"></span>${esc(jurShort(x.j.n))}</button>`).join('')+'</div>';
+  }
+  // projection (équirectangulaire corrigée en longitude, figurative)
+  const pts = feats.flatMap(f=>f.p);
+  let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+  for(const [x,y] of pts){ if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; }
+  const kx = Math.cos(((minY+maxY)/2)*Math.PI/180);
+  const W = 700, PAD = 16;
+  const sc = (W-2*PAD)/Math.max((maxX-minX)*kx, 1e-6);
+  const H = Math.min(Math.round((maxY-minY)*sc+2*PAD), 640);
+  const sc2 = Math.min(sc, (H-2*PAD)/Math.max(maxY-minY,1e-6));
+  const ox = (W - (maxX-minX)*kx*sc2)/2, oy = (H - (maxY-minY)*sc2)/2;
+  const fx = x => ox+(x-minX)*kx*sc2, fy = y => oy+(maxY-y)*sc2;
+  let svg = '';
+  for(const f of feats){
+    const d = f.p.map((pt,i)=>(i?'L':'M')+fx(pt[0]).toFixed(1)+','+fy(pt[1]).toFixed(1)).join('')+'Z';
+    svg += `<path class="${f.cls}" d="${d}" ${f.click?`onclick="${f.click}"`:''}><title>${esc(f.tip)}</title></path>`;
+  }
+  for(const f of feats){
+    if(!f.lbl) continue;
+    let cx=0, cy=0;
+    for(const [x,y] of f.p){ cx+=fx(x); cy+=fy(y); }
+    svg += `<text class="mlbl" x="${(cx/f.p.length).toFixed(0)}" y="${(cy/f.p.length).toFixed(0)}" font-size="11">${esc(f.lbl)}</text>`;
+  }
+  for(const {j,i} of dots){
+    const x = fx(j.x).toFixed(1), y = fy(j.y).toFixed(1), col = caColor(j.c);
+    const tip = `<title>${esc(j.n)}</title>`;
+    if(j.t==='ca')
+      svg += `<circle class="mdot" cx="${x}" cy="${y}" r="${showDotLbl?10:8}" fill="none" stroke="${col}" stroke-width="3.2" onclick="carteJur(${i})">${tip}</circle>`;
+    else if(j.t==='tj')
+      svg += `<circle class="mdot" cx="${x}" cy="${y}" r="${showDotLbl?7:5.2}" fill="${col}" stroke="var(--card)" stroke-width="1.6" onclick="carteJur(${i})">${tip}</circle>`;
+    else
+      svg += `<rect class="mdot" x="${x-4}" y="${y-4}" width="8" height="8" rx="2.5" fill="${col}" stroke="var(--card)" stroke-width="1.4" onclick="carteJur(${i})">${tip}</rect>`;
+    if(showDotLbl)
+      svg += `<text class="mdotlbl" x="${x}" y="${(+y)-12}" font-size="11">${esc(jurShort(j.n))}</text>`;
+  }
+  // légende : cours d'appel présentes + formes
+  const caSet = [...new Set(dots.map(x=>x.j.c).filter(c=>c>=0))];
+  let legend = '';
+  if(st.level!=='fr'){
+    legend = '<div class="mlegend">'+
+      caSet.map(c=>`<span class="it" onclick="carteCa(${c})"><span class="sw" style="background:${caColor(c)}"></span>${esc(MAPD.cas[c].replace(/^Cour d'Appel (de |d')/,''))}</span>`).join('')+
+      `<span class="shape">● TJ&nbsp;&nbsp;◯ Cour d'appel${st.level==='dep'?'&nbsp;&nbsp;▪ proximité':''}</span></div>`;
+  }
+  $('#view').innerHTML = `<div class="mapcard">
+    <div class="maphead">
+      <button id="btnback" onclick="${st.level==='fr'?'goHome()':st.level==='reg'?`carteGo('fr')`:`carteGo('reg','${(MAPD.d.find(d=>d.c===st.code)||{}).r}')`}" title="Retour">${icn('left',15)}</button>
+      <h2>${esc(titre)}</h2>
+      <span class="badge b-tj">Carte</span>
+    </div>
+    <div class="mcrumbs">${crumbs}</div>
+    <div class="mapwrap"><svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${svg}</svg></div>
+    ${legend}${sousListe}
+    <p class="hint" style="margin-top:10px">${st.level==='fr'?'Cliquez sur une région.':st.level==='reg'?'Cliquez sur un département ou directement sur une juridiction. Couleurs = ressorts de cour d\'appel.':'Cliquez sur une juridiction pour ouvrir sa fiche.'}</p>
+  </div>`;
+}
+window.carteCa = c => {
+  const f = findJurByName(MAPD.cas[c], ['ca']);
+  if(f) openFiche(f.id); else toast('Pas de fiche pour ' + MAPD.cas[c]);
 };
 
 /* ============================ mode lecture seule / modification ============================ */
@@ -2064,6 +2254,7 @@ document.getElementById('btntheme').addEventListener('click', ()=>{
   await load();
   const m = location.hash.match(/^#f\/(.+)$/);
   if(m && DATA.juridictions.some(j=>j.id===m[1])) ficheId = m[1];
+  if(location.hash==='#carte') mapState = {level:'fr'};
   renderChips(); render();
   Drive.init();
 })();
