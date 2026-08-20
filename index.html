@@ -1628,7 +1628,7 @@ function renderFicheSP(){
       </div>
       ${d&&d.adresse?`<div class="adr">${icn('pin',11)} ${esc(d.adresse)} <button class="mini" onclick="copyVal('${esc(d.adresse)}')">${icn('copy',11)} copier</button></div>`:''}
       <div class="facts">
-        <span class="mini" style="cursor:default">${icn('scale',13)} Fiche générée depuis l'annuaire officiel — pas encore dans votre annuaire</span>
+        <span class="mini" style="cursor:default; color:var(--ko); background:var(--ko-bg); border-color:color-mix(in srgb, var(--ko) 25%, transparent)">${icn('scale',13)} Fiche générée depuis l'annuaire officiel — pas encore dans votre annuaire</span>
         ${d?`<button class="mini" onclick="spAdd()">${icn('plus',13)} Ajouter à l'annuaire</button>`:''}
       </div>
     </div>
