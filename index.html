@@ -245,6 +245,7 @@ body.mapmode{padding-bottom:10px}
 .b-commissariat{color:#0e7490; background:color-mix(in srgb, #0e7490 12%, transparent)}
 .b-cra{color:#0f8a68; background:color-mix(in srgb, #0f8a68 12%, transparent)}
 .b-prefecture,.b-douane,.b-etranger,.b-commerce,.b-autre{color:var(--ink-2); background:var(--line-2)}
+.b-off{color:var(--gold); background:color-mix(in srgb, var(--gold) 14%, transparent)}
 .ncontacts{font-size:11.5px; color:var(--ink-3); font-weight:600}
 .more{
   display:block; width:100%; padding:14px; margin:16px 0 26px;
@@ -1071,7 +1072,19 @@ function search(){
   }
   results.sort((a,b)=> (b.nameHit-a.nameHit) ||
     (b.j.services.reduce((m,s)=>m+s.contacts.length,0) - a.j.services.reduce((m,s)=>m+s.contacts.length,0)));
-  return {results, tokens};
+  // dataset officiel : juridictions correspondantes (dédoublonnées à l'affichage)
+  let offm = [];
+  if(tokens.length){
+    if(!OFF) loadOfficiel();
+    else for(let i=0; i<OFF.j.length; i++){
+      const e = OFF.j[i];
+      if(!tokens.every(t=>tokMatch(e._txt, t) ||
+        (digits(t).length>=4 && e.tels.some(x=>digits(x).includes(digits(t)))))) continue;
+      offm.push(i);
+      if(offm.length>=30) break;
+    }
+  }
+  return {results, tokens, offm};
 }
 
 /* ============================ navigation ============================ */
@@ -1118,13 +1131,18 @@ function render(){
 
 /* ---------- vue liste ---------- */
 function renderList(){
-  const {results, tokens} = search();
+  const {results, tokens, offm} = search();
+  const offIdx = (offm||[]).filter(i=>!offJurMatch(OFF.j[i])).slice(0,12);
+  const offHtml = offIdx.length
+    ? `<div class="cathead">Annuaire officiel <span class="cnt">· juridictions absentes de votre annuaire</span></div>
+       <div class="grid">${offIdx.map(cardOff).join('')}</div>`
+    : '';
   const V = $('#view');
   $('#stats').textContent = tokens.length||currentCat ?
     `${results.length} juridiction${results.length>1?'s':''} — cliquez sur une fiche pour l'ouvrir` :
     `Tapez une recherche ou parcourez les fiches par catégorie`;
   if(!results.length){
-    V.innerHTML = `<div class="vide"><div class="big">${icn('search',34)}</div>Aucun résultat.<br><br>
+    V.innerHTML = offHtml || `<div class="vide"><div class="big">${icn('search',34)}</div>Aucun résultat.<br><br>
       <button class="btn primary" onclick="openAdd()">＋ Ajouter ce contact</button></div>`;
     return;
   }
@@ -1152,7 +1170,7 @@ function renderList(){
     const totalMatched = withHits.reduce((n,r)=>n+r.hits.reduce((m,h)=>m+h.cts.length,0),0);
     if(withHits.length && results.length<=12 && totalMatched<=80){
       for(const r of results) html += r.hits ? suggInline(r) : suggJur(r);
-      V.innerHTML = html;
+      V.innerHTML = html + offHtml;
       return;
     }
     // les juridictions dont le NOM correspond passent en grandes suggestions
@@ -1170,7 +1188,7 @@ function renderList(){
         html += `<button class="more" onclick="shownCards+=80;render()">Afficher ${contentRes.length-shownCards} fiches de plus</button>`;
     }
   }
-  V.innerHTML = html;
+  V.innerHTML = html + offHtml;
 }
 
 function suggJur({j, hits}){
@@ -1600,6 +1618,16 @@ function spExtract(r){
 async function spLookup(type, nom){
   const pivot = SP_PIVOT[type];
   if(!pivot) return null;
+  // 1. dataset embarqué (instantané, hors-ligne)
+  await loadOfficiel();
+  if(OFF){
+    const cible = normVille(nom);
+    const hit = OFF.j.find(e=>e.t===type && normVille(e.nom)===cible)
+      || OFF.j.find(e=>{ if(e.t!==type) return false; const n = normVille(e.nom);
+           return (n.startsWith(cible)||cible.startsWith(n)) && Math.min(n.length, cible.length)>=4; });
+    if(hit) return hit;
+  }
+  // 2. API en secours (cache 7 jours)
   const key = type+'/'+normVille(nom);
   const hit = spCacheGet(key);   // cache = enregistrement brut, extrait à l'affichage
   if(hit) return hit.v ? spExtract(hit.v) : null;
@@ -1757,6 +1785,54 @@ function spFillBlock(j){
       ${d.maj?`<div class="spfoot">Données ministère de la Justice, mises à jour le ${esc(d.maj)}.</div>`:''}
     </div>`;
   });
+}
+
+
+/* ============================ dataset officiel embarqué ============================
+   Toutes les juridictions de l'annuaire officiel (DILA), précalculées dans
+   officiel.json : alimente la recherche, les fiches générées et le bloc
+   « Annuaire officiel » des fiches existantes (instantané, hors-ligne). */
+let OFF = null, offLoading = false;
+async function loadOfficiel(){
+  if(OFF || offLoading) return OFF;
+  offLoading = true;
+  try{
+    const r = await fetch('officiel.json', {cache:'no-cache'});
+    if(r.ok){
+      OFF = await r.json();
+      for(const e of OFF.j)
+        e._txt = norm(e.nom+' '+(SP_TYPE_LBL[e.t]||'')+' '+e.adresse+' '
+          +e.tels.join(' ')+' '+e.mails.join(' '));
+      if(!ficheId && !mapState) render();
+    }
+  }catch(err){}
+  offLoading = false;
+  return OFF;
+}
+function offJurMatch(e){
+  return e.t==='ca' ? findJurByName(e.nom, ['ca'])
+    : e.t==='tj' ? findJurByName(e.nom, ['tj'])
+    : e.t==='tprx' ? findJurByName(e.nom, null, 'proximit')
+    : e.t==='cph' ? findJurByName(e.nom, null, 'prud')
+    : e.t==='commerce' ? findJurByName(e.nom, null, 'commerc')
+    : e.t==='ta' ? findJurByName(e.nom, null, 'administratif')
+    : findJurByName(e.nom, null, 'administrative');
+}
+window.openFicheOff = i => {
+  const e = OFF.j[i];
+  closeTools();
+  ficheId = null; mapState = null;
+  spState = {type:e.t, nom:e.nom, loading:false, data:e};
+  history.pushState(null,'','#sp/'+e.t+'/'+encodeURIComponent(e.nom));
+  render(); window.scrollTo(0,0);
+};
+function cardOff(i){
+  const e = OFF.j[i];
+  return `<div class="jcard" onclick="openFicheOff(${i})">
+    <div class="top"><span class="nom">${esc(e.nom)}</span><span class="badge b-off">Officiel</span></div>
+    ${e.adresse?`<div class="adr">${icn('pin',11)}<span>${esc(e.adresse)}</span></div>`:''}
+    <div class="foot"><span>${esc(SP_TYPE_LBL[e.t]||e.t)}</span>${e.tels.length?`<span>·</span><span>${esc(e.tels[0])}</span>`:''}</div>
+  </div>`;
 }
 
 /* ============================ juridiction compétente par adresse ============================
@@ -2656,6 +2732,7 @@ document.getElementById('btntheme').addEventListener('click', ()=>{
   if(location.hash==='#carte') mapState = {level:'fr'};
   renderChips(); render();
   Drive.init();
+  setTimeout(loadOfficiel, 2000);   // préchargement du dataset officiel
 })();
 </script>
 </body>
