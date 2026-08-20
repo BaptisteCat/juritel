@@ -148,6 +148,11 @@ header{
 }
 .iconbtn:hover{color:var(--ink); box-shadow:var(--shadow-s); transform:translateY(-2px);
   border-color:color-mix(in srgb, var(--accent) 35%, var(--line))}
+.iconbtn.notif{position:relative}
+.iconbtn.notif::after{
+  content:''; position:absolute; top:6px; right:6px; width:9px; height:9px;
+  border-radius:50%; background:var(--ko); border:2px solid var(--card);
+}
 
 .searchwrap{position:relative}
 .searchwrap .lens{
@@ -803,8 +808,9 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
       <p class="hint" id="gmsg" style="margin-top:10px"></p>
     </div>
     <div id="gdenied" style="display:none">
-      <p style="margin:10px 0">Le compte <b id="gwho"></b> n'est pas autorisé.<br>
-      <span class="hint">Demandez l'accès au propriétaire de l'annuaire, puis reconnectez-vous.</span></p>
+      <p style="margin:10px 0">Le compte <b id="gwho"></b> n'est pas autorisé.</p>
+      <button class="btn primary" id="gask" onclick="sbAsk()">Demander l'accès</button>
+      <p class="hint" id="gaskmsg" style="margin:4px 0 10px"></p>
       <button class="btn" onclick="sbLogout()">Changer de compte</button>
     </div>
   </div>
@@ -3027,11 +3033,13 @@ async function sbGateUpdate(){
     document.getElementById('gforms').style.display = 'none';
     document.getElementById('gdenied').style.display = '';
     document.getElementById('gwho').textContent = sbUser.email||'';
+    sbAskState();
     sbState('err', 'non autorisé');
     return;
   }
   gate.classList.add('off');
   sbPull();
+  sbNotifDemandes();
 }
 
 window.sbLogin = async () => {
@@ -3057,6 +3065,31 @@ window.sbGoogle = async () => {
     'Connexion Google non disponible ('+error.message+') — utilisez e-mail/mot de passe.';
 };
 window.sbLogout = async () => { await sb.auth.signOut(); location.reload(); };
+window.sbAsk = async () => {
+  if(!sbUser) return;
+  const email = (sbUser.email||'').toLowerCase();
+  const {error} = await sb.from('demandes').insert({email});
+  const msg = document.getElementById('gaskmsg');
+  if(!error || (error.code==='23505')){   // 23505 = déjà demandé
+    msg.textContent = 'Demande envoyée — le propriétaire la verra à sa prochaine connexion.';
+    document.getElementById('gask').style.display = 'none';
+  } else {
+    msg.textContent = 'Échec : '+error.message;
+  }
+};
+async function sbAskState(){
+  // sur l'écran refusé : la demande est-elle déjà déposée ?
+  try{
+    const {data} = await sb.from('demandes').select('email').limit(1);
+    if(data && data.length){
+      document.getElementById('gask').style.display = 'none';
+      document.getElementById('gaskmsg').textContent = 'Demande en attente de validation par le propriétaire.';
+    } else {
+      document.getElementById('gask').style.display = '';
+      document.getElementById('gaskmsg').textContent = '';
+    }
+  }catch(e){}
+}
 
 async function sbPull(){
   if(!sbAdmis || sbBusy) return;
@@ -3098,6 +3131,18 @@ window.sbSchedulePush = () => {
   sbTimer = setTimeout(()=>{ if(!sbBusy) sbPush(false); }, 2500);
 };
 
+async function sbNotifDemandes(){
+  try{
+    const {data, error} = await sb.from('demandes').select('email');
+    const gear = document.getElementById('btnsettings');
+    if(!error && data && data.length){
+      gear.classList.add('notif');
+      toast(data.length + ' demande' + (data.length>1?'s':'') + " d'accès en attente — voir Réglages");
+    } else {
+      gear.classList.remove('notif');
+    }
+  }catch(e){}
+}
 async function sbAccountUI(){
   const info = document.getElementById('accInfo');
   if(!sbUser){ info.textContent = 'Non connecté.'; return; }
@@ -3107,12 +3152,39 @@ async function sbAccountUI(){
   const {data, error} = await sb.from('acces').select('email,role').order('email');
   if(error || !data){ wl.style.display = 'none'; return; }
   wl.style.display = 'block';
-  document.getElementById('wlList').innerHTML = data.map(r=>
+  // demandes en attente
+  let demHtml = '';
+  try{
+    const dem = await sb.from('demandes').select('email,created_at').order('created_at');
+    if(dem.data && dem.data.length){
+      demHtml = `<div style="margin-bottom:10px">`+
+        `<span class="hint" style="font-weight:650; color:var(--ko)">Demandes d'accès en attente :</span>`+
+        dem.data.map(d=>`<div class="setrow" style="margin:5px 0">
+          <span style="flex:1; font-size:13.5px">${esc(d.email)}</span>
+          <button class="mini" style="color:var(--ok)" onclick="sbDemOk('${esc(d.email)}')">${icn('check',12)} autoriser</button>
+          <button class="mini" style="color:var(--ko)" onclick="sbDemNo('${esc(d.email)}')">${icn('x',12)} refuser</button>
+        </div>`).join('')+`</div>`;
+    }
+  }catch(e){}
+  document.getElementById('wlList').innerHTML = demHtml + data.map(r=>
     `<div class="setrow" style="margin:4px 0">
       <span style="flex:1; font-size:13.5px">${esc(r.email)} ${r.role==='owner'?'<span class="hint">(propriétaire)</span>':''}</span>
       ${r.role==='owner'?'':`<button class="mini" onclick="sbWlDel('${esc(r.email)}')">${icn('trash',12)} retirer</button>`}
     </div>`).join('');
 }
+window.sbDemOk = async mail => {
+  const r1 = await sb.from('acces').insert({email: mail});
+  if(r1.error && r1.error.code !== '23505'){ toast('Échec : '+r1.error.message); return; }
+  await sb.from('demandes').delete().eq('email', mail);
+  toast(mail + ' autorisé');
+  sbAccountUI(); sbNotifDemandes();
+};
+window.sbDemNo = async mail => {
+  if(!confirm('Refuser la demande de '+mail+' ?')) return;
+  await sb.from('demandes').delete().eq('email', mail);
+  toast('Demande refusée');
+  sbAccountUI(); sbNotifDemandes();
+};
 window.sbWlAdd = async () => {
   const mail = (document.getElementById('wlMail').value||'').trim().toLowerCase();
   if(!mail.includes('@')){ toast('Adresse invalide'); return; }
