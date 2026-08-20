@@ -530,8 +530,10 @@ select.mini{
 /* carte de France interactive */
 .mapcard{
   background:var(--card); border:1px solid var(--line); border-radius:var(--r);
-  box-shadow:var(--shadow-s); padding:16px 18px; margin-bottom:14px;
+  box-shadow:var(--shadow-s); padding:16px 18px; margin:0 auto 14px;
+  max-width:660px;
 }
+.mapwrap svg{max-height:520px; margin:0 auto}
 .maphead{display:flex; align-items:center; gap:12px; margin-bottom:6px}
 .maphead h2{font-size:18px; font-weight:750; letter-spacing:-.02em; flex:1;
   background:var(--title-grad); -webkit-background-clip:text; background-clip:text;
