@@ -753,16 +753,10 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <b>Outils</b>
     <button class="iconbtn" onclick="closeTools()" title="Fermer" data-ic="x" data-s="14"></button>
   </div>
-  <div class="toolitem" onclick="tglTool('t-adr')">
+  <div class="toolitem" onclick="openAdrDlg()">
     <span class="tico tel" data-ic="pin" data-s="13"></span>
     <div class="ti"><b>Juridiction compétente</b><small>À partir de n'importe quelle adresse en France</small></div>
-    <span class="caret" data-ic="chev" data-s="12"></span>
-  </div>
-  <div class="tbody" id="t-adr">
-    <input id="adr" placeholder="Adresse, code postal ou ville…"
-      autocomplete="off" spellcheck="false" oninput="adrInput(this.value)">
-    <div class="adrsugg" id="adrsugg"></div>
-    <p class="hint" style="margin-top:8px">Géocodage Base Adresse Nationale · compétences officielles du ministère de la Justice (data.gouv.fr).</p>
+    <span class="caret" data-ic="right" data-s="12"></span>
   </div>
   <div class="toolitem" onclick="closeTools();openCarte()">
     <span class="tico email" data-ic="map" data-s="13"></span>
@@ -810,6 +804,16 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <button class="btn primary" value="ok" id="addOk">Ajouter</button>
   </div>
 </form></dialog>
+
+<dialog id="dlgAdr"><div class="dlg">
+  <h2>Juridiction compétente</h2>
+  <p class="hint" style="margin:-8px 0 12px">Tapez une adresse, un code postal ou une ville : Juritel identifie les juridictions compétentes et ouvre la fiche du tribunal judiciaire.</p>
+  <input id="adr" placeholder="Adresse, code postal ou ville…"
+    autocomplete="off" spellcheck="false" oninput="adrInput(this.value)">
+  <div class="adrsugg" id="adrsugg"></div>
+  <p class="hint" style="margin-top:12px">Géocodage Base Adresse Nationale · compétences officielles du ministère de la Justice (data.gouv.fr).</p>
+  <div class="dlgbtns"><button class="btn" onclick="document.getElementById('dlgAdr').close()">Fermer</button></div>
+</div></dialog>
 
 <dialog id="dlgMove"><form class="dlg" method="dialog" id="formMove">
   <h2>Déplacer vers…</h2>
@@ -1070,6 +1074,8 @@ function search(){
 function goHome(){ ficheId = null; editMode = false; mapState = null; spState = null; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
 window.goHome = goHome;
 window.openFiche = id => {
+  const da = document.getElementById('dlgAdr');
+  if(da && da.open) da.close();
   if(id!==ficheId){ ficheDom = ''; editMode = false; }
   mapState = null; spState = null;
   ficheId = id;
@@ -1483,6 +1489,14 @@ window.closeTools = () => {
   if(t.classList.contains('docked')) return;
   t.classList.remove('show');
   document.getElementById('toolsback').classList.remove('show');
+};
+window.openAdrDlg = () => {
+  closeTools();
+  const d = document.getElementById('dlgAdr');
+  d.showModal();
+  loadComp();
+  const inp = document.getElementById('adr');
+  setTimeout(()=>{ inp.focus(); inp.select(); }, 60);
 };
 window.tglTool = id => {
   const item = document.querySelector(`.toolitem[onclick*="${id}"]`);
