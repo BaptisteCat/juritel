@@ -190,6 +190,8 @@ header{
 
 main{max-width:1080px; margin:0 auto; padding:16px 18px}
 #stats{color:var(--ink-3); font-size:12.5px; font-weight:500; margin:2px 4px 14px}
+#stats:empty{display:none}
+body.mapmode{padding-bottom:10px}
 
 /* ==================== vue liste ==================== */
 .cathead{
@@ -526,20 +528,54 @@ select.mini{
   font-size:11.5px; font-weight:650; color:var(--ok); margin-top:2px}
 .compcell .cabs{font-size:11.5px; color:var(--ink-3); margin-top:2px}
 
+/* bloc « annuaire officiel » (service-public.fr) sur les fiches + fiche générée */
+.spcard{
+  margin:0 0 14px; padding:14px 16px; border-radius:16px;
+  background:var(--card); border:1px solid var(--line);
+  animation:reveal .25s cubic-bezier(.2,.6,.3,1);
+}
+.spcard .comphead{margin-bottom:8px}
+.splink{margin-left:auto; flex-shrink:0; font-size:11px; color:var(--ink-3);
+  text-decoration:none; border-bottom:1px dotted var(--line)}
+.splink:hover{color:var(--accent); border-color:var(--accent)}
+.sprow{display:flex; gap:9px; align-items:flex-start; font-size:13px;
+  color:var(--ink-2); padding:3px 0; line-height:1.55}
+.sprow svg{flex-shrink:0; margin-top:4px; color:var(--ink-3)}
+.sprow b{color:var(--ink); font-weight:650}
+.spnote{color:var(--ink-3); font-size:11.5px}
+.spfoot{font-size:11px; color:var(--ink-3); margin-top:9px; line-height:1.5}
+.spfoot a{color:inherit; text-decoration:underline; text-underline-offset:2px}
+.spfoot a:hover{color:var(--accent)}
+
 
 /* carte de France interactive */
 .mapcard{
   background:var(--card); border:1px solid var(--line); border-radius:var(--r);
-  box-shadow:var(--shadow-s); padding:16px 18px; margin:0 auto 14px;
-  max-width:660px;
+  box-shadow:var(--shadow-s); padding:14px 16px; margin:0 auto;
+  max-width:960px;
 }
-.mapwrap svg{max-height:520px; margin:0 auto}
-.maphead{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+.maplayout{display:grid; grid-template-columns:minmax(0,1fr) 220px; gap:14px; align-items:start}
+.mside{
+  display:flex; flex-direction:column; gap:8px;
+  max-height:calc(100vh - 330px); overflow-y:auto;
+}
+.mside .mlegend{flex-direction:column; align-items:stretch; gap:3px; margin:0}
+.mside .mlegend .it{cursor:default}
+.mside .mjlist{flex-direction:column; margin:0; gap:5px}
+.mside .mjlist .schip{justify-content:flex-start; text-align:left}
+.mside .hint{margin:4px 2px 0}
+.msidetitle{font-size:10.5px; font-weight:700; color:var(--ink-3);
+  text-transform:uppercase; letter-spacing:.07em; margin:4px 2px 0}
+@media (max-width:760px){
+  .maplayout{grid-template-columns:1fr}
+  .mside{max-height:none}
+}
+.maphead{display:flex; align-items:center; gap:12px; margin-bottom:4px}
 .maphead h2{font-size:18px; font-weight:750; letter-spacing:-.02em; flex:1;
   background:var(--title-grad); -webkit-background-clip:text; background-clip:text;
   color:var(--title-color)}
 .mcrumbs{display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600;
-  color:var(--ink-3); margin-bottom:10px; flex-wrap:wrap}
+  color:var(--ink-3); margin-bottom:8px; flex-wrap:wrap}
 .mcrumb{cursor:pointer; padding:3px 9px; border-radius:8px; transition:all .13s}
 .mcrumb:hover{background:var(--line-2); color:var(--ink)}
 .mcrumb.on{color:var(--accent); cursor:default; background:color-mix(in srgb, var(--accent) 9%, transparent)}
@@ -550,7 +586,7 @@ select.mini{
     radial-gradient(120% 90% at 90% 100%, color-mix(in srgb, var(--mail) 7%, transparent), transparent 55%),
     var(--card-2);
 }
-.mapwrap svg{display:block; width:100%; height:auto}
+.mapwrap svg{display:block; width:100%; height:auto; max-height:calc(100vh - 330px); margin:0 auto}
 .mreg, .mdep{
   fill:color-mix(in srgb, var(--accent) 7%, var(--card));
   stroke:color-mix(in srgb, var(--accent) 30%, var(--line));
@@ -812,6 +848,8 @@ const ICONS = {
   contrast:'<circle cx="12" cy="12" r="10"/><path d="M12 18a6 6 0 0 0 0-12v12z"/>',
   tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
   map:'<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
 };
 const icn = (n, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||''}</svg>`;
 
@@ -850,6 +888,7 @@ let ficheId = null;          // juridiction affichée en fiche (null = liste)
 let ficheDom = '';           // filtre de domaine dans la fiche ('' = tout)
 let editMode = false;        // mode réorganisation de la fiche
 let mapState = null;         // carte interactive : null | {level:'fr'|'reg'|'dep', code}
+let spState = null;          // fiche officielle service-public : null | {type, nom, loading, data}
 let modifMode = false;       // false = lecture seule (défaut)
 const openState = {};        // id -> ouvert/fermé (services, volets)
 const $ = s => document.querySelector(s);
@@ -1002,11 +1041,11 @@ function search(){
 }
 
 /* ============================ navigation ============================ */
-function goHome(){ ficheId = null; editMode = false; mapState = null; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
+function goHome(){ ficheId = null; editMode = false; mapState = null; spState = null; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
 window.goHome = goHome;
 window.openFiche = id => {
   if(id!==ficheId){ ficheDom = ''; editMode = false; }
-  mapState = null;
+  mapState = null; spState = null;
   ficheId = id;
   history.pushState(null,'','#f/'+id);
   render(); window.scrollTo(0,0);
@@ -1015,8 +1054,11 @@ window.setFicheDom = d => { ficheDom = d; render(); };
 window.addEventListener('popstate', ()=>{
   const m = location.hash.match(/^#f\/(.+)$/);
   ficheId = m ? m[1] : null;
+  const sp = location.hash.match(/^#sp\/([a-z]+)\/(.+)$/);
+  spState = (!ficheId && sp) ? {type:sp[1], nom:decodeURIComponent(sp[2]), loading:true} : null;
   mapState = location.hash==='#carte' ? (mapState||{level:'fr'}) : null;
-  if(ficheId) mapState = null;
+  if(ficheId || spState) mapState = null;
+  if(spState) spResolve();
   render();
 });
 
@@ -1026,11 +1068,13 @@ function render(){
   const nc = DATA.juridictions.reduce((n,j)=>n+j.services.reduce((m,s)=>m+s.contacts.length,0),0);
   $('#count').textContent = `${total} juridictions · ${nc.toLocaleString('fr-FR')} contacts`;
   $('#clearq').style.display = $('#q').value ? 'grid':'none';
+  document.body.classList.toggle('mapmode', !!mapState && !ficheId);
   if(ficheId){
     const j = DATA.juridictions.find(x=>x.id===ficheId);
     if(j){ renderFiche(j); return; }
     ficheId = null;
   }
+  if(spState){ renderFicheSP(); return; }
   if(mapState){ renderCarte(); return; }
   renderList();
 }
@@ -1227,11 +1271,13 @@ function renderFiche(j){
         <span class="mini" style="cursor:default">${j.services.length} services · ${nc} contacts</span>
       </div>
     </div>
+    <div id="spblock"></div>
     ${fchips}
     <div class="flayout">
       <nav class="toc">${toc}</nav>
       <div>${blocks}</div>
     </div>`;
+  spFillBlock(j);
 }
 
 function renderSvcBlock(j, s, matchOpen){
@@ -1327,7 +1373,7 @@ function renderChips(){
 }
 
 /* ============================ interactions ============================ */
-window.setCat = c => { currentCat=c; shownCards=60; ficheId=null; renderChips(); render(); };
+window.setCat = c => { currentCat=c; shownCards=60; ficheId=null; spState=null; renderChips(); render(); };
 window.tgl = (id, cur) => { openState[id] = !cur; render(); };
 window.copyVal = v => { navigator.clipboard?.writeText(v).then(()=>toast('Copié : '+v)); };
 
@@ -1398,13 +1444,13 @@ window.tglTool = id => {
 const COMP_LBL = {CA:"Cour d'appel", TJ:'Tribunal judiciaire',
   'Proximité':'Tribunal de proximité', CPH:"Conseil de prud'hommes"};
 function compCard(c, curId, inPanel){
-  const cells = c.items.map(x=>{
+  const cells = c.items.map((x,i)=>{
     const here = curId && x.jurId===curId;
     const action = here
       ? `<span class="chere">${icn('check',11)} fiche affichée</span>`
       : x.jurId
         ? `<button class="cgo" onclick="closeTools();openFiche('${x.jurId}')">ouvrir la fiche ${icn('right',11)}</button>`
-        : `<span class="cabs">pas de fiche dans l'annuaire</span>`;
+        : `<button class="cgo" onclick="openCompSP(${i})" title="Pas de fiche dans l'annuaire — coordonnées officielles service-public.fr">fiche officielle ${icn('right',11)}</button>`;
     return `<div class="compcell ${here?'here':''}">
       <span class="cl">${COMP_LBL[x.type]||x.type}</span>
       <span class="cn">${esc(x.nom)}</span>
@@ -1417,6 +1463,223 @@ function compCard(c, curId, inPanel){
       <span>Compétence territoriale — <b>${esc(c.adresse)}</b></span>${close}</div>
     <div class="compgrid">${cells}</div>
   </div>`;
+}
+window.openCompSP = i => {
+  const x = COMP_LAST && COMP_LAST.items[i];
+  if(x) openFicheSP(x.key, x.nom);
+};
+
+/* ============================ annuaire officiel — lannuaire.service-public.fr ============================
+   API DILA « Annuaire de l'administration » (CORS ouvert, données ministère de la Justice).
+   Sert à : 1. compléter les fiches existantes (adresse, horaires, tél, mail officiels)
+            2. générer une fiche à la volée quand la juridiction n'est pas dans l'annuaire */
+const SP_API = 'https://api-lannuaire.service-public.fr/api/explore/v2.1/catalog/datasets/api-lannuaire-administration/records';
+const SP_PIVOT = {tj:'tgi', ca:'cour_appel', tprx:'ti', cph:'prudhommes', commerce:'tribunal_commerce'};
+const SP_TYPE_LBL = {tj:'Tribunal judiciaire', ca:"Cour d'appel", tprx:'Tribunal de proximité',
+  cph:"Conseil de prud'hommes", commerce:'Tribunal de commerce'};
+const SP_BADGE = {tj:'tj', ca:'ca', tprx:'tj', cph:'autre', commerce:'commerce'};
+const SP_BADGE_LBL = {tj:'TJ', ca:'CA', tprx:'Prox.', cph:'CPH', commerce:'T.Com'};
+const SP_TTL = 7*24*3600*1000;   // cache local : 7 jours
+const spJ = s => { try{ return JSON.parse(s||'null')||[]; }catch(e){ return []; } };
+function spCacheGet(k){
+  try{
+    const o = JSON.parse(localStorage.getItem('juritel.sp2.'+k)||'null');
+    if(o && Date.now()-o.t < SP_TTL) return o;
+    if(o) localStorage.removeItem('juritel.sp2.'+k);
+  }catch(e){}
+  return null;
+}
+function spCachePut(k, v){ try{ localStorage.setItem('juritel.sp2.'+k, JSON.stringify({t:Date.now(), v})); }catch(e){} }
+
+function spExtract(r){
+  const adrs = spJ(r.adresse);
+  const adr = adrs.find(a=>a.type_adresse==='Adresse') || adrs[0] || {};
+  const ligne = [adr.numero_voie, adr.complement1, adr.complement2, adr.service_distribution]
+    .map(x=>(x||'').trim()).filter(Boolean).join(', ');
+  const ville = [adr.code_postal, adr.nom_commune].filter(Boolean).join(' ');
+  const horaires = spJ(r.plage_ouverture).map(p=>{
+    const h = t=>(t||'').slice(0,5);
+    const jours = (!p.nom_jour_fin || p.nom_jour_debut===p.nom_jour_fin)
+      ? p.nom_jour_debut : p.nom_jour_debut+' – '+p.nom_jour_fin;
+    // certaines fiches codent 00:00–00:00 et donnent l'horaire réel en commentaire
+    const ok = (a,b)=> h(a) && h(a)!==h(b);
+    let plages = ok(p.valeur_heure_debut_1, p.valeur_heure_fin_1) ? h(p.valeur_heure_debut_1)+'–'+h(p.valeur_heure_fin_1) : '';
+    if(ok(p.valeur_heure_debut_2, p.valeur_heure_fin_2)) plages += (plages?' et ':'')+h(p.valeur_heure_debut_2)+'–'+h(p.valeur_heure_fin_2);
+    return {jours, plages, note:(p.commentaire||'').trim()};
+  }).filter(x=>x.jours);
+  return {
+    id: r.id, nom: r.nom,
+    adresse: [ligne, ville].filter(Boolean).join(' – '),
+    tels: spJ(r.telephone).map(t=>(t.valeur||'').trim()).filter(Boolean),
+    mails: (r.adresse_courriel||'').split(/[;,\s]+/).filter(x=>x.includes('@')),
+    site: ((spJ(r.site_internet)[0]||{}).valeur||'').trim(),
+    horaires,
+    url: r.url_service_public||'',
+    maj: (r.partenaire_date_modification||r.date_modification||'').split(' ')[0],
+  };
+}
+
+/* recherche d'une juridiction par type + nom ; renvoie null si introuvable (mis en cache) */
+async function spLookup(type, nom){
+  const pivot = SP_PIVOT[type];
+  if(!pivot) return null;
+  const key = type+'/'+normVille(nom);
+  const hit = spCacheGet(key);   // cache = enregistrement brut, extrait à l'affichage
+  if(hit) return hit.v ? spExtract(hit.v) : null;
+  const q = (SP_TYPE_LBL[type]+' '+normVille(nom)).replace(/"/g,' ');
+  const url = SP_API+'?limit=20'
+    +'&select=id,nom,adresse,telephone,adresse_courriel,plage_ouverture,site_internet,url_service_public,partenaire_date_modification,date_modification'
+    +'&where='+encodeURIComponent(`pivot like "${pivot}" and search(nom, "${q}")`);
+  let rec;
+  try{
+    const r = await fetch(url);
+    if(!r.ok) return null;
+    const d = await r.json();
+    const res = d.results||[];
+    const cible = normVille(nom);
+    rec = res.find(x=>normVille(x.nom)===cible)
+       || res.find(x=>{const n=normVille(x.nom); return (n.startsWith(cible)||cible.startsWith(n)) && Math.min(n.length,cible.length)>=4;})
+       || (res.length===1 ? res[0] : null);
+  }catch(e){ return null; }   // erreur réseau : on ne met pas en cache
+  spCachePut(key, rec||null);
+  return rec ? spExtract(rec) : null;
+}
+
+/* pastille de contact (sans notation : donnée officielle, pas un contact de l'annuaire) */
+function spChan(type, v, blank){
+  const href = type==='email' ? 'mailto:'+v
+    : type==='web' ? v
+    : 'tel:'+(digits(v).length===10 ? '+33'+digits(v).slice(1) : digits(v));
+  const ico = type==='email' ? 'mail' : type==='web' ? 'globe' : 'phone';
+  const lbl = type==='web' ? v.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'') : v;
+  return `<div class="chan"><span class="tico ${type==='web'?'fax':type}">${icn(ico,13)}</span>
+    <a class="v" href="${esc(href)}"${type==='web'||blank?' target="_blank" rel="noopener"':''}>${esc(lbl)}</a>
+    <div class="acts"><button class="abtn ghost" title="Copier" onclick="copyVal('${esc(v)}')">${icn('copy',13)}</button></div>
+  </div>`;
+}
+function spHoursHtml(d){
+  if(!d.horaires.length) return '';
+  const rows = d.horaires.map(h=>
+    `<div><b>${esc(h.jours)}</b>${h.plages?' : '+esc(h.plages):''}${h.note?` <span class="spnote">${esc(h.note)}</span>`:''}</div>`).join('');
+  return `<div class="sprow">${icn('clock',13)}<div>${rows}</div></div>`;
+}
+
+/* ---------- fiche générée à la volée (juridiction absente de l'annuaire) ---------- */
+function spResolve(){
+  const st = spState; if(!st) return;
+  spLookup(st.type, st.nom).then(d=>{
+    if(spState!==st) return;
+    st.loading = false; st.data = d;
+    render();
+  });
+}
+window.openFicheSP = (type, nom) => {
+  closeTools();
+  ficheId = null; mapState = null;
+  spState = {type, nom, loading:true};
+  history.pushState(null,'','#sp/'+type+'/'+encodeURIComponent(nom));
+  render(); window.scrollTo(0,0);
+  spResolve();
+};
+
+function renderFicheSP(){
+  const st = spState;
+  $('#stats').textContent = '';
+  const d = st.data;
+  let body;
+  if(st.loading){
+    body = `<div class="vide">Recherche dans l'annuaire officiel…</div>`;
+  } else if(!d){
+    body = `<div class="vide"><div class="big">${icn('search',34)}</div>
+      Juridiction introuvable dans l'annuaire officiel.<br><br>
+      <a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener"
+        href="https://lannuaire.service-public.gouv.fr/recherche?whoWhat=${encodeURIComponent(st.nom)}">
+        Chercher sur lannuaire.service-public.gouv.fr</a></div>`;
+  } else {
+    const chans = d.tels.map(t=>spChan('tel',t)).join('')
+      + d.mails.map(m=>spChan('email',m)).join('')
+      + (d.site ? spChan('web', d.site) : '');
+    body = `
+      <section class="svcblock open">
+        <h3><span class="caret" style="transform:rotate(90deg)">${icn('chev',12)}</span>
+          Coordonnées officielles <span class="cnt">${d.tels.length+d.mails.length}</span></h3>
+        <div class="svcinner">
+          <div class="entry nolabel"><div class="chans">${chans||'<span class="hint">Aucune coordonnée publiée.</span>'}</div></div>
+          <div style="padding:2px 17px 13px">
+            ${spHoursHtml(d)}
+            <div class="spfoot">Source : <a href="${esc(d.url)}" target="_blank" rel="noopener">lannuaire.service-public.gouv.fr</a>
+              — données du ministère de la Justice${d.maj?`, mises à jour le ${esc(d.maj)}`:''}.</div>
+          </div>
+        </div>
+      </section>`;
+  }
+  const nom = d ? d.nom : st.nom;
+  $('#view').innerHTML = `
+    <div class="fhead">
+      <div class="row1">
+        <button id="btnback" onclick="goHome()" title="Retour">${icn('left',15)}</button>
+        <h2>${esc(nom)}</h2>
+        <span class="badge b-${SP_BADGE[st.type]||'autre'}">${SP_BADGE_LBL[st.type]||st.type}</span>
+      </div>
+      ${d&&d.adresse?`<div class="adr">${icn('pin',11)} ${esc(d.adresse)} <button class="mini" onclick="copyVal('${esc(d.adresse)}')">${icn('copy',11)} copier</button></div>`:''}
+      <div class="facts">
+        <span class="mini" style="cursor:default">${icn('scale',13)} Fiche générée depuis l'annuaire officiel — pas encore dans votre annuaire</span>
+        ${d?`<button class="mini" onclick="spAdd()">${icn('plus',13)} Ajouter à l'annuaire</button>`:''}
+      </div>
+    </div>
+    ${body}`;
+}
+
+/* enregistre la fiche générée comme vraie juridiction (synchronisée Drive ensuite) */
+window.spAdd = () => {
+  if(!spState || !spState.data) return;
+  const d = spState.data, type = spState.type;
+  const deja = DATA.juridictions.find(x=>normVille(x.nom)===normVille(d.nom));
+  if(deja){ openFiche(deja.id); toast('Déjà dans l\'annuaire'); return; }
+  const s = {id:uid('s'), nom:'Accueil / Standard', domaine:'general', contacts:[]};
+  for(const t of d.tels)
+    s.contacts.push({id:uid('c'), type:'tel', valeur:t, libelle:'Accueil', groupe:'', note:'', ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+  for(const m of d.mails)
+    s.contacts.push({id:uid('c'), type:'email', valeur:m, libelle:'Accueil', groupe:'', note:'', ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+  const j = {id:uid('j'), nom:d.nom, categorie:SP_BADGE[type]||'autre', adresse:d.adresse, services:[s]};
+  DATA.juridictions.push(j);
+  buildIndex(); save(); renderChips();
+  spState = null;
+  openFiche(j.id);
+  toast('Fiche ajoutée à l\'annuaire');
+};
+
+/* ---------- complément officiel sur les fiches existantes ---------- */
+function spTypeFor(j){
+  const n = norm(j.nom);
+  if(/proximit/.test(n)) return 'tprx';
+  if(/prud/.test(n)) return 'cph';
+  if(j.categorie==='ca') return 'ca';
+  if(j.categorie==='commerce') return 'commerce';
+  if(j.categorie==='tj' && /^(tj\b|tribunal judiciaire)/.test(n)) return 'tj';
+  return null;
+}
+let spReq = 0;
+function spFillBlock(j){
+  const type = spTypeFor(j); if(!type) return;
+  const tok = ++spReq;
+  spLookup(type, j.nom).then(d=>{
+    if(tok!==spReq || !d || ficheId!==j.id) return;
+    const el = document.getElementById('spblock');
+    if(!el) return;
+    const chans = d.tels.map(t=>spChan('tel',t)).join('')
+      + d.mails.map(m=>spChan('email',m)).join('')
+      + (d.site ? spChan('web', d.site) : '');
+    el.innerHTML = `<div class="spcard">
+      <div class="comphead">${icn('scale',13)}
+        <span>Annuaire officiel — <b>${esc(d.nom)}</b></span>
+        <a class="splink" href="${esc(d.url)}" target="_blank" rel="noopener">lannuaire.service-public.gouv.fr</a></div>
+      ${d.adresse?`<div class="sprow">${icn('pin',13)}<div>${esc(d.adresse)} <button class="mini" onclick="copyVal('${esc(d.adresse)}')">${icn('copy',11)} copier</button></div></div>`:''}
+      ${spHoursHtml(d)}
+      ${chans?`<div class="chans" style="margin-top:7px">${chans}</div>`:''}
+      ${d.maj?`<div class="spfoot">Données ministère de la Justice, mises à jour le ${esc(d.maj)}.</div>`:''}
+    </div>`;
+  });
 }
 
 /* ============================ juridiction compétente par adresse ============================
@@ -1484,7 +1747,7 @@ window.pickAdr = async i => {
       : key==='tj' ? findJurByName(nom, ['tj'])
       : key==='tprx' ? findJurByName(nom, null, 'proximit')
       : findJurByName(nom, null, 'prud');
-    items.push({type:label, nom, jurId: j? j.id : null});
+    items.push({type:label, key, nom, jurId: j? j.id : null});
   });
   const tj = items.find(x=>x.type==='TJ');
   COMP_LAST = {adresse: f.properties.label, items, tjId: tj && tj.jurId};
@@ -1511,7 +1774,7 @@ async function loadCarte(){
 }
 window.openCarte = () => {
   mapState = {level:'fr'};
-  ficheId = null;
+  ficheId = null; spState = null;
   if(location.hash!=='#carte') history.pushState(null,'','#carte');
   render(); window.scrollTo(0,0);
 };
@@ -1536,7 +1799,7 @@ window.carteJur = i => {
     : j.t==='ca' ? findJurByName(j.n, ['ca'])
     : findJurByName(j.n, null, 'proximit');
   if(f) openFiche(f.id);
-  else toast('Pas de fiche dans l\'annuaire pour ' + jurShort(j.n));
+  else openFicheSP(j.t, j.n);   // pas de fiche locale : fiche générée via l'annuaire officiel
 };
 window.carteDep = code => {
   const js = MAPD.j.map((j,i)=>({j,i})).filter(x=>x.j.d===code);
@@ -1633,9 +1896,14 @@ function renderCarte(){
       <span class="badge b-tj">Carte</span>
     </div>
     <div class="mcrumbs">${crumbs}</div>
-    <div class="mapwrap"><svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${svg}</svg></div>
-    ${legend}${sousListe}
-    <p class="hint" style="margin-top:10px">${st.level==='fr'?'Cliquez sur une région.':st.level==='reg'?'Cliquez sur un département ou directement sur une juridiction. Les filtres en haut de page s\'appliquent à la carte.':'Cliquez sur une juridiction pour ouvrir sa fiche.'}</p>
+    <div class="maplayout">
+      <div class="mapwrap"><svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${svg}</svg></div>
+      <div class="mside">
+        ${legend?'<div class="msidetitle">Légende</div>'+legend:''}
+        ${sousListe?'<div class="msidetitle">Juridictions</div>'+sousListe:''}
+        <p class="hint">${st.level==='fr'?'Cliquez sur une région.':st.level==='reg'?'Cliquez sur un département ou directement sur une juridiction. Les filtres en haut de page s\'appliquent à la carte.':'Cliquez sur une juridiction pour ouvrir sa fiche.'}</p>
+      </div>
+    </div>
   </div>`;
 }
 window.carteCa = c => {
@@ -2268,6 +2536,8 @@ document.getElementById('btntheme').addEventListener('click', ()=>{
   await load();
   const m = location.hash.match(/^#f\/(.+)$/);
   if(m && DATA.juridictions.some(j=>j.id===m[1])) ficheId = m[1];
+  const sp = location.hash.match(/^#sp\/([a-z]+)\/(.+)$/);
+  if(!ficheId && sp){ spState = {type:sp[1], nom:decodeURIComponent(sp[2]), loading:true}; spResolve(); }
   if(location.hash==='#carte') mapState = {level:'fr'};
   renderChips(); render();
   Drive.init();
