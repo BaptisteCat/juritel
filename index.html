@@ -762,6 +762,12 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   box-shadow:0 8px 26px var(--glow), var(--shadow-l);
 }
 #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+/* mobile : les fenêtres s'ancrent en haut pour rester visibles clavier ouvert */
+@media (max-width:640px){
+  dialog{margin:10px auto auto; max-height:calc(100dvh - 20px)}
+  #dlgAdr .dlg > p.hint:first-of-type{display:none}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
