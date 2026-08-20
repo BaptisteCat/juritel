@@ -811,7 +811,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   <input id="adr" placeholder="Adresse, code postal ou ville…"
     autocomplete="off" spellcheck="false" oninput="adrInput(this.value)">
   <div class="adrsugg" id="adrsugg"></div>
-  <p class="hint" style="margin-top:12px">Géocodage Base Adresse Nationale · compétences officielles du ministère de la Justice (data.gouv.fr).</p>
+  <p class="hint" style="margin-top:12px">Sources officielles : Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</p>
   <div class="dlgbtns"><button class="btn" onclick="document.getElementById('dlgAdr').close()">Fermer</button></div>
 </div></dialog>
 
@@ -1512,7 +1512,9 @@ window.tglTool = id => {
 
 
 const COMP_LBL = {CA:"Cour d'appel", TJ:'Tribunal judiciaire',
-  'Proximité':'Tribunal de proximité', CPH:"Conseil de prud'hommes"};
+  'Proximité':'Tribunal de proximité', CPH:"Conseil de prud'hommes",
+  TCO:'Tribunal de commerce', TA:'Tribunal administratif',
+  CAA:"Cour administrative d'appel"};
 function compCard(c, curId, inPanel){
   const cells = c.items.map((x,i)=>{
     const here = curId && x.jurId===curId;
@@ -1544,11 +1546,12 @@ window.openCompSP = i => {
    Sert à : 1. compléter les fiches existantes (adresse, horaires, tél, mail officiels)
             2. générer une fiche à la volée quand la juridiction n'est pas dans l'annuaire */
 const SP_API = 'https://api-lannuaire.service-public.fr/api/explore/v2.1/catalog/datasets/api-lannuaire-administration/records';
-const SP_PIVOT = {tj:'tgi', ca:'cour_appel', tprx:'ti', cph:'prudhommes', commerce:'tribunal_commerce'};
+const SP_PIVOT = {tj:'tgi', ca:'cour_appel', tprx:'ti', cph:'prudhommes', commerce:'tribunal_commerce', ta:'ta', caa:'caa'};
 const SP_TYPE_LBL = {tj:'Tribunal judiciaire', ca:"Cour d'appel", tprx:'Tribunal de proximité',
-  cph:"Conseil de prud'hommes", commerce:'Tribunal de commerce'};
-const SP_BADGE = {tj:'tj', ca:'ca', tprx:'tj', cph:'autre', commerce:'commerce'};
-const SP_BADGE_LBL = {tj:'TJ', ca:'CA', tprx:'Prox.', cph:'CPH', commerce:'T.Com'};
+  cph:"Conseil de prud'hommes", commerce:'Tribunal de commerce',
+  ta:'Tribunal administratif', caa:"Cour administrative d'appel"};
+const SP_BADGE = {tj:'tj', ca:'ca', tprx:'tj', cph:'autre', commerce:'commerce', ta:'autre', caa:'ca'};
+const SP_BADGE_LBL = {tj:'TJ', ca:'CA', tprx:'Prox.', cph:'CPH', commerce:'T.Com', ta:'TA', caa:'CAA'};
 const SP_TTL = 7*24*3600*1000;   // cache local : 7 jours
 const spJ = s => { try{ return JSON.parse(s||'null')||[]; }catch(e){ return []; } };
 function spCacheGet(k){
@@ -1784,7 +1787,8 @@ window.adrInput = v => {
   loadComp();
 };
 function normVille(s){
-  return norm(s).replace(/^(tribunal judiciaire|tribunal de proximite|cour d'appel|conseil de prud'hommes|tj|ca|cph)\s*(de la |de l'|des |du |de |d')?/,'')
+  return norm(s).replace(/\(.*\)/g,'')
+    .replace(/^(cour administrative d'appel|tribunal administratif|tribunal de commerce|chambre commerciale du tj|tribunal judiciaire|tribunal de proximite|cour d'appel|conseil de prud'hommes|tj|ca|cph)\s*(de la |de l'|des |du |de |d')?/,'')
     .replace(/-/g,' ').replace(/\s+/g,' ').trim();
 }
 function findJurByName(nom, cats, require){
@@ -1807,18 +1811,30 @@ window.pickAdr = async i => {
   if(!comp){ toast('Table des compétences indisponible'); return; }
   const entry = comp.c[f.properties.citycode];
   if(!entry){ toast('Commune introuvable dans la table officielle'); if(box) box.innerHTML=''; return; }
-  const types = [['CA','ca',['ca']], ['TJ','tj',['tj']], ['Proximité','tprx',['tj','autre']], ['CPH','cph',['autre','commerce']]];
+  const types = [['CA','ca'], ['TJ','tj'], ['Proximité','tprx'], ['CPH','cph'], ['TCO','tco']];
   const items = [];
-  types.forEach(([label, key, cats], k)=>{
+  types.forEach(([label, key], k)=>{
     const idx = entry[k];
-    if(idx<0) return;
+    if(idx===undefined || idx<0) return;
     const nom = comp[key][idx];
     const j = key==='ca' ? findJurByName(nom, ['ca'])
       : key==='tj' ? findJurByName(nom, ['tj'])
       : key==='tprx' ? findJurByName(nom, null, 'proximit')
+      : key==='tco' ? findJurByName(nom, null, 'commerc')
       : findJurByName(nom, null, 'prud');
-    items.push({type:label, key, nom, jurId: j? j.id : null});
+    items.push({type:label, key: key==='tco' ? 'commerce' : key, nom, jurId: j? j.id : null});
   });
+  // ordre administratif : ressort départemental (CJA R221-3 et R221-7)
+  const cc = f.properties.citycode;
+  const depa = cc.startsWith('97') ? cc.slice(0,3) : cc.slice(0,2);
+  const tad = comp.tadep && comp.tadep[depa];
+  if(tad){
+    const nta = comp.ta[tad[0]], ncaa = comp.caa[tad[1]];
+    const jta = findJurByName(nta, null, 'administratif');
+    const jcaa = findJurByName(ncaa, null, 'administrative');
+    items.push({type:'TA', key:'ta', nom:nta, jurId: jta ? jta.id : null});
+    items.push({type:'CAA', key:'caa', nom:ncaa, jurId: jcaa ? jcaa.id : null});
+  }
   const tj = items.find(x=>x.type==='TJ');
   COMP_LAST = {adresse: f.properties.label, items, tjId: tj && tj.jurId};
   if(tj && tj.jurId){
