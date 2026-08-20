@@ -853,6 +853,17 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <div class="setrow"><button class="btn primary" id="btnDrive"><span data-ic="cloud" data-s="15"></span> Connecter Google Drive</button></div>
     <div class="setrow" style="display:none" id="rowDriveOff"><button class="btn" id="btnDriveOff">Déconnecter Google Drive</button></div>
     <p class="hint" id="driveHint"></p>
+    <div id="shareBox" style="display:none">
+      <label style="display:block; font-size:11px; font-weight:650; margin:12px 0 5px; color:var(--ink-2); text-transform:uppercase; letter-spacing:.06em">Partager la base</label>
+      <div class="setrow">
+        <input id="shareMail" placeholder="adresse@gmail.com" autocomplete="off"
+          style="flex:1; padding:10px 12px; font-size:14px; border:1.5px solid var(--line); border-radius:10px; background:var(--card-2); color:var(--ink); outline:none; font-family:inherit">
+        <button class="btn" id="btnShare" style="flex:0 0 auto">Inviter</button>
+      </div>
+      <p class="hint">La personne invitée reçoit un accès en écriture au fichier de base dans votre Drive. Sur son poste, elle connecte <b>son</b> compte Google puis utilise « Rejoindre ».</p>
+    </div>
+    <div class="setrow"><button class="btn" id="btnJoin"><span data-ic="up2" data-s="15"></span> Rejoindre une base partagée…</button></div>
+    <p class="hint" id="joinHint"></p>
   </div>
   <hr>
   <p class="hint" id="metaInfo"></p>
@@ -919,6 +930,7 @@ const icn = (n, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fi
    ============================================================ */
 const CLIENT_ID = '1002386733501-oeq2g899a2dlgcttg0qem8a7ugvsh847.apps.googleusercontent.com';
 const DRIVE_FILENAME = 'juritel-data.json';
+const PICKER_API_KEY = '';   // clé API Google (console) pour « Rejoindre une base partagée »
 const LS_KEY = 'juritel.data';
 const LS_DRIVE = 'juritel.driveOn';
 const LS_FILEID = 'juritel.driveFileId';
@@ -2583,6 +2595,8 @@ const Drive = (() => {
     }
     $('#btnDrive').style.display = on()?'none':'flex';
     $('#rowDriveOff').style.display = on()?'flex':'none';
+    const sb = document.getElementById('shareBox');
+    if(sb) sb.style.display = on()?'block':'none';
     $('#driveHint').textContent = on() ?
       'Connecté : le fichier « '+DRIVE_FILENAME+' » de votre Drive est synchronisé automatiquement entre vos appareils.' :
       'Vos données seront stockées dans un fichier de votre Google Drive et synchronisées entre tous vos appareils.';
@@ -2813,10 +2827,22 @@ const Drive = (() => {
     });
     setInterval(()=>{ if(on() && !busy && !document.hidden) pull(false); }, 5*60*1000);
   }
-  return {init, connect, disconnect, schedulePush, refreshSettingsUI};
+  const getToken = interactive => ensureToken(!!interactive);
+  function fileIdNow(){ return fileId; }
+  function useFile(id){
+    fileId = id;
+    localStorage.setItem(LS_FILEID, id);
+    localStorage.setItem(LS_DRIVE, '1');
+    lastRemoteRev = null;
+    refreshSettingsUI();
+    pull(false);
+  }
+  return {init, connect, disconnect, schedulePush, refreshSettingsUI, token: getToken, fileIdNow, useFile};
 })();
 $('#btnDrive').addEventListener('click', ()=>Drive.connect());
 $('#btnDriveOff').addEventListener('click', ()=>{ Drive.disconnect(); toast('Drive déconnecté'); });
+$('#btnShare').addEventListener('click', ()=>driveInvite());
+$('#btnJoin').addEventListener('click', ()=>driveJoin());
 // l'indicateur de synchronisation sert de bouton de reconnexion en cas d'erreur
 $('#syncstate').addEventListener('click', ()=>{
   if($('#syncstate').classList.contains('err')) Drive.connect();
@@ -2844,6 +2870,64 @@ document.getElementById('btntheme').addEventListener('click', ()=>{
   applyTheme();
   toast('Thème '+(next==='dark' ? 'sombre' : 'clair'));
 });
+
+
+/* ---------- partage de la base entre comptes Google ---------- */
+window.driveInvite = async () => {
+  const mail = (document.getElementById('shareMail').value||'').trim();
+  if(!mail.includes('@')){ toast('Adresse e-mail invalide'); return; }
+  const t = await Drive.token(); if(!t){ toast('Reconnectez Google Drive'); return; }
+  const fid = Drive.fileIdNow();
+  if(!fid){ toast('Aucun fichier de base à partager — synchronisez d\'abord'); return; }
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fid}/permissions?sendNotificationEmail=true`,{
+    method:'POST', headers:{'Authorization':'Bearer '+t, 'Content-Type':'application/json'},
+    body: JSON.stringify({role:'writer', type:'user', emailAddress: mail})});
+  if(r.ok){
+    toast('Invitation envoyée à '+mail);
+    document.getElementById('shareMail').value='';
+  } else {
+    const e = await r.json().catch(()=>null);
+    toast('Échec du partage : '+((e&&e.error&&e.error.message)||r.status));
+  }
+};
+let pickerReady = false;
+function loadPicker(){
+  return new Promise(res=>{
+    if(pickerReady) return res(true);
+    const s = document.createElement('script');
+    s.src = 'https://apis.google.com/js/api.js';
+    s.onload = ()=>gapi.load('picker', ()=>{ pickerReady = true; res(true); });
+    s.onerror = ()=>res(false);
+    document.head.appendChild(s);
+  });
+}
+window.driveJoin = async () => {
+  if(!PICKER_API_KEY){
+    document.getElementById('joinHint').textContent =
+      'Fonction à activer : créez une clé API (console Google, API « Google Picker » activée) et transmettez-la pour finaliser.';
+    return;
+  }
+  const t = await Drive.token(true); if(!t){ toast('Connexion Google requise'); return; }
+  if(!await loadPicker()){ toast('Sélecteur Google indisponible'); return; }
+  const view = new google.picker.DocsView(google.picker.ViewId.DOCS)
+    .setMode(google.picker.DocsViewMode.LIST)
+    .setQuery(DRIVE_FILENAME);
+  const shared = new google.picker.DocsView(google.picker.ViewId.DOCS)
+    .setOwnedByMe(false).setMode(google.picker.DocsViewMode.LIST)
+    .setQuery(DRIVE_FILENAME);
+  const picker = new google.picker.PickerBuilder()
+    .setOAuthToken(t).setDeveloperKey(PICKER_API_KEY)
+    .setTitle('Choisissez le fichier juritel-data.json partagé avec vous')
+    .addView(shared).addView(view)
+    .setCallback(data=>{
+      if(data.action === google.picker.Action.PICKED && data.docs && data.docs[0]){
+        Drive.useFile(data.docs[0].id);
+        toast('Base partagée rejointe — synchronisation…');
+      }
+    })
+    .build();
+  picker.setVisible(true);
+};
 
 /* ============================ démarrage ============================ */
 (async function(){
