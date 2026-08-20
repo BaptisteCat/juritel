@@ -1240,8 +1240,7 @@ function renderList(){
     : '';
   const V = $('#view');
   $('#stats').textContent = tokens.length||currentCat ?
-    `${results.length} juridiction${results.length>1?'s':''} — cliquez sur une fiche pour l'ouvrir` :
-    `Tapez une recherche ou parcourez les fiches par catégorie`;
+    `${results.length} juridiction${results.length>1?'s':''} — cliquez sur une fiche pour l'ouvrir` : '';
   if(!results.length){
     V.innerHTML = offHtml || `<div class="vide"><div class="big">${icn('search',34)}</div>Aucun résultat.<br><br>
       <button class="btn primary" onclick="openAdd()">＋ Ajouter ce contact</button></div>`;
