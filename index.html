@@ -615,6 +615,20 @@ select.mini{
 .mlegend .shape{font-size:11.5px; color:var(--ink-3); font-weight:550}
 .mjlist{display:flex; flex-wrap:wrap; gap:7px; margin-top:12px}
 
+
+/* outils ancrés en colonne latérale (accueil, écrans larges) */
+.mainrow{display:grid; grid-template-columns:minmax(0,1fr); gap:16px; align-items:start}
+body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
+#toolsdock:empty{display:none}
+#tools.docked{
+  position:sticky; top:136px; right:auto; bottom:auto; z-index:1;
+  width:auto; transform:none; transition:none;
+  border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); padding:14px;
+  max-height:calc(100vh - 156px); overflow-y:auto;
+}
+#tools.docked .thead .iconbtn{display:none}
+
 /* ==================== bouton flottant ==================== */
 #fab{
   position:fixed; right:22px; bottom:22px; z-index:30;
@@ -722,7 +736,10 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 
 <main>
   <div id="stats"></div>
-  <div id="view"></div>
+  <div class="mainrow">
+    <div id="view"></div>
+    <div id="toolsdock"></div>
+  </div>
 </main>
 
 <div id="toolsback" onclick="closeTools()"></div>
@@ -1074,6 +1091,7 @@ function render(){
   $('#count').textContent = `${total} juridictions · ${nc.toLocaleString('fr-FR')} contacts`;
   $('#clearq').style.display = $('#q').value ? 'grid':'none';
   document.body.classList.toggle('mapmode', !!mapState && !ficheId);
+  updateToolsDock();
   if(ficheId){
     const j = DATA.juridictions.find(x=>x.id===ficheId);
     if(j){ renderFiche(j); return; }
@@ -1424,13 +1442,42 @@ window.delJur = id => {
 
 
 
+
+/* ancrage des outils : colonne latérale sur l'accueil (bureau), tiroir sinon */
+function updateToolsDock(){
+  const tools = document.getElementById('tools');
+  const dock = document.getElementById('toolsdock');
+  if(!tools || !dock) return;
+  const wantDock = window.innerWidth >= 1080 && !ficheId && !mapState;
+  document.body.classList.toggle('toolsdocked', wantDock);
+  tools.classList.toggle('docked', wantDock);
+  const btn = document.getElementById('btntools');
+  if(btn) btn.style.display = wantDock ? 'none' : '';
+  if(wantDock){
+    if(tools.parentElement !== dock) dock.appendChild(tools);
+    tools.classList.add('show');
+    document.getElementById('toolsback').classList.remove('show');
+  } else if(tools.parentElement === dock){
+    document.body.appendChild(tools);
+    tools.classList.remove('show');
+  }
+}
+let dockTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(dockTimer);
+  dockTimer = setTimeout(updateToolsDock, 120);
+});
+
 /* panneau latéral d'outils */
 window.openTools = () => {
+  if(document.getElementById('tools').classList.contains('docked')) return;
   document.getElementById('tools').classList.add('show');
   document.getElementById('toolsback').classList.add('show');
 };
 window.closeTools = () => {
-  document.getElementById('tools').classList.remove('show');
+  const t = document.getElementById('tools');
+  if(t.classList.contains('docked')) return;
+  t.classList.remove('show');
   document.getElementById('toolsback').classList.remove('show');
 };
 window.tglTool = id => {
