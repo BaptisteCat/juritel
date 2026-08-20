@@ -611,6 +611,13 @@ select.mini{
 .mapwrap svg.hovering .mdotlbl:not(.hl){opacity:.12}
 .mdot.hl{transform:scale(1.5)}
 .mdotlbl.hl{font-weight:750}
+.mgroup .mexp{display:none}
+.mgroup.open .mexp{display:initial}
+.mgroup.open .mclu{display:none}
+.mclu{cursor:pointer}
+.mcatch{fill:transparent; pointer-events:all}
+svg.gdim > .mdot, svg.gdim > .mdotlbl, svg.gdim .mgroup:not(.open){opacity:.15; transition:opacity .18s}
+.mapwrap svg.hovering .mclu{opacity:.15}
 .mjlist.hovering .schip:not(.hl){opacity:.35}
 .mjlist .schip{transition:all .16s}
 .mjlist .schip.hl{border-color:var(--accent); color:var(--accent); background:var(--card);
@@ -1968,6 +1975,7 @@ function mapTypesFor(level){
   if(currentCat==='commerce') return level==='dep' ? ['commerce'] : [];
   return [];   // catégorie non cartographiée
 }
+const cityOf = n => jurShort(n).replace(/^(TJ|CPH|T\.Com|TA|CAA|Prox\.)\s+/,'');
 const jurShort = n => n.replace(/^Tribunal judiciaire de /,'TJ ')
   .replace(/^Tribunal de proximité (de |d')/,'Prox. ')
   .replace(/^Cour d'Appel (de |d')/i,'CA ')
@@ -1976,6 +1984,26 @@ const jurShort = n => n.replace(/^Tribunal judiciaire de /,'TJ ')
   .replace(/^Tribunal Administratif (de |d')/i,'TA ')
   .replace(/^Cour administrative d'appel (de |d')/i,'CAA ');
 
+let grpGrace = null;
+window.grpOpen = k => {
+  clearTimeout(grpGrace);
+  const svg = document.querySelector('.mapwrap svg');
+  if(!svg) return;
+  svg.querySelectorAll('.mgroup.open').forEach(g=>g.classList.remove('open'));
+  const g = document.getElementById('mg-'+k);
+  if(g){ g.classList.add('open'); svg.classList.add('gdim'); }
+};
+function grpCloseAll(){
+  const svg = document.querySelector('.mapwrap svg');
+  if(!svg) return;
+  svg.querySelectorAll('.mgroup.open').forEach(g=>g.classList.remove('open'));
+  svg.classList.remove('gdim');
+}
+window.grpClose = () => {
+  clearTimeout(grpGrace);
+  grpGrace = setTimeout(grpCloseAll, 160);   // tolérance : pas de fermeture intempestive
+};
+window.grpCloseNow = grpCloseAll;
 window.carteJur = i => {
   const j = MAPD.j[i];
   const f = j.t==='tj' ? findJurByName(j.n, ['tj'])
@@ -2052,59 +2080,74 @@ function renderCarte(){
     for(const [x,y] of f.p){ cx+=fx(x); cy+=fy(y); }
     svg += `<text class="mlbl" x="${(cx/f.p.length).toFixed(0)}" y="${(cy/f.p.length).toFixed(0)}" font-size="15">${esc(f.lbl)}</text>`;
   }
-  // anneaux des CA dessinés d'abord : les disques TJ restent cliquables au-dessus
   // anneaux (cours d'appel) dessinés d'abord, disques par-dessus
   dots.sort((a,b)=>((a.j.t==='ca'||a.j.t==='caa')?0:1)-((b.j.t==='ca'||b.j.t==='caa')?0:1));
-  // vue département : éclatement en éventail des tribunaux d'une même ville
-  const dpos = new Map();
-  if(showDotLbl){
+  const lblPlaced = [];
+  const placeLbl = (px, py) => {
+    let ly = py - 16;
+    for(const cand of [py-16, py+27, py-34, py+45, py-52, py+63]){
+      if(!lblPlaced.some(q=>Math.abs(q.x-px)<108 && Math.abs(q.y-cand)<15)){ ly = cand; break; }
+    }
+    lblPlaced.push({x:px, y:ly});
+    return ly;
+  };
+  const dotSvg = (j, i, px, py, withLbl, lblY) => {
+    const col = typeColor(j.t);
+    const x = px.toFixed(1), y = py.toFixed(1);
+    const tip = `<title>${esc(j.n)}</title>`;
+    const on = `onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)"`;
+    let s;
+    if(j.t==='ca'||j.t==='caa')
+      s = `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?12:10}" fill="none" stroke="${col}" stroke-width="3.8" ${on}>${tip}</circle>`;
+    else if(j.t==='tprx')
+      s = `<rect class="mdot" id="mj-${i}" x="${(px-5.5).toFixed(1)}" y="${(py-5.5).toFixed(1)}" width="11" height="11" rx="3.5" fill="${col}" stroke="var(--card)" stroke-width="1.4" ${on}>${tip}</rect>`;
+    else
+      s = `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?9:7}" fill="${col}" stroke="var(--card)" stroke-width="1.8" ${on}>${tip}</circle>`;
+    if(withLbl)
+      s += `<text class="mdotlbl" id="ml-${i}" x="${x}" y="${lblY.toFixed(1)}" font-size="14">${esc(jurShort(j.n))}</text>`;
+    return s;
+  };
+  if(!showDotLbl){
+    for(const {j,i} of dots) svg += dotSvg(j, i, fx(j.x), fy(j.y), false, 0);
+  } else {
+    // vue département : une ville = un seul point ; l'éventail s'ouvre au survol
     const groups = [];
     for(const x of dots){
       const px = fx(x.j.x), py = fy(x.j.y);
       let g = groups.find(G=>Math.hypot(G.cx-px, G.cy-py) < 34);
       if(!g){ g = {sx:0, sy:0, cx:px, cy:py, items:[]}; groups.push(g); }
-      g.items.push({i:x.i, px, py});
+      g.items.push({d:x, px, py});
       g.sx += px; g.sy += py;
       g.cx = g.sx/g.items.length; g.cy = g.sy/g.items.length;
     }
-    for(const g of groups){
+    groups.forEach((g, k)=>{
       if(g.items.length === 1){
-        dpos.set(g.items[0].i, {x:g.items[0].px, y:g.items[0].py});
-        continue;
+        const it = g.items[0];
+        svg += dotSvg(it.d.j, it.d.i, it.px, it.py, true, placeLbl(it.px, it.py));
+        return;
       }
-      const R = Math.max(28, 12 + g.items.length*7);
-      // ancrage de la ville + traits de liaison
-      svg += `<circle cx="${g.cx.toFixed(1)}" cy="${g.cy.toFixed(1)}" r="3" fill="var(--ink-3)" opacity=".55"/>`;
-      g.items.forEach((it, k)=>{
-        const a = -Math.PI/2 + k*2*Math.PI/g.items.length;
-        const X = g.cx + R*Math.cos(a), Y = g.cy + R*Math.sin(a);
-        svg += `<line x1="${g.cx.toFixed(1)}" y1="${g.cy.toFixed(1)}" x2="${X.toFixed(1)}" y2="${Y.toFixed(1)}" stroke="var(--ink-3)" stroke-width="1" opacity=".38"/>`;
-        dpos.set(it.i, {x:X, y:Y});
+      const R = Math.max(30, 14 + g.items.length*7);
+      const cx = g.cx.toFixed(1), cy = g.cy.toFixed(1);
+      const ville = cityOf(g.items[0].d.j.n);
+      const ly = placeLbl(g.cx, g.cy);
+      // contenu éclaté (visible au survol) : zone tampon, ancrage, traits, points
+      let inner = `<circle class="mcatch" cx="${cx}" cy="${cy}" r="${(R+24).toFixed(0)}" onclick="grpCloseNow()"/>`
+        + `<circle cx="${cx}" cy="${cy}" r="3" fill="var(--ink-3)" opacity=".55" style="pointer-events:none"/>`;
+      let expd = '';
+      g.items.forEach((it, m)=>{
+        const a2 = -Math.PI/2 + m*2*Math.PI/g.items.length;
+        const X = g.cx + R*Math.cos(a2), Y = g.cy + R*Math.sin(a2);
+        inner += `<line x1="${cx}" y1="${cy}" x2="${X.toFixed(1)}" y2="${Y.toFixed(1)}" stroke="var(--ink-3)" stroke-width="1" opacity=".38" style="pointer-events:none"/>`;
+        const above = Math.sin(a2) < -0.3 || Math.cos(a2) < -0.5;
+        expd += dotSvg(it.d.j, it.d.i, X, Y, true, above ? Y-16 : Y+27);
       });
-    }
-  }
-  const lblPlaced = [];
-  for(const {j,i} of dots){
-    const sp = dpos.get(i);
-    const px = sp ? sp.x : fx(j.x), py = sp ? sp.y : fy(j.y), col = typeColor(j.t);
-    const x = px.toFixed(1), y = py.toFixed(1);
-    const tip = `<title>${esc(j.n)}</title>`;
-    const on = `onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)"`;
-    if(j.t==='ca'||j.t==='caa')
-      svg += `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?12:10}" fill="none" stroke="${col}" stroke-width="3.8" ${on}>${tip}</circle>`;
-    else if(j.t==='tprx')
-      svg += `<rect class="mdot" id="mj-${i}" x="${(px-5.5).toFixed(1)}" y="${(py-5.5).toFixed(1)}" width="11" height="11" rx="3.5" fill="${col}" stroke="var(--card)" stroke-width="1.4" ${on}>${tip}</rect>`;
-    else
-      svg += `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?9:7}" fill="${col}" stroke="var(--card)" stroke-width="1.8" ${on}>${tip}</circle>`;
-    if(showDotLbl){
-      // placement d'étiquette sans chevauchement (essais autour du point)
-      let ly = py - 16;
-      for(const cand of [py-16, py+27, py-34, py+45, py-52, py+63]){
-        if(!lblPlaced.some(q=>Math.abs(q.x-px)<108 && Math.abs(q.y-cand)<15)){ ly = cand; break; }
-      }
-      lblPlaced.push({x:px, y:ly});
-      svg += `<text class="mdotlbl" id="ml-${i}" x="${x}" y="${ly.toFixed(1)}" font-size="14">${esc(jurShort(j.n))}</text>`;
-    }
+      svg += `<g class="mgroup" id="mg-${k}" onmouseenter="grpOpen(${k})" onmouseleave="grpClose()">`
+        + `<g class="mclu" onclick="grpOpen(${k})">`
+        + `<circle cx="${cx}" cy="${cy}" r="11.5" fill="var(--card)" stroke="var(--accent)" stroke-width="2.6"><title>${esc(ville)} — ${g.items.length} juridictions</title></circle>`
+        + `<text x="${cx}" y="${(g.cy+4).toFixed(1)}" font-size="11" font-weight="700" fill="var(--accent)" text-anchor="middle" style="pointer-events:none">${g.items.length}</text>`
+        + `<text class="mdotlbl" x="${cx}" y="${ly.toFixed(1)}" font-size="14">${esc(ville)}</text>`
+        + `</g><g class="mexp">${inner}${expd}</g></g>`;
+    });
   }
   // légende par type de juridiction
   let legend = '';
@@ -2146,8 +2189,14 @@ window.hlJur = i => {
   svg.querySelectorAll('.hl').forEach(e=>e.classList.remove('hl'));
   if(i!==null){
     const d = document.getElementById('mj-'+i), l = document.getElementById('ml-'+i);
-    if(d) d.classList.add('hl');
+    if(d){
+      const g = d.closest('.mgroup');
+      if(g && !g.classList.contains('open')) grpOpen(+g.id.slice(3));
+      d.classList.add('hl');
+    }
     if(l) l.classList.add('hl');
+  } else {
+    grpClose();
   }
 };
 window.hlChip = i => {
