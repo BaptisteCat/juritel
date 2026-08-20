@@ -490,27 +490,41 @@ select.mini{
   letter-spacing:-.008em;
 }
 .adrsugg button:hover{background:var(--card-2); color:var(--accent)}
-.comprow{
-  display:flex; align-items:center; gap:10px; padding:10px 11px;
-  border-top:1px solid var(--line-2);
+.compcard{
+  background:var(--card);
+  border:1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
+  border-radius:var(--r); box-shadow:var(--shadow-s);
+  padding:14px 16px; margin-bottom:14px;
 }
-.comprow:first-of-type{margin-top:8px}
-.comprow .ct2{font-size:10.5px; font-weight:700; color:var(--ink-3);
-  text-transform:uppercase; letter-spacing:.05em; width:74px; flex-shrink:0}
-.comprow .cn{flex:1; min-width:0; font-size:13.5px; font-weight:600}
-.comprow .cgo{font-size:12px; font-weight:600; color:var(--accent); cursor:pointer;
-  white-space:nowrap; padding:5px 10px; border-radius:8px; border:1px solid var(--line);
-  background:var(--card-2)}
-.comprow .cgo:hover{border-color:var(--accent)}
-.comprow .cabs{font-size:11.5px; color:var(--ink-3)}
-.compband{
-  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-  background:color-mix(in srgb, var(--accent) 8%, var(--card));
-  border:1px solid color-mix(in srgb, var(--accent) 25%, var(--line));
-  border-radius:14px; padding:10px 14px; margin-bottom:12px; font-size:12.5px;
+.adrsugg .compcard{margin-top:10px; margin-bottom:0; padding:12px}
+.comphead{display:flex; align-items:flex-start; gap:8px; font-size:12.5px;
+  color:var(--ink-2); margin-bottom:11px; letter-spacing:-.005em}
+.comphead svg{margin-top:2px; color:var(--accent)}
+.comphead b{color:var(--ink); font-weight:650}
+.comphead .mini{margin-left:auto; flex-shrink:0}
+.compgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:9px}
+.compcell{
+  background:var(--card-2); border:1px solid var(--line-2); border-radius:12px;
+  padding:10px 12px; display:flex; flex-direction:column; gap:4px; min-width:0;
+  transition:all .15s;
 }
-.compband b{font-weight:650}
-.compband .x{margin-left:auto}
+.compcell.here{
+  border-color:color-mix(in srgb, var(--accent) 50%, var(--line));
+  background:color-mix(in srgb, var(--accent) 8%, var(--card-2));
+}
+.compcell .cl{font-size:10px; font-weight:700; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--ink-3)}
+.compcell .cn{font-size:13px; font-weight:650; letter-spacing:-.012em; color:var(--ink)}
+.compcell .cgo{
+  align-self:flex-start; display:inline-flex; align-items:center; gap:5px;
+  font-size:11.5px; font-weight:650; color:var(--accent); cursor:pointer;
+  padding:4px 10px; border-radius:8px; border:1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  background:var(--card); margin-top:2px; transition:all .13s;
+}
+.compcell .cgo:hover{background:color-mix(in srgb, var(--accent) 10%, var(--card)); transform:translateY(-1px)}
+.compcell .chere{display:inline-flex; align-items:center; gap:5px;
+  font-size:11.5px; font-weight:650; color:var(--ok); margin-top:2px}
+.compcell .cabs{font-size:11.5px; color:var(--ink-3); margin-top:2px}
 
 /* ==================== bouton flottant ==================== */
 #fab{
@@ -1136,11 +1150,7 @@ function renderFiche(j){
   if(!blocks) blocks = `<div class="vide">Aucun service dans cette catégorie.</div>`;
   let band = '';
   if(COMP_LAST && COMP_LAST.tjId===j.id){
-    const parts = COMP_LAST.items.filter(x=>x.type!=='TJ').map(x=>
-      x.jurId ? `<b style="cursor:pointer; color:var(--accent)" onclick="openFiche('${x.jurId}')">${esc(x.nom)}</b>`
-              : `<b>${esc(x.nom)}</b>`).join(' · ');
-    band = `<div class="compband">${icn('pin',13)} <span>Compétent pour <b>${esc(COMP_LAST.adresse)}</b>${parts?' — '+parts:''}</span>
-      <button class="mini x" onclick="COMP_LAST=null;render()">${icn('x',12)}</button></div>`;
+    band = compCard(COMP_LAST, j.id, false);
   }
   $('#view').innerHTML = `
     ${band}
@@ -1325,6 +1335,31 @@ window.tglTool = id => {
   }
 };
 
+
+const COMP_LBL = {CA:"Cour d'appel", TJ:'Tribunal judiciaire',
+  'Proximité':'Tribunal de proximité', CPH:"Conseil de prud'hommes"};
+function compCard(c, curId, inPanel){
+  const cells = c.items.map(x=>{
+    const here = curId && x.jurId===curId;
+    const action = here
+      ? `<span class="chere">${icn('check',11)} fiche affichée</span>`
+      : x.jurId
+        ? `<button class="cgo" onclick="closeTools();openFiche('${x.jurId}')">ouvrir la fiche ${icn('right',11)}</button>`
+        : `<span class="cabs">pas de fiche dans l'annuaire</span>`;
+    return `<div class="compcell ${here?'here':''}">
+      <span class="cl">${COMP_LBL[x.type]||x.type}</span>
+      <span class="cn">${esc(x.nom)}</span>
+      ${action}</div>`;
+  }).join('');
+  const close = inPanel ? '' :
+    `<button class="mini" title="Masquer" onclick="COMP_LAST=null;render()">${icn('x',12)}</button>`;
+  return `<div class="compcard">
+    <div class="comphead">${icn('pin',13)}
+      <span>Compétence territoriale — <b>${esc(c.adresse)}</b></span>${close}</div>
+    <div class="compgrid">${cells}</div>
+  </div>`;
+}
+
 /* ============================ juridiction compétente par adresse ============================
    1. géocodage Base Adresse Nationale (Géoplateforme IGN, données officielles)
    2. table officielle commune -> juridictions (data.gouv.fr, ministère de la Justice)
@@ -1360,11 +1395,12 @@ function normVille(s){
   return norm(s).replace(/^(tribunal judiciaire|tribunal de proximite|cour d'appel|conseil de prud'hommes|tj|ca|cph)\s*(de la |de l'|des |du |de |d')?/,'')
     .replace(/-/g,' ').replace(/\s+/g,' ').trim();
 }
-function findJurByName(nom, cats){
+function findJurByName(nom, cats, require){
   const cible = normVille(nom);
   let best = null;
   for(const j of DATA.juridictions){
     if(cats && !cats.includes(j.categorie)) continue;
+    if(require && !norm(j.nom).includes(require)) continue;
     const n = normVille(j.nom);
     if(n===cible) return j;
     if(!best && (n.startsWith(cible) || cible.startsWith(n)) && Math.min(n.length,cible.length)>=4) best = j;
@@ -1385,7 +1421,10 @@ window.pickAdr = async i => {
     const idx = entry[k];
     if(idx<0) return;
     const nom = comp[key][idx];
-    const j = findJurByName(nom, key==='ca'?['ca']:key==='tj'?['tj']:null);
+    const j = key==='ca' ? findJurByName(nom, ['ca'])
+      : key==='tj' ? findJurByName(nom, ['tj'])
+      : key==='tprx' ? findJurByName(nom, null, 'proximit')
+      : findJurByName(nom, null, 'prud');
     items.push({type:label, nom, jurId: j? j.id : null});
   });
   const tj = items.find(x=>x.type==='TJ');
@@ -1395,13 +1434,9 @@ window.pickAdr = async i => {
     openFiche(tj.jurId);
     return;
   }
-  // pas de fiche TJ : afficher le résultat sur place
-  if(box) box.innerHTML = items.map(x=>{
-    const link = x.jurId
-      ? `<span class="cgo" onclick="closeTools();openFiche('${x.jurId}')">ouvrir la fiche ${icn('right',11)}</span>`
-      : `<span class="cabs">pas de fiche dans l'annuaire</span>`;
-    return `<div class="comprow"><span class="ct2">${x.type}</span><span class="cn">${esc(x.nom)}</span>${link}</div>`;
-  }).join('') || '<div class="hint" style="padding:8px">Aucune juridiction trouvée.</div>';
+  // pas de fiche TJ : afficher la carte de compétence sur place
+  if(box) box.innerHTML = items.length ? compCard(COMP_LAST, null, true)
+    : '<div class="hint" style="padding:8px">Aucune juridiction trouvée.</div>';
 };
 
 /* ============================ mode lecture seule / modification ============================ */
