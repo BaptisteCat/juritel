@@ -193,8 +193,16 @@ header{
 }
 #clearq:hover{background:var(--line); color:var(--ink); transform:translateY(-50%) scale(1.08)}
 
-.chips{display:flex; gap:7px; overflow-x:auto; padding:12px 2px 2px; scrollbar-width:none}
+.chips{display:flex; gap:7px; overflow-x:auto; padding:12px 2px 2px; scrollbar-width:none;
+  overscroll-behavior-x:contain}
 .chips::-webkit-scrollbar{display:none}
+/* degrade de bord : signale qu il reste des filtres hors champ */
+.chips.cfr{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 38px),transparent);
+           mask-image:linear-gradient(90deg,#000 calc(100% - 38px),transparent)}
+.chips.cfl{-webkit-mask-image:linear-gradient(90deg,transparent,#000 38px);
+           mask-image:linear-gradient(90deg,transparent,#000 38px)}
+.chips.cfl.cfr{-webkit-mask-image:linear-gradient(90deg,transparent,#000 38px,#000 calc(100% - 38px),transparent);
+               mask-image:linear-gradient(90deg,transparent,#000 38px,#000 calc(100% - 38px),transparent)}
 .chip{
   border:1px solid var(--line); background:var(--card); color:var(--ink-2);
   border-radius:20px; padding:6px 14px; font-size:12.5px; font-weight:600;
@@ -1294,6 +1302,7 @@ window.addEventListener('popstate', ()=>{
 
 /* ============================ rendu ============================ */
 function render(){
+  setTimeout(chipsFadeAll, 0);   // render() a plusieurs sorties : on couvre toutes les branches
   $('#clearq').style.display = $('#q').value ? 'grid':'none';
   document.body.classList.toggle('mapmode', !!mapState && !ficheId);
   updateToolsDock();
@@ -1602,7 +1611,31 @@ function renderChips(){
     html += `<button class="chip ${currentCat===k?'on':''}" onclick="setCat('${k}')">${v} · ${counts[k]}</button>`;
   }
   $('#chips').innerHTML = html;
+  setTimeout(chipsFadeAll, 0);
 }
+
+/* ---- rangees de filtres : molette verticale = defilement horizontal ---- */
+function chipsFade(el){
+  const max = el.scrollWidth - el.clientWidth;
+  el.classList.toggle('cfl', max > 2 && el.scrollLeft > 2);
+  el.classList.toggle('cfr', max > 2 && el.scrollLeft < max - 2);
+}
+window.chipsFadeAll = () => document.querySelectorAll('.chips').forEach(chipsFade);
+document.addEventListener('wheel', e => {
+  const c = e.target.closest && e.target.closest('.chips');
+  if(!c) return;
+  const max = c.scrollWidth - c.clientWidth;
+  if(max < 2) return;
+  if(Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return;   // geste deja horizontal : natif
+  e.preventDefault();
+  c.scrollLeft += e.deltaY;
+  chipsFade(c);   // l evenement scroll depend des frames : on rafraichit tout de suite
+}, {passive:false});
+document.addEventListener('scroll', e => {
+  const t = e.target;
+  if(t instanceof Element && t.classList.contains('chips')) chipsFade(t);
+}, true);
+window.addEventListener('resize', () => chipsFadeAll());
 
 /* ============================ interactions ============================ */
 window.setCat = c => { currentCat=c; shownCards=60; ficheId=null; spState=null; renderChips(); render(); };
