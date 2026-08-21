@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
 
 <style>
 /* ==================== système de design v2 ==================== */
@@ -761,28 +761,25 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
     color-mix(in srgb, var(--accent) 11%, transparent), transparent 68%);
 }
 body.accueil .hero{display:block}
-.hero-logo{
-  display:block; margin:0 auto 15px; width:62px; height:62px;
-  /* drop-shadow suit la forme du logo, contrairement à box-shadow */
-  filter:drop-shadow(0 15px 28px color-mix(in srgb, var(--grad-a) 42%, transparent));
-  transition:transform .3s cubic-bezier(.2,.6,.3,1);
-}
-.hero:hover .hero-logo{transform:translateY(-3px) scale(1.03)}
 .hero-nom{
-  font-size:clamp(40px, 7vw, 62px); font-weight:800; letter-spacing:-.05em; line-height:.98;
+  /* Fraunces : serif contrasté, « wonk » activé — le caractère vient du dessin
+     de la lettre, pas de la couleur. Repli sur un serif système hors ligne. */
+  font-family:'Fraunces','Iowan Old Style','Palatino Linotype',Georgia,serif;
+  font-variation-settings:'SOFT' 30, 'WONK' 1, 'opsz' 120;
+  font-size:clamp(31px, 4.2vw, 44px); font-weight:700; letter-spacing:-.02em; line-height:1.02;
   background:linear-gradient(112deg, var(--grad-a) 0%,
     color-mix(in srgb, var(--grad-b) 78%, var(--accent)) 58%, var(--grad-b) 100%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
 /* filet dégradé sous le nom, qui prolonge la marque */
 .hero-nom::after{
-  content:''; display:block; width:64px; height:3px; margin:14px auto 0; border-radius:2px;
+  content:''; display:block; width:52px; height:2.5px; margin:11px auto 0; border-radius:2px;
   background:linear-gradient(90deg, var(--bar-a), var(--bar-b));
   opacity:.85;
 }
 .hero-sous{
-  margin-top:13px; font-size:11px; font-weight:650; color:var(--ink-3);
-  text-transform:uppercase; letter-spacing:.2em;
+  margin-top:10px; font-size:10.5px; font-weight:650; color:var(--ink-3);
+  text-transform:uppercase; letter-spacing:.18em;
 }
 
 .searchzone{display:flex; flex-direction:column}
@@ -796,7 +793,7 @@ body.accueil .hero{display:block}
   -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
   transition:opacity .22s ease;
 }
-body.qfocus #searchveil{opacity:1}
+@media (max-width:760px){ body.qfocus #searchveil{opacity:1} }
 
 /* ==================== accueil épuré ====================
    Sur l'accueil « nu » (aucune recherche, aucune catégorie), la barre de
@@ -805,12 +802,12 @@ body.qfocus #searchveil{opacity:1}
 body.accueil header{
   position:static; background:transparent; border-bottom-color:transparent;
   -webkit-backdrop-filter:none; backdrop-filter:none;
-  padding-top:clamp(38px, 9vh, 104px); padding-bottom:8px;
+  padding-top:clamp(26px, 5.5vh, 62px); padding-bottom:8px;
 }
 /* Taille identique en toutes circonstances : la barre ne doit pas sauter
    au premier caractere saisi. Seul l'espacement vertical de l'en-tete change. */
 @media (min-width:761px){
-  .searchwrap{width:100%; max-width:930px; margin-left:auto; margin-right:auto}
+  .searchwrap{width:100%; max-width:780px; margin-left:auto; margin-right:auto}
   #q{
     padding:17px 58px; font-size:16.5px; border-radius:999px; border-width:2px;
     box-shadow:0 18px 40px -26px color-mix(in srgb, var(--grad-a) 55%, transparent), var(--shadow-s);
@@ -837,7 +834,7 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
 .chips{max-height:0; opacity:0; overflow:hidden; padding-top:0; padding-bottom:0;
   transition:max-height .25s cubic-bezier(.2,.6,.3,1), opacity .2s, padding .25s}
 body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom:2px}
-@media (min-width:761px){ .chips{width:100%; max-width:930px; margin-left:auto; margin-right:auto; justify-content:safe center} }
+@media (min-width:761px){ .chips{width:100%; max-width:780px; margin-left:auto; margin-right:auto; justify-content:safe center} }
 
 /* les trois portes d'entrée */
 .homeacts{
@@ -1019,7 +1016,6 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
   </div>
   <div class="hero" id="hero" onclick="goHome()">
-    <img class="hero-logo" src="logo-balance-tel.svg" alt="" width="62" height="62">
     <div class="hero-nom">Juritel</div>
     <div class="hero-sous">L’annuaire des greffes et juridictions</div>
   </div>
