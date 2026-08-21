@@ -1438,13 +1438,6 @@ function renderList(){
   const V = $('#view');
   $('#stats').textContent = tokens.length||currentCat||browseAll ?
     `${results.length} juridiction${results.length>1?'s':''} — cliquez sur une fiche pour l'ouvrir` : '';
-  if(!results.length){
-    V.innerHTML = offHtml || `<div class="vide"><div class="big">${icn('search',34)}</div>Aucun résultat.<br><br>
-      <button class="btn primary" onclick="openAdd()">＋ Ajouter ce contact</button></div>`;
-    return;
-  }
-  const slice = results.slice(0, shownCards);
-  let html = '';
   if(!tokens.length && !currentCat && !browseAll){
     // Accueil : on ne deverse plus toutes les fiches. Trois portes d'entree,
     // la recherche restant l'element central (mise en forme par body.accueil).
@@ -1460,11 +1453,18 @@ function renderList(){
       </button>
       <button class="homeact" onclick="parcourir()">
         <span class="ha-ic">${icn('scale',20)}</span>
-        <span class="ha-tx"><b>Parcourir l’annuaire</b><span class="hint">${nj} juridictions</span></span>
+        <span class="ha-tx"><b>Parcourir l’annuaire</b><span class="hint">${nj} juridiction${nj>1?'s':''}</span></span>
       </button>
     </div>`;
     return;
   }
+  if(!results.length){
+    V.innerHTML = offHtml || `<div class="vide"><div class="big">${icn('search',34)}</div>Aucun résultat.<br><br>
+      <button class="btn primary" onclick="openAdd()">＋ Ajouter ce contact</button></div>`;
+    return;
+  }
+  const slice = results.slice(0, shownCards);
+  let html = '';
   if(!tokens.length && !currentCat){
     // accueil : aperçu structuré de toutes les catégories
     const order = ['tj','ca','cassation','penitentiaire','commissariat','cra','prefecture','douane','etranger','commerce','autre'];
