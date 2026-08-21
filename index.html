@@ -716,7 +716,8 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 /* mobile : usage à une main — recherche en bas, outils empilés depuis le bas */
 @media (max-width:760px){
   .searchwrap{
-    position:fixed; left:10px; right:10px; bottom:22px; z-index:35;
+    position:fixed; left:10px; right:10px; z-index:35;
+    bottom:calc(30px + env(safe-area-inset-bottom, 0px));
     background:color-mix(in srgb, var(--bg) 55%, transparent);
     -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
     border-radius:17px;
@@ -736,12 +737,12 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
                0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
                0 6px 18px rgba(0,0,0,.5);
   }
-  body{padding-bottom:170px}
-  body.mapmode{padding-bottom:170px}
-  #fab{bottom:88px}
-  #fabmod{bottom:152px}
-  #fabtools{bottom:206px}
-  #toast{bottom:198px}
+  body{padding-bottom:calc(178px + env(safe-area-inset-bottom, 0px))}
+  body.mapmode{padding-bottom:calc(178px + env(safe-area-inset-bottom, 0px))}
+  #fab{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
+  #fabmod{bottom:calc(160px + env(safe-area-inset-bottom, 0px))}
+  #fabtools{bottom:calc(214px + env(safe-area-inset-bottom, 0px))}
+  #toast{bottom:calc(206px + env(safe-area-inset-bottom, 0px))}
   .searchwrap:focus-within #q{
     background-image:linear-gradient(100deg,
       transparent 22%,
@@ -757,7 +758,7 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
     0%{background-position:130% 0}
     100%{background-position:-130% 0}
   }
-  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start; padding-bottom:146px}
+  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start; padding-bottom:calc(154px + env(safe-area-inset-bottom, 0px))}
   #tools .thead{margin-bottom:0; margin-top:14px}
 }
 
