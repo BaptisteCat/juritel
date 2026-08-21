@@ -192,7 +192,7 @@ header{
 #q{
   width:100%; padding:14px 46px; font-size:15.5px; font-weight:450; color:var(--ink);
   font-family:inherit; letter-spacing:-.011em;
-  border:1.5px solid var(--line); border-radius:15px; background:var(--card);
+  border:1.5px solid var(--line); border-radius:999px; background:var(--card);
   outline:none; box-shadow:var(--shadow-s); transition:all .2s;
 }
 #q::placeholder{color:var(--ink-3); font-weight:400}
@@ -206,7 +206,7 @@ header{
 }
 #clearq:hover{background:var(--line); color:var(--ink); transform:translateY(-50%) scale(1.08)}
 
-.chips{display:flex; gap:7px; overflow-x:auto; padding:12px 2px 2px; scrollbar-width:none;
+.chips{display:flex; gap:7px; overflow-x:auto; padding:12px 4px 2px; scrollbar-width:none;
   overscroll-behavior-x:contain}
 .chips::-webkit-scrollbar{display:none}
 /* degrade de bord : signale qu il reste des filtres hors champ */
@@ -762,11 +762,11 @@ body.accueil header{
 @media (min-width:761px){
   .searchwrap{max-width:620px; margin-left:auto; margin-right:auto}
   #q{
-    padding:17px 54px; font-size:16.5px; border-radius:19px; border-width:2px;
+    padding:17px 58px; font-size:16.5px; border-radius:999px; border-width:2px;
     box-shadow:0 18px 40px -26px color-mix(in srgb, var(--grad-a) 55%, transparent), var(--shadow-s);
   }
-  .searchwrap .lens{left:20px}
-  #clearq{right:12px}
+  .searchwrap .lens{left:24px}
+  #clearq{right:14px}
 }
 body.accueil .searchwrap{margin-top:24px}
 body.accueil #stats{display:none}
@@ -787,7 +787,7 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
 .chips{max-height:0; opacity:0; overflow:hidden; padding-top:0; padding-bottom:0;
   transition:max-height .25s cubic-bezier(.2,.6,.3,1), opacity .2s, padding .25s}
 body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom:2px}
-@media (min-width:761px){ .chips{max-width:820px; margin-left:auto; margin-right:auto; justify-content:center} }
+@media (min-width:761px){ .chips{max-width:820px; margin-left:auto; margin-right:auto; justify-content:safe center} }
 
 /* les trois portes d'entrée */
 .homeacts{
@@ -836,7 +836,7 @@ body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom
     bottom:var(--mbot);
     background:color-mix(in srgb, var(--bg) 55%, transparent);
     -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
-    border-radius:17px;
+    border-radius:999px;
     box-shadow:0 14px 34px -8px color-mix(in srgb, var(--grad-a) 55%, transparent),
                0 4px 14px color-mix(in srgb, var(--grad-a) 26%, transparent);
   }
