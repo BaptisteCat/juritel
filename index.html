@@ -802,7 +802,22 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 dialog{
   border:none; border-radius:22px; padding:0; max-width:500px; width:calc(100vw - 32px);
   background:var(--card); color:var(--ink); box-shadow:var(--shadow-l); max-height:88vh;
-  margin:auto; overflow-y:auto;
+  margin:auto;
+  /* le defilement appartient au contenu, pas au cadre : sinon l ascenseur du
+     navigateur se colle au bord et carre les deux coins de droite */
+  overflow:hidden;
+}
+.dlg{max-height:88vh; overflow-y:auto; overscroll-behavior:contain}
+/* ascenseur discret : pouce arrondi flottant, rail invisible */
+.dlg, #tools{scrollbar-width:thin; scrollbar-color:color-mix(in srgb, var(--ink-3) 45%, transparent) transparent}
+.dlg::-webkit-scrollbar, #tools::-webkit-scrollbar{width:10px; height:10px}
+.dlg::-webkit-scrollbar-track, #tools::-webkit-scrollbar-track{background:transparent}
+.dlg::-webkit-scrollbar-thumb, #tools::-webkit-scrollbar-thumb{
+  background:color-mix(in srgb, var(--ink-3) 42%, transparent);
+  border:3px solid transparent; background-clip:content-box; border-radius:999px;
+}
+.dlg::-webkit-scrollbar-thumb:hover, #tools::-webkit-scrollbar-thumb:hover{
+  background:color-mix(in srgb, var(--ink-2) 60%, transparent); background-clip:content-box;
 }
 dialog::backdrop{background:rgba(8,9,18,.55); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px)}
 .dlg{padding:24px}
@@ -1125,6 +1140,12 @@ const SUPA_URL = 'https://qkjpzwfucnjawhbfkydh.supabase.co';
 const SUPA_KEY = 'sb_publishable_olObFO7aa5oGUgxilfdStA_iC1F67rz';
 const LS_KEY = 'juritel.data';
 const LS_TRI = 'juritel.tri';   // tri des interlocuteurs dans une fiche
+
+// Fermeture au clic en dehors : dans une <dialog> modale, un clic sur l arriere-plan
+// a pour cible la boite elle-meme (le contenu occupe toute sa surface).
+document.addEventListener('click', e => {
+  if(e.target instanceof HTMLDialogElement && e.target.open) e.target.close();
+});
 const LS_DRIVE = 'juritel.driveOn';
 const LS_FILEID = 'juritel.driveFileId';
 
