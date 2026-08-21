@@ -513,6 +513,8 @@ select.mini{
   border:1px solid var(--line); border-radius:14px; background:var(--card-2);
   cursor:pointer; user-select:none; transition:all .16s; margin-bottom:8px;
 }
+.toolitem.actif{border-color:color-mix(in srgb, var(--ok) 45%, var(--line));
+  background:var(--ok-bg)}
 .toolitem:hover{border-color:color-mix(in srgb, var(--accent) 35%, var(--line));
   box-shadow:var(--shadow-s); transform:translateY(-1px)}
 .toolitem .tico{width:32px; height:32px; border-radius:10px}
@@ -739,6 +741,11 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 }
 #fabmod{bottom:86px}
 #fabtools{bottom:140px}
+#fabtools b{display:none; font-size:13px; font-weight:650; letter-spacing:-.01em}
+@media (max-width:760px){
+  #fabtools{width:auto; padding:0 16px; gap:8px; display:flex; align-items:center}
+  #fabtools b{display:inline}
+}
 #fabmod:hover, #fabtools:hover{transform:translateY(-2px); color:var(--ink)}
 #fabmod.on{
   background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
@@ -747,6 +754,22 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 }
 @media (max-width:560px){ #fabmod{right:22px} }
 
+
+.hero{text-align:center; cursor:pointer; user-select:none; display:none}
+body.accueil .hero{display:block}
+.hero-nom{
+  font-size:clamp(38px, 7vw, 60px); font-weight:800; letter-spacing:-.045em; line-height:1;
+  background:var(--title-grad); -webkit-background-clip:text; background-clip:text;
+  color:var(--title-color);
+}
+.hero-sous{
+  margin-top:9px; font-size:13.5px; font-weight:500; color:var(--ink-3);
+  letter-spacing:.005em;
+}
+/* le titre compact de l'en-tête ferait doublon avec le grand titre */
+body.accueil .titrebar h1{visibility:hidden}
+
+.searchzone{display:flex; flex-direction:column}
 
 /* ==================== accueil épuré ====================
    Sur l'accueil « nu » (aucune recherche, aucune catégorie), la barre de
@@ -816,36 +839,34 @@ body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom
 
 /* mobile : la recherche se place au centre de l'écran sur l'accueil */
 @media (max-width:760px){
-  /* la recherche occupe le centre de l'écran, les raccourcis se compactent
-     en lignes pour tenir juste en dessous */
-  body.accueil .searchwrap{top:50%; bottom:auto; transform:translateY(-50%); max-width:none; margin:0}
-  body.accueil header{padding-top:14px}
-  body.accueil .chips{margin-top:10px}
-  /* les raccourcis se placent sous la barre centrée (l'en-tête mesure ~132 px) */
-  body.accueil .homeacts{margin-top:calc(50vh - 42px); gap:9px}
-  body.accueil{padding-bottom:40px}
   .homeact{flex-direction:row; align-items:center; gap:12px; padding:12px 14px}
   .homeact .ha-ic{margin-bottom:0; width:34px; height:34px; flex-shrink:0}
+  .homeacts{gap:9px}
 }
 
 /* mobile : usage à une main — recherche en bas, outils empilés depuis le bas */
 @media (max-width:760px){
   :root{--mbot:max(22px, env(safe-area-inset-bottom, 0px))}
+
+  /* ---- bloc de recherche ancré en bas : position stable, jamais déplacée ----
+     Les catégories se déplient VERS LE HAUT (colonne inversée) pour ne pas
+     pousser la barre sous le pouce. */
+  #searchzone{
+    position:fixed; left:10px; right:10px; bottom:var(--mbot); z-index:35;
+    flex-direction:column-reverse;
+  }
   .searchwrap{
-    position:fixed; left:10px; right:10px; z-index:35;
-    bottom:var(--mbot);
     background:color-mix(in srgb, var(--bg) 55%, transparent);
     -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
     border-radius:999px;
     box-shadow:0 14px 34px -8px color-mix(in srgb, var(--grad-a) 55%, transparent),
                0 4px 14px color-mix(in srgb, var(--grad-a) 26%, transparent);
   }
-  /* en sombre, --grad-a est blanc : halo adouci */
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]) .searchwrap{
       box-shadow:0 0 0 1px color-mix(in srgb, var(--grad-a) 18%, transparent),
-               0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
-               0 6px 18px rgba(0,0,0,.5);
+                 0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
+                 0 6px 18px rgba(0,0,0,.5);
     }
   }
   :root[data-theme="dark"] .searchwrap{
@@ -853,29 +874,27 @@ body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom
                0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
                0 6px 18px rgba(0,0,0,.5);
   }
-  body{padding-bottom:calc(148px + var(--mbot))}
-  body.mapmode{padding-bottom:calc(148px + var(--mbot))}
-  #fab{bottom:calc(66px + var(--mbot))}
-  #fabmod{bottom:calc(130px + var(--mbot))}
-  #fabtools{bottom:calc(184px + var(--mbot))}
-  body #toast{bottom:calc(176px + var(--mbot))}   /* #toast est redéclaré plus bas : spécificité accrue */
-  .searchwrap:focus-within #q{
-    background-image:linear-gradient(100deg,
-      transparent 22%,
-      color-mix(in srgb, var(--bar-a) 15%, transparent) 40%,
-      color-mix(in srgb, var(--accent) 20%, transparent) 50%,
-      color-mix(in srgb, var(--bar-b) 15%, transparent) 60%,
-      transparent 78%);
-    background-size:260% 100%; background-repeat:no-repeat;
-    background-position:-130% 0;
-    animation:qsweep 2.8s ease-in-out 1;
-  }
-  @keyframes qsweep{
-    0%{background-position:130% 0}
-    100%{background-position:-130% 0}
-  }
-  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start; padding-bottom:calc(124px + var(--mbot))}
+  /* bouton de filtre et catégories : au-dessus de la barre, à portée */
+  /* à gauche : le bouton flottant occupe déjà le coin droit */
+  .filtrow{justify-content:flex-start; margin:0 0 6px; padding-left:4px}
+  .filtbtn{background:var(--card); border-color:var(--line); box-shadow:var(--shadow-s)}
+  .chips{padding:0 4px 8px}
+  body.filtres .chips{padding-top:0; padding-bottom:8px}
+
+  /* ---- un seul bouton flottant : le tiroir rassemble toutes les actions ---- */
+  #fab, #fabmod{display:none !important}
+  #fabtools{bottom:calc(72px + var(--mbot))}
+  #toast{bottom:calc(140px + var(--mbot))}
+  body, body.mapmode{padding-bottom:calc(120px + var(--mbot))}
+
+  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start;
+         padding-bottom:calc(30px + var(--mbot))}
   #tools .thead{margin-bottom:0; margin-top:14px}
+
+  /* ---- accueil : le titre respire, les raccourcis restent visibles ---- */
+  body.accueil header{padding-top:18px}
+  .hero-sous{font-size:12.5px}
+  body.accueil .homeacts{margin-top:22px}
 }
 
 /* ==================== dialogues ==================== */
@@ -965,14 +984,20 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <button class="iconbtn" id="btntheme" title="Thème"></button>
     <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
   </div>
-  <div class="searchwrap">
-    <span class="lens" data-ic="search" data-s="16"></span>
-    <input id="q" type="search" placeholder="Rechercher dans l’annuaire : juridiction, ville, numéro, adresse…"
-      autocomplete="off" autocapitalize="off" spellcheck="false">
-    <button id="clearq" title="Effacer" data-ic="x" data-s="13"></button>
+  <div class="hero" id="hero" onclick="goHome()">
+    <div class="hero-nom">Juritel</div>
+    <div class="hero-sous">L’annuaire des greffes et juridictions</div>
   </div>
-  <div class="filtrow"><button class="filtbtn" id="btnfiltres" onclick="toggleFiltres()"></button></div>
-  <div class="chips" id="chips"></div>
+  <div class="searchzone" id="searchzone">
+    <div class="searchwrap">
+      <span class="lens" data-ic="search" data-s="16"></span>
+      <input id="q" type="search" placeholder="Rechercher dans l’annuaire : juridiction, ville, numéro, adresse…"
+        autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button id="clearq" title="Effacer" data-ic="x" data-s="13"></button>
+    </div>
+    <div class="filtrow"><button class="filtbtn" id="btnfiltres" onclick="toggleFiltres()"></button></div>
+    <div class="chips" id="chips"></div>
+  </div>
 </div></header>
 
 <main>
@@ -1024,9 +1049,19 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <div class="ti"><b>Carte de France</b><small>Trouver une juridiction par navigation géographique</small></div>
     <span class="caret" data-ic="right" data-s="12"></span>
   </div>
+  <div class="toolitem" onclick="closeTools();openAdd()">
+    <span class="tico tel" data-ic="plus" data-s="13"></span>
+    <div class="ti"><b id="tiAjout">Ajouter un contact</b><small id="tiAjoutS">Nouvelle fiche ou nouveau numéro</small></div>
+    <span class="caret" data-ic="right" data-s="12"></span>
+  </div>
+  <div class="toolitem" id="tiModif" onclick="closeTools();toggleModif()">
+    <span class="tico email" data-ic="pen" data-s="13"></span>
+    <div class="ti"><b id="tiModifB">Mode modification</b><small id="tiModifS">Afficher les commandes d’édition</small></div>
+    <span class="caret" data-ic="right" data-s="12"></span>
+  </div>
 </aside>
 
-<button id="fabtools" title="Outils"></button>
+<button id="fabtools" title="Outils"><b>Outils</b></button>
 <button id="fabmod" title="Mode modification"></button>
 <button id="fab" title="Ajouter un contact"><span data-ic="plus" data-s="17"></span><b>Ajouter</b></button>
 <div id="toast"></div>
@@ -1931,16 +1966,16 @@ function updateToolsDock(){
   const tools = document.getElementById('tools');
   const dock = document.getElementById('toolsdock');
   if(!tools || !dock) return;
-  // mobile : la barre de recherche sort de l en-tête (le backdrop-filter du
-  // header ferait référence pour position:fixed) et se fixe en bas de l écran
-  const sw = document.querySelector('.searchwrap');
-  if(sw){
+  // mobile : recherche, bouton de filtre et catégories forment un bloc unique
+  // ancré en bas de l'écran. Il sort de l'en-tête car le backdrop-filter de
+  // celui-ci servirait de référence à position:fixed.
+  const sz = document.getElementById('searchzone');
+  if(sz){
     const mobile = window.innerWidth < 760;
-    if(mobile && sw.parentElement !== document.body){
-      document.body.appendChild(sw);
-    } else if(!mobile && sw.parentElement === document.body){
-      const hw = document.querySelector('.hwrap');
-      hw.insertBefore(sw, hw.querySelector('.chips'));
+    if(mobile && sz.parentElement !== document.body){
+      document.body.appendChild(sz);
+    } else if(!mobile && sz.parentElement === document.body){
+      document.querySelector('.hwrap').appendChild(sz);
     }
   }
   const wantDock = window.innerWidth >= 1080 && !ficheId && !mapState && !accueilNu();
@@ -1966,6 +2001,7 @@ window.addEventListener('resize', ()=>{
 /* panneau latéral d'outils */
 window.openTools = () => {
   if(document.getElementById('tools').classList.contains('docked')) return;
+  majEntreeModif();
   document.getElementById('tools').classList.add('show');
   document.getElementById('toolsback').classList.add('show');
 };
@@ -2679,10 +2715,20 @@ window.carteCa = c => {
 };
 
 /* ============================ mode lecture seule / modification ============================ */
+function majEntreeModif(){
+  const b = document.getElementById('tiModifB'), s = document.getElementById('tiModifS');
+  if(!b) return;
+  b.textContent = modifMode ? 'Quitter le mode modification' : 'Mode modification';
+  s.textContent = modifMode ? 'Revenir à la lecture seule' : 'Afficher les commandes d’édition';
+  document.getElementById('tiModif').classList.toggle('actif', modifMode);
+  const a = document.getElementById('tiAjout');
+  if(a) a.textContent = estProp() ? 'Ajouter un contact' : 'Proposer un contact';
+}
 window.toggleModif = () => {
   modifMode = !modifMode;
   if(!modifMode) editMode = false;
   document.getElementById('fabmod').classList.toggle('on', modifMode);
+  majEntreeModif();
   toast(modifMode ? (estProp() ? 'Mode modification activé' : 'Mode proposition activé')
                   : 'Mode lecture seule');
   render();
@@ -3788,7 +3834,7 @@ document.getElementById('btnWlAdd').addEventListener('click', ()=>sbWlAdd());
   fm.innerHTML = icn('pen',16);
   fm.addEventListener('click', toggleModif);
   const ft = document.getElementById('fabtools');
-  ft.innerHTML = icn('tool',16);
+  ft.innerHTML = icn('tool',16) + '<b>Outils</b>';
   ft.addEventListener('click', ()=>openTools());
   applyTheme();
   await load();
