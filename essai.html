@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&family=Bodoni+Moda:opsz,wght@6..96,700&display=swap" rel="stylesheet">
 
 <style>
 /* ==================== système de design v2 ==================== */
@@ -757,17 +757,15 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 .hero{text-align:center; cursor:pointer; user-select:none; display:none}
 body.accueil .hero{display:block}
 .hero-nom{
-  /* Space Grotesk : grotesque géométrique aux formes tranchées (J à pied plat,
-     r et t caractéristiques). Repli sur la pile système hors ligne. */
-  font-family:'Space Grotesk','Inter',-apple-system,'Segoe UI',sans-serif;
-  font-size:clamp(32px, 4.3vw, 46px); letter-spacing:-.035em; line-height:1.02;
+  /* Bodoni Moda : didone à fort contraste — l'opposition pleins/déliés porte
+     le caractère. Repli sur les didones système, puis un serif générique. */
+  font-family:'Bodoni Moda',Didot,'Bodoni MT','Times New Roman',serif;
+  font-weight:700; font-size:clamp(35px, 4.7vw, 52px); letter-spacing:-.012em; line-height:1.05;
   /* même dégradé que le logo et le bouton principal du thème */
   background:linear-gradient(135deg, var(--grad-a), var(--grad-b));
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
 /* le caractère vient du contraste de masse entre les deux moitiés du nom */
-.hn-a{font-weight:700}
-.hn-b{font-weight:400}
 /* filet dégradé sous le nom, qui prolonge la marque */
 .hero-nom::after{
   content:''; display:block; width:52px; height:2.5px; margin:11px auto 0; border-radius:2px;
@@ -1013,7 +1011,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
   </div>
   <div class="hero" id="hero" onclick="goHome()">
-    <div class="hero-nom"><span class="hn-a">Juri</span><span class="hn-b">tel</span></div>
+    <div class="hero-nom">Juritel</div>
     <div class="hero-sous">L’annuaire des greffes et juridictions</div>
   </div>
   <div class="searchzone" id="searchzone">
