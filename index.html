@@ -165,6 +165,9 @@ header{
 #syncstate.err{cursor:pointer}
 #syncstate.err:hover{border-color:var(--ko)}
 #syncstate.work .dot{background:var(--gold); animation:pulse 1s infinite}
+/* une fois synchronise, l indicateur s efface pour degager l en-tete */
+#syncstate.fade{opacity:0; transform:scale(.94)}
+#syncstate.hidden{display:none}
 @keyframes pulse{50%{opacity:.25}}
 .iconbtn{
   width:38px; height:38px; border-radius:12px; border:1px solid var(--line);
@@ -997,6 +1000,14 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 <dialog id="dlgSettings"><div class="dlg">
   <h2>Réglages</h2>
   <div class="setrow">
+    <span style="flex:1; font-size:13.5px">Tri des contacts d'une fiche</span>
+    <select class="mini" id="triContacts">
+      <option value="annuaire">Ordre de l'annuaire</option>
+      <option value="alpha">Alphabétique</option>
+      <option value="fiabilite">Fiabilité</option>
+    </select>
+  </div>
+  <div class="setrow">
     <span style="flex:1; font-size:13.5px">Échelle de l'interface</span>
     <select class="mini" id="uiScale">
       <option value="auto">Auto (selon l'écran)</option>
@@ -1113,6 +1124,7 @@ const PICKER_API_KEY = 'AIzaSyD2vs6f-XvU6yvxi84Us2nvD-IhbfoVywg';   // clé API 
 const SUPA_URL = 'https://qkjpzwfucnjawhbfkydh.supabase.co';
 const SUPA_KEY = 'sb_publishable_olObFO7aa5oGUgxilfdStA_iC1F67rz';
 const LS_KEY = 'juritel.data';
+const LS_TRI = 'juritel.tri';   // tri des interlocuteurs dans une fiche
 const LS_DRIVE = 'juritel.driveOn';
 const LS_FILEID = 'juritel.driveFileId';
 
@@ -1253,6 +1265,22 @@ function structureService(contacts){
   for(const b of bureaux.values())
     for(const e of b.entries.values())
       e.chans.sort((a,c)=> (rank[a.type]-rank[c.type]) || (score(c)-score(a)) );
+  // tri des interlocuteurs au sein de chaque bureau, selon le reglage
+  const tri = localStorage.getItem(LS_TRI) || 'annuaire';
+  if(tri !== 'annuaire'){
+    for(const b of bureaux.values()){
+      const liste = [...b.entries.entries()];
+      const meilleur = e => e.chans.reduce((m,c)=>Math.max(m, score(c)), -Infinity);
+      liste.sort((x, y) => {
+        const [, a] = x, [, c] = y;
+        // l entree principale (sans libelle) reste en tete dans tous les cas
+        if(!a.lib !== !c.lib) return a.lib ? 1 : -1;
+        return tri === 'alpha' ? a.lib.localeCompare(c.lib, 'fr')
+                               : meilleur(c) - meilleur(a);
+      });
+      b.entries = new Map(liste);
+    }
+  }
   // racine d'abord, puis bureaux dans l'ordre du document
   const out = [];
   if(bureaux.has(rootKey)) out.push(bureaux.get(rootKey));
@@ -3218,6 +3246,15 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW non enregistre', e));
   });
 }
+function applyTri(){
+  const sel = document.getElementById('triContacts');
+  if(sel) sel.value = localStorage.getItem(LS_TRI) || 'annuaire';
+}
+applyTri();
+document.getElementById('triContacts').addEventListener('change', e => {
+  localStorage.setItem(LS_TRI, e.target.value);
+  render();
+});
 const LS_UI = 'juritel.uiscale';
 function applyUiScale(){
   const v = localStorage.getItem(LS_UI) || 'auto';
@@ -3315,7 +3352,21 @@ window.driveJoin = async () => {
 /* ============================ compte, liste blanche et synchronisation (Supabase) ============================ */
 let sb = null, sbUser = null, sbAdmis = false, sbTimer = null, sbBusy = false, sbTs = null;
 const sbClean = () => JSON.parse(JSON.stringify(DATA, (k,v)=>k.startsWith('_')?undefined:v));
-function sbState(cls, txt){ const el=$('#syncstate'); el.className=cls; $('#synctxt').textContent=txt; }
+// L indicateur ne reste affiche que tant qu il a quelque chose a dire : il
+// reapparait des qu un envoi commence et s efface peu apres « synchronise ».
+let sbFadeT = null;
+function sbState(cls, txt){
+  const el = $('#syncstate');
+  clearTimeout(sbFadeT);
+  el.className = cls;                       // retire aussi fade/hidden
+  $('#synctxt').textContent = txt;
+  if(cls === 'on'){
+    sbFadeT = setTimeout(() => {
+      el.classList.add('fade');
+      sbFadeT = setTimeout(() => el.classList.add('hidden'), 400);
+    }, 1600);
+  }
+}
 
 async function sbGateUpdate(){
   const gate = document.getElementById('gate');
