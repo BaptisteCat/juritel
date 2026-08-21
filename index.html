@@ -715,9 +715,10 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 
 /* mobile : usage à une main — recherche en bas, outils empilés depuis le bas */
 @media (max-width:760px){
+  :root{--mbot:max(22px, env(safe-area-inset-bottom, 0px))}
   .searchwrap{
     position:fixed; left:10px; right:10px; z-index:35;
-    bottom:calc(30px + env(safe-area-inset-bottom, 0px));
+    bottom:var(--mbot);
     background:color-mix(in srgb, var(--bg) 55%, transparent);
     -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
     border-radius:17px;
@@ -737,12 +738,12 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
                0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
                0 6px 18px rgba(0,0,0,.5);
   }
-  body{padding-bottom:calc(178px + env(safe-area-inset-bottom, 0px))}
-  body.mapmode{padding-bottom:calc(178px + env(safe-area-inset-bottom, 0px))}
-  #fab{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
-  #fabmod{bottom:calc(160px + env(safe-area-inset-bottom, 0px))}
-  #fabtools{bottom:calc(214px + env(safe-area-inset-bottom, 0px))}
-  #toast{bottom:calc(206px + env(safe-area-inset-bottom, 0px))}
+  body{padding-bottom:calc(148px + var(--mbot))}
+  body.mapmode{padding-bottom:calc(148px + var(--mbot))}
+  #fab{bottom:calc(66px + var(--mbot))}
+  #fabmod{bottom:calc(130px + var(--mbot))}
+  #fabtools{bottom:calc(184px + var(--mbot))}
+  body #toast{bottom:calc(176px + var(--mbot))}   /* #toast est redéclaré plus bas : spécificité accrue */
   .searchwrap:focus-within #q{
     background-image:linear-gradient(100deg,
       transparent 22%,
@@ -758,7 +759,7 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
     0%{background-position:130% 0}
     100%{background-position:-130% 0}
   }
-  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start; padding-bottom:calc(154px + env(safe-area-inset-bottom, 0px))}
+  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start; padding-bottom:calc(124px + var(--mbot))}
   #tools .thead{margin-bottom:0; margin-top:14px}
 }
 
