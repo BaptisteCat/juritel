@@ -748,6 +748,64 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 @media (max-width:560px){ #fabmod{right:22px} }
 
 
+/* ==================== accueil épuré ====================
+   Sur l'accueil « nu » (aucune recherche, aucune catégorie), la barre de
+   recherche devient l'élément central : l'en-tête cesse d'être collant, se
+   déploie en hauteur, et la barre est resserrée et mise en avant.          */
+body.accueil header{
+  position:static; background:transparent; border-bottom-color:transparent;
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+  padding-top:clamp(38px, 9vh, 104px); padding-bottom:8px;
+}
+body.accueil .searchwrap{max-width:620px; margin:24px auto 0}
+body.accueil #q{
+  padding:17px 54px; font-size:16.5px; border-radius:19px; border-width:2px;
+  box-shadow:0 22px 48px -26px color-mix(in srgb, var(--grad-a) 62%, transparent), var(--shadow-m);
+}
+body.accueil .searchwrap .lens{left:20px}
+body.accueil #clearq{right:12px}
+body.accueil .chips{max-width:820px; margin:14px auto 0; justify-content:center}
+body.accueil #stats{display:none}
+
+/* les trois portes d'entrée */
+.homeacts{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));
+  gap:12px; max-width:620px; margin:26px auto 0;
+}
+.homeact{
+  display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+  padding:16px 16px 15px; text-align:left; cursor:pointer;
+  border:1px solid var(--line); border-radius:16px; background:var(--card);
+  color:var(--ink); font-family:inherit; box-shadow:var(--shadow-s);
+  transition:all .2s cubic-bezier(.2,.6,.3,1);
+}
+.homeact:hover{
+  transform:translateY(-3px); box-shadow:var(--shadow-m);
+  border-color:color-mix(in srgb, var(--accent) 38%, var(--line));
+}
+.homeact .ha-ic{
+  width:36px; height:36px; border-radius:11px; display:grid; place-items:center;
+  margin-bottom:7px; color:var(--cta-ink);
+  background:linear-gradient(135deg, var(--grad-a), var(--grad-b));
+}
+.homeact .ha-tx{display:flex; flex-direction:column; gap:2px; min-width:0}
+.homeact b{font-size:14px; font-weight:650; letter-spacing:-.012em}
+.homeact .hint{font-size:12px}
+
+/* mobile : la recherche se place au centre de l'écran sur l'accueil */
+@media (max-width:760px){
+  /* la recherche occupe le centre de l'écran, les raccourcis se compactent
+     en lignes pour tenir juste en dessous */
+  body.accueil .searchwrap{top:50%; bottom:auto; transform:translateY(-50%); max-width:none; margin:0}
+  body.accueil header{padding-top:14px}
+  body.accueil .chips{margin-top:10px}
+  /* les raccourcis se placent sous la barre centrée (l'en-tête mesure ~132 px) */
+  body.accueil .homeacts{margin-top:calc(50vh - 42px); gap:9px}
+  body.accueil{padding-bottom:40px}
+  .homeact{flex-direction:row; align-items:center; gap:12px; padding:12px 14px}
+  .homeact .ha-ic{margin-bottom:0; width:34px; height:34px; flex-shrink:0}
+}
+
 /* mobile : usage à une main — recherche en bas, outils empilés depuis le bas */
 @media (max-width:760px){
   :root{--mbot:max(22px, env(safe-area-inset-bottom, 0px))}
@@ -872,7 +930,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   </div>
   <div class="searchwrap">
     <span class="lens" data-ic="search" data-s="16"></span>
-    <input id="q" type="search" placeholder="Ville, juridiction, service, numéro, mail…"
+    <input id="q" type="search" placeholder="Rechercher dans l’annuaire : juridiction, ville, numéro, adresse…"
       autocomplete="off" autocapitalize="off" spellcheck="false">
     <button id="clearq" title="Effacer" data-ic="x" data-s="13"></button>
   </div>
@@ -1138,6 +1196,9 @@ let editMode = false;        // mode réorganisation de la fiche
 let mapState = null;         // carte interactive : null | {level:'fr'|'reg'|'dep', code}
 let spState = null;          // fiche officielle service-public : null | {type, nom, loading, data}
 let modifMode = false;       // false = lecture seule (défaut)
+let browseAll = false;       // l'accueil n'affiche les fiches qu'à la demande
+// accueil « nu » : ni recherche, ni catégorie, ni parcours explicite
+const accueilNu = () => !$('#q').value.trim() && !currentCat && !browseAll;
 // sbProp est resolu tres tot (ouverture de la porte) ; tant qu il vaut null on
 // masque les commandes reservees, ce qui est le defaut prudent.
 const estProp = () => sbProp === true;
@@ -1326,7 +1387,7 @@ function search(){
 }
 
 /* ============================ navigation ============================ */
-function goHome(){ ficheId = null; editMode = false; mapState = null; spState = null; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
+function goHome(){ ficheId = null; editMode = false; mapState = null; spState = null; browseAll = false; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
 window.goHome = goHome;
 window.openFiche = id => {
   const da = document.getElementById('dlgAdr');
@@ -1351,7 +1412,8 @@ window.addEventListener('popstate', ()=>{
 
 /* ============================ rendu ============================ */
 function render(){
-  setTimeout(chipsFadeAll, 0);   // render() a plusieurs sorties : on couvre toutes les branches
+  setTimeout(chipsFadeAll, 0);
+  document.body.classList.toggle('accueil', !ficheId && !spState && !mapState && accueilNu());   // render() a plusieurs sorties : on couvre toutes les branches
   $('#clearq').style.display = $('#q').value ? 'grid':'none';
   document.body.classList.toggle('mapmode', !!mapState && !ficheId);
   updateToolsDock();
@@ -1374,7 +1436,7 @@ function renderList(){
        <div class="grid">${offIdx.map(cardOff).join('')}</div>`
     : '';
   const V = $('#view');
-  $('#stats').textContent = tokens.length||currentCat ?
+  $('#stats').textContent = tokens.length||currentCat||browseAll ?
     `${results.length} juridiction${results.length>1?'s':''} — cliquez sur une fiche pour l'ouvrir` : '';
   if(!results.length){
     V.innerHTML = offHtml || `<div class="vide"><div class="big">${icn('search',34)}</div>Aucun résultat.<br><br>
@@ -1383,6 +1445,26 @@ function renderList(){
   }
   const slice = results.slice(0, shownCards);
   let html = '';
+  if(!tokens.length && !currentCat && !browseAll){
+    // Accueil : on ne deverse plus toutes les fiches. Trois portes d'entree,
+    // la recherche restant l'element central (mise en forme par body.accueil).
+    const nj = DATA.juridictions.length;
+    V.innerHTML = `<div class="homeacts">
+      <button class="homeact" onclick="openAdrDlg()">
+        <span class="ha-ic">${icn('pin',20)}</span>
+        <span class="ha-tx"><b>Juridiction compétente</b><span class="hint">À partir d’une adresse</span></span>
+      </button>
+      <button class="homeact" onclick="openCarte()">
+        <span class="ha-ic">${icn('map',20)}</span>
+        <span class="ha-tx"><b>Carte de France</b><span class="hint">Parcourir par région</span></span>
+      </button>
+      <button class="homeact" onclick="parcourir()">
+        <span class="ha-ic">${icn('scale',20)}</span>
+        <span class="ha-tx"><b>Parcourir l’annuaire</b><span class="hint">${nj} juridictions</span></span>
+      </button>
+    </div>`;
+    return;
+  }
   if(!tokens.length && !currentCat){
     // accueil : aperçu structuré de toutes les catégories
     const order = ['tj','ca','cassation','penitentiaire','commissariat','cra','prefecture','douane','etranger','commerce','autre'];
@@ -1690,6 +1772,7 @@ window.addEventListener('resize', () => chipsFadeAll());
 
 /* ============================ interactions ============================ */
 window.setCat = c => { currentCat=c; shownCards=60; ficheId=null; spState=null; renderChips(); render(); };
+window.parcourir = () => { browseAll = true; shownCards = 60; render(); };
 window.tgl = (id, cur) => { openState[id] = !cur; render(); };
 window.copyVal = v => { navigator.clipboard?.writeText(v).then(()=>toast('Copié : '+v)); };
 
@@ -1796,7 +1879,7 @@ function updateToolsDock(){
       hw.insertBefore(sw, hw.querySelector('.chips'));
     }
   }
-  const wantDock = window.innerWidth >= 1080 && !ficheId && !mapState;
+  const wantDock = window.innerWidth >= 1080 && !ficheId && !mapState && !accueilNu();
   document.body.classList.toggle('toolsdocked', wantDock);
   tools.classList.toggle('docked', wantDock);
   const ft = document.getElementById('fabtools');
