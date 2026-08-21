@@ -754,21 +754,49 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 @media (max-width:560px){ #fabmod{right:22px} }
 
 
-.hero{text-align:center; cursor:pointer; user-select:none; display:none}
+.hero{
+  text-align:center; cursor:pointer; user-select:none; display:none;
+  /* halo d'ambiance discret derrière la marque */
+  background:radial-gradient(56% 72% at 50% 26%,
+    color-mix(in srgb, var(--accent) 11%, transparent), transparent 68%);
+}
 body.accueil .hero{display:block}
+.hero-logo{
+  display:block; margin:0 auto 15px; width:62px; height:62px;
+  /* drop-shadow suit la forme du logo, contrairement à box-shadow */
+  filter:drop-shadow(0 15px 28px color-mix(in srgb, var(--grad-a) 42%, transparent));
+  transition:transform .3s cubic-bezier(.2,.6,.3,1);
+}
+.hero:hover .hero-logo{transform:translateY(-3px) scale(1.03)}
 .hero-nom{
-  font-size:clamp(38px, 7vw, 60px); font-weight:800; letter-spacing:-.045em; line-height:1;
-  background:var(--title-grad); -webkit-background-clip:text; background-clip:text;
-  color:var(--title-color);
+  font-size:clamp(40px, 7vw, 62px); font-weight:800; letter-spacing:-.05em; line-height:.98;
+  background:linear-gradient(112deg, var(--grad-a) 0%,
+    color-mix(in srgb, var(--grad-b) 78%, var(--accent)) 58%, var(--grad-b) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+/* filet dégradé sous le nom, qui prolonge la marque */
+.hero-nom::after{
+  content:''; display:block; width:64px; height:3px; margin:14px auto 0; border-radius:2px;
+  background:linear-gradient(90deg, var(--bar-a), var(--bar-b));
+  opacity:.85;
 }
 .hero-sous{
-  margin-top:9px; font-size:13.5px; font-weight:500; color:var(--ink-3);
-  letter-spacing:.005em;
+  margin-top:13px; font-size:11px; font-weight:650; color:var(--ink-3);
+  text-transform:uppercase; letter-spacing:.2em;
 }
-/* le titre compact de l'en-tête ferait doublon avec le grand titre */
-body.accueil .titrebar h1{visibility:hidden}
 
 .searchzone{display:flex; flex-direction:column}
+
+/* Voile de mise au point : au clic dans la recherche (tant qu'elle est vide),
+   le reste de l'application s'estompe. Il s'efface des la premiere frappe,
+   sinon il masquerait les resultats qui s'affichent derriere. */
+#searchveil{
+  position:fixed; inset:0; z-index:34; opacity:0; pointer-events:none;
+  background:color-mix(in srgb, var(--bg) 38%, transparent);
+  -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
+  transition:opacity .22s ease;
+}
+body.qfocus #searchveil{opacity:1}
 
 /* ==================== accueil épuré ====================
    Sur l'accueil « nu » (aucune recherche, aucune catégorie), la barre de
@@ -782,7 +810,7 @@ body.accueil header{
 /* Taille identique en toutes circonstances : la barre ne doit pas sauter
    au premier caractere saisi. Seul l'espacement vertical de l'en-tete change. */
 @media (min-width:761px){
-  .searchwrap{max-width:620px; margin-left:auto; margin-right:auto}
+  .searchwrap{width:100%; max-width:930px; margin-left:auto; margin-right:auto}
   #q{
     padding:17px 58px; font-size:16.5px; border-radius:999px; border-width:2px;
     box-shadow:0 18px 40px -26px color-mix(in srgb, var(--grad-a) 55%, transparent), var(--shadow-s);
@@ -809,7 +837,7 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
 .chips{max-height:0; opacity:0; overflow:hidden; padding-top:0; padding-bottom:0;
   transition:max-height .25s cubic-bezier(.2,.6,.3,1), opacity .2s, padding .25s}
 body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom:2px}
-@media (min-width:761px){ .chips{max-width:820px; margin-left:auto; margin-right:auto; justify-content:safe center} }
+@media (min-width:761px){ .chips{width:100%; max-width:930px; margin-left:auto; margin-right:auto; justify-content:safe center} }
 
 /* les trois portes d'entrée */
 .homeacts{
@@ -845,7 +873,7 @@ body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom
 
 /* mobile : usage à une main — recherche en bas, outils empilés depuis le bas */
 @media (max-width:760px){
-  :root{--mbot:max(22px, env(safe-area-inset-bottom, 0px))}
+  :root{--mbot:max(34px, calc(env(safe-area-inset-bottom, 0px) + 12px))}
 
   /* ---- bloc de recherche ancré en bas : position stable, jamais déplacée ----
      Les catégories se déplient VERS LE HAUT (colonne inversée) pour ne pas
@@ -853,7 +881,14 @@ body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom
   #searchzone{
     position:fixed; left:10px; right:10px; bottom:var(--mbot); z-index:35;
     flex-direction:column-reverse;
+    /* le conteneur et ses rangées débordent en hauteur au-dessus de la barre :
+       leurs zones transparentes captaient les clics destinés au bouton flottant.
+       Seules les commandes réelles reçoivent les clics. */
+    pointer-events:none;
   }
+  #searchzone > *{pointer-events:none}
+  #searchzone .searchwrap, #searchzone .filtbtn{pointer-events:auto}
+  body.filtres #searchzone .chips{pointer-events:auto}
   .searchwrap{
     background:color-mix(in srgb, var(--bg) 55%, transparent);
     -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
@@ -984,6 +1019,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
   </div>
   <div class="hero" id="hero" onclick="goHome()">
+    <img class="hero-logo" src="logo-balance-tel.svg" alt="" width="62" height="62">
     <div class="hero-nom">Juritel</div>
     <div class="hero-sous">L’annuaire des greffes et juridictions</div>
   </div>
@@ -1063,6 +1099,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 <button id="fabtools" title="Outils"><b>Outils</b></button>
 <button id="fabmod" title="Mode modification"></button>
 <button id="fab" title="Ajouter un contact"><span data-ic="plus" data-s="17"></span><b>Ajouter</b></button>
+<div id="searchveil"></div>
 <div id="toast"></div>
 
 <dialog id="dlgAdd"><form class="dlg" method="dialog" id="formAdd">
@@ -3141,6 +3178,16 @@ $('#q').addEventListener('input', ()=>{
     render();
   }, 90);
 });
+(() => {
+  const q = $('#q');
+  // On suit l'état explicitement : pendant l'événement « blur »,
+  // document.activeElement pointe encore sur le champ et inverserait le voile.
+  let vise = false;
+  const majVoile = () => document.body.classList.toggle('qfocus', vise && !q.value.trim());
+  q.addEventListener('focus', () => { vise = true;  majVoile(); });
+  q.addEventListener('blur',  () => { vise = false; majVoile(); });
+  q.addEventListener('input', majVoile);
+})();
 $('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownCards=60; render(); $('#q').focus(); });
 document.addEventListener('keydown', e=>{
   if(e.key==='/' && document.activeElement!==$('#q') && !document.querySelector('dialog[open]')){
