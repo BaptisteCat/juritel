@@ -3303,6 +3303,7 @@ window.sbSchedulePush = () => {
 
 async function sbNotifDemandes(){
   try{
+    if(!(await sbEstProprietaire())) return;   // seul le proprietaire arbitre
     const {data, error} = await sb.from('demandes').select('email');
     const gear = document.getElementById('btnsettings');
     if(!error && data && data.length){
@@ -3313,14 +3314,34 @@ async function sbNotifDemandes(){
     }
   }catch(e){}
 }
+let sbProp = null;                       // null = pas encore verifie
+async function sbEstProprietaire(){
+  if(sbProp !== null) return sbProp;
+  try{
+    const {data, error} = await sb.rpc('est_proprietaire');
+    if(!error){ sbProp = data === true; return sbProp; }
+  }catch(e){}
+  // repli si la fonction n est pas exposee : on lit SA PROPRE ligne
+  try{
+    const mail = (sbUser && sbUser.email || '').toLowerCase();
+    const {data} = await sb.from('acces').select('role').eq('email', mail).maybeSingle();
+    sbProp = !!(data && data.role === 'owner');
+  }catch(e){ sbProp = false; }
+  return sbProp;
+}
 async function sbAccountUI(){
   const info = document.getElementById('accInfo');
   if(!sbUser){ info.textContent = 'Non connecté.'; return; }
   info.textContent = 'Connecté : ' + (sbUser.email||'');
-  // propriétaire ? (seul lui peut lire la liste blanche)
   const wl = document.getElementById('wlBox');
+  wl.style.display = 'none';
+  // La gestion de la liste blanche est reservee au proprietaire. On interroge le
+  // serveur (fonction est_proprietaire) au lieu de deduire le role du fait que
+  // la lecture a reussi : masquer l interface ne protege rien, c est la regle
+  // RLS de la table « acces » qui fait foi cote base.
+  if(!(await sbEstProprietaire())) return;
   const {data, error} = await sb.from('acces').select('email,role').order('email');
-  if(error || !data){ wl.style.display = 'none'; return; }
+  if(error || !data) return;
   wl.style.display = 'block';
   // demandes en attente
   let demHtml = '';
@@ -3343,6 +3364,7 @@ async function sbAccountUI(){
     </div>`).join('');
 }
 window.sbDemOk = async mail => {
+  if(!(await sbEstProprietaire())) return;
   const r1 = await sb.from('acces').insert({email: mail});
   if(r1.error && r1.error.code !== '23505'){ toast('Échec : '+r1.error.message); return; }
   await sb.from('demandes').delete().eq('email', mail);
@@ -3350,12 +3372,14 @@ window.sbDemOk = async mail => {
   sbAccountUI(); sbNotifDemandes();
 };
 window.sbDemNo = async mail => {
+  if(!(await sbEstProprietaire())) return;
   if(!confirm('Refuser la demande de '+mail+' ?')) return;
   await sb.from('demandes').delete().eq('email', mail);
   toast('Demande refusée');
   sbAccountUI(); sbNotifDemandes();
 };
 window.sbWlAdd = async () => {
+  if(!(await sbEstProprietaire())) return;
   const mail = (document.getElementById('wlMail').value||'').trim().toLowerCase();
   if(!mail.includes('@')){ toast('Adresse invalide'); return; }
   const {error} = await sb.from('acces').insert({email: mail});
@@ -3365,6 +3389,7 @@ window.sbWlAdd = async () => {
   sbAccountUI();
 };
 window.sbWlDel = async mail => {
+  if(!(await sbEstProprietaire())) return;
   if(!confirm('Retirer l\'accès de '+mail+' ?')) return;
   const {error} = await sb.from('acces').delete().eq('email', mail);
   if(error){ toast('Échec : '+error.message); return; }
@@ -3377,7 +3402,7 @@ async function sbInit(){
   sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
   sb.auth.onAuthStateChange((_e, session)=>{
     const u = session ? session.user : null;
-    if((u&&u.id) !== (sbUser&&sbUser.id)){ sbUser = u; sbGateUpdate(); }
+    if((u&&u.id) !== (sbUser&&sbUser.id)){ sbUser = u; sbProp = null; sbGateUpdate(); }
   });
   const {data:{session}} = await sb.auth.getSession();
   sbUser = session ? session.user : null;
