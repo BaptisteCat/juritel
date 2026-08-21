@@ -1,0 +1,3741 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Juritel — essai interface</title>
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f5f8">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0c0e13">
+<link rel="icon" type="image/svg+xml" href="logo-balance-tel.svg">
+<!-- application installable (PWA) : meme icone que le favicon -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="application-name" content="Juritel">
+<meta name="apple-mobile-web-app-title" content="Juritel">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&display=swap" rel="stylesheet">
+
+<style>
+/* ==================== système de design v2 ==================== */
+:root{
+  --bg:#f4f5f8;
+  --bg-image:
+    radial-gradient(900px 420px at 85% -8%, rgba(90,95,245,.055), transparent 60%),
+    radial-gradient(800px 400px at -6% 22%, rgba(139,92,246,.04), transparent 55%);
+  --card:#ffffff; --card-2:#f8f9fc;
+  --ink:#0d0f1e; --ink-2:#585d75; --ink-3:#9599ac;
+  --line:#e8eaf1; --line-2:#eff1f6;
+  --accent:#4353ff; --accent-2:#3542d8;
+  --grad-a:#181b30; --grad-b:#33395f;
+  --cta-ink:#ffffff;
+  --glow:rgba(24,27,48,.22);
+  --hairline-a:rgba(67,83,255,.45); --hairline-b:rgba(139,92,246,.25);
+  --gold:#b58a2f;
+  --ok:#0e8345; --ok-bg:#e5f6ec; --ko:#d02b35; --ko-bg:#fdecec;
+  --shadow-s:0 1px 2px rgba(13,15,30,.04), 0 1px 6px rgba(13,15,30,.04);
+  --shadow-m:0 2px 6px rgba(13,15,30,.05), 0 14px 36px rgba(13,15,30,.09);
+  --shadow-l:0 10px 32px rgba(13,15,30,.14), 0 30px 70px rgba(13,15,30,.16);
+  --r:18px;
+  --tel:#3542d8; --tel-bg:#eceeff; --mail:#7c3aed; --mail-bg:#f3edfd;
+  --fax:#585d75; --fax-bg:#eef0f4;
+  --btj-grad:linear-gradient(135deg,#181b30,#33395f); --btj-ink:#fff;
+  --bar-a:#4353ff; --bar-b:#7c3aed;
+  --title-grad:none; --title-color:var(--ink);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c0e13;
+    --bg-image:
+      radial-gradient(1000px 480px at 82% -10%, rgba(190,200,235,.06), transparent 60%),
+      radial-gradient(900px 460px at -8% 108%, rgba(99,102,241,.06), transparent 60%);
+    --card:#171b28; --card-2:#222738;
+    --ink:#eef0f5; --ink-2:#b0b6c8; --ink-3:#767e94;
+    --line:#2d3247; --line-2:#272c3e;
+    --accent:#93a5ff; --accent-2:#7d92ff;
+    --grad-a:#ffffff; --grad-b:#c4cbdf;
+    --cta-ink:#12141c;
+    --glow:rgba(180,190,220,.16);
+    --hairline-a:rgba(150,168,255,.5); --hairline-b:rgba(201,161,255,.15);
+    --gold:#d3b878;
+    --ok:#43cf7f; --ok-bg:#11301e; --ko:#ff6f75; --ko-bg:#391317;
+    --shadow-s:0 1px 2px rgba(0,0,0,.5);
+    --shadow-m:0 2px 8px rgba(0,0,0,.45), 0 16px 40px rgba(0,0,0,.42);
+    --shadow-l:0 16px 48px rgba(0,0,0,.62);
+    --tel:#9fb0ff; --tel-bg:#28305c; --mail:#d0acff; --mail-bg:#372a5e;
+    --fax:#aeb4c4; --fax-bg:#282d3c;
+    --btj-grad:linear-gradient(135deg,#93a5ff,#8f7ff2); --btj-ink:#0f1220;
+    --bar-a:#93a5ff; --bar-b:#c9a1ff;
+    --chip-a:#93a5ff; --chip-b:#8f7ff2; --chip-ink:#0f1220;
+    --chip-glow:rgba(147,165,255,.3);
+    --title-grad:linear-gradient(115deg,#ffffff 0%,#dde2ee 55%,#9ea8c2 100%);
+    --title-color:transparent;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c0e13;
+  --bg-image:
+    radial-gradient(1000px 480px at 82% -10%, rgba(190,200,235,.06), transparent 60%),
+    radial-gradient(900px 460px at -8% 108%, rgba(99,102,241,.06), transparent 60%);
+  --card:#171b28; --card-2:#222738;
+  --ink:#eef0f5; --ink-2:#b0b6c8; --ink-3:#767e94;
+  --line:#2d3247; --line-2:#272c3e;
+  --accent:#93a5ff; --accent-2:#7d92ff;
+  --grad-a:#ffffff; --grad-b:#c4cbdf;
+  --cta-ink:#12141c;
+  --glow:rgba(180,190,220,.16);
+  --hairline-a:rgba(150,168,255,.5); --hairline-b:rgba(201,161,255,.15);
+  --gold:#d3b878;
+  --ok:#43cf7f; --ok-bg:#11301e; --ko:#ff6f75; --ko-bg:#391317;
+  --shadow-s:0 1px 2px rgba(0,0,0,.5);
+  --shadow-m:0 2px 8px rgba(0,0,0,.45), 0 16px 40px rgba(0,0,0,.42);
+  --shadow-l:0 16px 48px rgba(0,0,0,.62);
+  --tel:#9fb0ff; --tel-bg:#28305c; --mail:#d0acff; --mail-bg:#372a5e;
+  --fax:#aeb4c4; --fax-bg:#282d3c;
+  --btj-grad:linear-gradient(135deg,#93a5ff,#8f7ff2); --btj-ink:#0f1220;
+    --bar-a:#93a5ff; --bar-b:#c9a1ff;
+    --chip-a:#93a5ff; --chip-b:#8f7ff2; --chip-ink:#0f1220;
+    --chip-glow:rgba(147,165,255,.3);
+  --title-grad:linear-gradient(115deg,#ffffff 0%,#dde2ee 55%,#9ea8c2 100%);
+  --title-color:transparent;
+}
+*{box-sizing:border-box; margin:0}
+html{-webkit-text-size-adjust:100%}
+/* ==== échelle d'interface : proportionnée à la taille de l'écran ====
+   Tout le site est en pixels fixes ; « zoom » agrandit l'ensemble de façon
+   homothétique, et --maxw élargit le conteneur pour combler les marges vides
+   des grands écrans. Les media queries sont évaluées sur la largeur NON zoomée,
+   donc les paliers restent stables (pas d'oscillation). */
+:root{--maxw:1080px}
+@media (min-width:1500px){ :root{--maxw:1200px; zoom:1.10} }
+@media (min-width:1800px){ :root{--maxw:1320px; zoom:1.20} }
+@media (min-width:2200px){ :root{--maxw:1440px; zoom:1.30} }
+/* reglage manuel (Reglages > Echelle) : prioritaire sur les paliers */
+:root[data-ui="100"]{zoom:1;    --maxw:1080px}
+:root[data-ui="110"]{zoom:1.10; --maxw:1200px}
+:root[data-ui="125"]{zoom:1.25; --maxw:1320px}
+:root[data-ui="140"]{zoom:1.40; --maxw:1440px}
+body{
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+  font-size:14.5px; line-height:1.5; letter-spacing:-.011em;
+  background-color:var(--bg); background-image:var(--bg-image);
+  background-attachment:fixed; background-repeat:no-repeat;
+  color:var(--ink); padding-bottom:96px; min-height:100vh;
+  font-feature-settings:"tnum","cv05";
+}
+button{font-family:inherit}
+a{color:inherit}
+svg{display:block; flex-shrink:0}
+::selection{background:color-mix(in srgb, var(--accent) 25%, transparent)}
+
+/* ==================== en-tête ==================== */
+header{
+  position:sticky; top:0; z-index:20; padding:14px 18px 12px;
+  padding-top:calc(14px + env(safe-area-inset-top, 0px));
+  background:color-mix(in srgb, var(--bg) 76%, transparent);
+  -webkit-backdrop-filter:blur(18px) saturate(1.5); backdrop-filter:blur(18px) saturate(1.5);
+  border-bottom:1px solid var(--line);
+}
+.hwrap{max-width:var(--maxw); margin:0 auto}
+.titrebar{display:flex; align-items:center; gap:12px; margin-bottom:12px}
+.logo{
+  width:38px; height:38px; border-radius:12px; flex-shrink:0;
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
+  color:var(--cta-ink);
+  display:grid; place-items:center; cursor:pointer;
+  box-shadow:0 4px 14px var(--glow); transition:transform .2s cubic-bezier(.2,.6,.3,1), box-shadow .2s;
+}
+.logo:hover{transform:scale(1.06) rotate(-2deg); box-shadow:0 6px 20px var(--glow)}
+.titrebar h1{
+  font-size:16.5px; font-weight:750; letter-spacing:-.02em; flex:1; min-width:0; cursor:pointer;
+}
+.titrebar h1 small{display:block; font-size:11.5px; font-weight:500; color:var(--ink-3);
+  letter-spacing:-.005em; margin-top:1px}
+#syncstate{
+  display:flex; align-items:center; gap:7px; font-size:12px; font-weight:550; color:var(--ink-3);
+  padding:6px 12px; border-radius:20px; background:var(--card); border:1px solid var(--line);
+  transition:all .2s;
+}
+#syncstate .dot{width:6px;height:6px;border-radius:50%;background:var(--ink-3); transition:all .2s}
+#syncstate.on .dot{background:var(--ok); box-shadow:0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent)}
+#syncstate.err .dot{background:var(--ko)}
+#syncstate.err{cursor:pointer}
+#syncstate.err:hover{border-color:var(--ko)}
+#syncstate.work .dot{background:var(--gold); animation:pulse 1s infinite}
+/* une fois synchronise, l indicateur s efface pour degager l en-tete */
+#syncstate.fade{opacity:0; transform:scale(.94)}
+#syncstate.hidden{display:none}
+@keyframes pulse{50%{opacity:.25}}
+.iconbtn{
+  width:38px; height:38px; border-radius:12px; border:1px solid var(--line);
+  background:var(--card); color:var(--ink-2); cursor:pointer;
+  display:grid; place-items:center; transition:all .18s cubic-bezier(.2,.6,.3,1); flex-shrink:0;
+}
+.iconbtn:hover{color:var(--ink); box-shadow:var(--shadow-s); transform:translateY(-2px);
+  border-color:color-mix(in srgb, var(--accent) 35%, var(--line))}
+.iconbtn.notif{position:relative}
+.iconbtn.notif::after{
+  content:''; position:absolute; top:6px; right:6px; width:9px; height:9px;
+  border-radius:50%; background:var(--ko); border:2px solid var(--card);
+}
+
+.searchwrap{position:relative}
+.searchwrap .lens{
+  position:absolute; left:16px; top:50%; transform:translateY(-50%);
+  color:var(--ink-3); pointer-events:none; display:grid; place-items:center;
+  transition:color .2s;
+}
+.searchwrap:focus-within .lens{color:var(--accent)}
+#q{
+  width:100%; padding:14px 46px; font-size:15.5px; font-weight:450; color:var(--ink);
+  font-family:inherit; letter-spacing:-.011em;
+  border:1.5px solid var(--line); border-radius:15px; background:var(--card);
+  outline:none; box-shadow:var(--shadow-s); transition:all .2s;
+}
+#q::placeholder{color:var(--ink-3); font-weight:400}
+#q:focus{border-color:var(--accent);
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 13%, transparent), var(--shadow-m)}
+#clearq{
+  position:absolute; right:9px; top:50%; transform:translateY(-50%);
+  border:none; background:var(--line-2); color:var(--ink-2); cursor:pointer;
+  width:28px; height:28px; border-radius:50%; display:none; place-items:center;
+  transition:all .15s;
+}
+#clearq:hover{background:var(--line); color:var(--ink); transform:translateY(-50%) scale(1.08)}
+
+.chips{display:flex; gap:7px; overflow-x:auto; padding:12px 2px 2px; scrollbar-width:none;
+  overscroll-behavior-x:contain}
+.chips::-webkit-scrollbar{display:none}
+/* degrade de bord : signale qu il reste des filtres hors champ */
+.chips.cfr{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 38px),transparent);
+           mask-image:linear-gradient(90deg,#000 calc(100% - 38px),transparent)}
+.chips.cfl{-webkit-mask-image:linear-gradient(90deg,transparent,#000 38px);
+           mask-image:linear-gradient(90deg,transparent,#000 38px)}
+.chips.cfl.cfr{-webkit-mask-image:linear-gradient(90deg,transparent,#000 38px,#000 calc(100% - 38px),transparent);
+               mask-image:linear-gradient(90deg,transparent,#000 38px,#000 calc(100% - 38px),transparent)}
+.chip{
+  border:1px solid var(--line); background:var(--card); color:var(--ink-2);
+  border-radius:20px; padding:6px 14px; font-size:12.5px; font-weight:600;
+  letter-spacing:-.005em; cursor:pointer; white-space:nowrap;
+  transition:all .18s cubic-bezier(.2,.6,.3,1);
+}
+.chip:hover{border-color:var(--ink-3); color:var(--ink); transform:translateY(-1px); box-shadow:var(--shadow-s)}
+.chip.on{
+  background:linear-gradient(135deg,var(--chip-a,var(--grad-a)),var(--chip-b,var(--grad-b)));
+  color:var(--chip-ink,var(--cta-ink)); border-color:transparent;
+  box-shadow:0 3px 10px var(--chip-glow,var(--glow));
+}
+
+main{max-width:var(--maxw); margin:0 auto; padding:16px 18px}
+#stats{color:var(--ink-3); font-size:12.5px; font-weight:500; margin:2px 4px 14px}
+#stats:empty{display:none}
+body.mapmode{padding-bottom:10px}
+
+/* ==================== vue liste ==================== */
+.cathead{
+  font-size:11.5px; font-weight:700; color:var(--ink-2); text-transform:uppercase;
+  letter-spacing:.08em; margin:26px 4px 12px; display:flex; align-items:center; gap:8px;
+}
+.cathead:first-child{margin-top:4px}
+.cathead .cnt{font-weight:550; color:var(--ink-3); letter-spacing:0; text-transform:none}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px}
+
+/* bordure dégradée révélée au survol (cartes et suggestions) */
+.jcard, .sugg{position:relative}
+.jcard::after, .sugg::after{
+  content:''; position:absolute; inset:0; border-radius:inherit; padding:1.5px;
+  background:linear-gradient(135deg, var(--hairline-a), var(--hairline-b) 55%, transparent);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  opacity:0; transition:opacity .25s; pointer-events:none;
+}
+.jcard:hover::after, .sugg:hover::after{opacity:1}
+
+.jcard{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  padding:16px 18px; cursor:pointer; box-shadow:var(--shadow-s);
+  transition:all .22s cubic-bezier(.2,.6,.3,1);
+  display:flex; flex-direction:column; gap:7px; min-width:0;
+}
+.jcard:hover{box-shadow:var(--shadow-m); transform:translateY(-3px)}
+.jcard .top{display:flex; align-items:center; gap:10px}
+.jcard .nom{font-weight:650; font-size:14.5px; letter-spacing:-.015em; flex:1; min-width:0}
+.jcard .adr{
+  font-size:12px; color:var(--ink-3); display:flex; align-items:center; gap:5px;
+  overflow:hidden; white-space:nowrap;
+}
+.jcard .adr span{overflow:hidden; text-overflow:ellipsis}
+.jcard .foot{display:flex; align-items:center; gap:8px; font-size:11.5px; font-weight:500;
+  color:var(--ink-3); margin-top:2px}
+.jcard .snip{
+  font-size:12px; color:var(--ink-2); background:var(--card-2); border-radius:9px;
+  padding:7px 10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.jcard .snip b{color:var(--accent); font-weight:600}
+.badge{
+  font-size:10px; font-weight:700; padding:4px 9px; border-radius:7px;
+  letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; flex-shrink:0;
+}
+.b-tj{color:var(--btj-ink); background:var(--btj-grad)}
+.b-ca{color:var(--mail); background:var(--mail-bg)}
+.b-cassation{color:var(--gold); background:color-mix(in srgb, var(--gold) 13%, transparent)}
+.b-penitentiaire{color:#b45f19; background:color-mix(in srgb, #c47121 13%, transparent)}
+.b-commissariat{color:#0e7490; background:color-mix(in srgb, #0e7490 12%, transparent)}
+.b-cra{color:#0f8a68; background:color-mix(in srgb, #0f8a68 12%, transparent)}
+.b-prefecture,.b-douane,.b-etranger,.b-commerce,.b-autre{color:var(--ink-2); background:var(--line-2)}
+.b-off{color:var(--gold); background:color-mix(in srgb, var(--gold) 14%, transparent)}
+.ncontacts{font-size:11.5px; color:var(--ink-3); font-weight:600}
+.more{
+  display:block; width:100%; padding:14px; margin:16px 0 26px;
+  border:1.5px dashed var(--line); background:none; color:var(--accent);
+  border-radius:var(--r); cursor:pointer; font-size:13.5px; font-weight:600;
+  transition:all .18s;
+}
+.more:hover{background:var(--card); border-color:var(--accent); transform:translateY(-1px)}
+.vide{text-align:center; color:var(--ink-3); padding:70px 10px}
+.vide .big{display:flex; justify-content:center; margin-bottom:14px; color:var(--ink-3)}
+
+/* suggestions principales */
+.sugg{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); padding:17px 20px; margin-bottom:12px; cursor:pointer;
+  transition:all .22s cubic-bezier(.2,.6,.3,1);
+}
+.sugg:hover{box-shadow:var(--shadow-m); transform:translateY(-2px)}
+.sugg .stop{display:flex; align-items:center; gap:12px}
+.sugg .snom{
+  font-size:18.5px; font-weight:750; letter-spacing:-.025em; flex:1; min-width:0;
+  background:var(--title-grad); -webkit-background-clip:text; background-clip:text;
+  color:var(--title-color);
+}
+.sugg .sadr{
+  font-size:12px; font-weight:450; color:var(--ink-3); margin-top:3px;
+  display:flex; align-items:center; gap:5px; letter-spacing:-.005em;
+  -webkit-text-fill-color:var(--ink-3);
+}
+.schips{display:flex; flex-wrap:wrap; gap:7px; margin-top:12px}
+.schip{
+  border:1px solid var(--line); background:var(--card-2); border-radius:18px;
+  padding:5px 13px; font-size:12px; font-weight:600; color:var(--ink-2); cursor:pointer;
+  transition:all .16s cubic-bezier(.2,.6,.3,1); letter-spacing:-.005em;
+}
+.schip:hover{border-color:var(--accent); color:var(--accent); background:var(--card);
+  transform:translateY(-1px); box-shadow:var(--shadow-s)}
+.schip .n{color:var(--ink-3); font-weight:600; margin-left:4px; font-size:10.5px}
+.isvc{border:1px solid var(--line-2); border-radius:12px; margin-top:12px; overflow:hidden;
+  background:var(--card)}
+.isvchead{
+  display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--card-2);
+  font-size:11.5px; font-weight:700; color:var(--accent); text-transform:uppercase;
+  letter-spacing:.06em; cursor:pointer; transition:background .15s;
+}
+.isvchead:hover{background:var(--line-2)}
+.isvchead .cnt{font-size:10.5px; color:var(--ink-3)}
+.isvchead .goto{margin-left:auto; font-size:11px; color:var(--ink-3); font-weight:550;
+  text-transform:none; letter-spacing:-.005em}
+
+/* ==================== fiche ==================== */
+.fhead{
+  background:linear-gradient(160deg, var(--card) 55%, color-mix(in srgb, var(--card-2) 80%, var(--card)) 100%);
+  border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); padding:18px 20px; margin-bottom:14px;
+}
+.fhead .row1{display:flex; align-items:center; gap:13px}
+#btnback{
+  width:36px; height:36px; border-radius:11px; border:1px solid var(--line);
+  background:var(--card-2); color:var(--ink); cursor:pointer; flex-shrink:0;
+  display:grid; place-items:center; transition:all .18s cubic-bezier(.2,.6,.3,1);
+}
+#btnback:hover{box-shadow:var(--shadow-s); transform:translateX(-2px)}
+.fhead h2{
+  font-size:19px; font-weight:750; letter-spacing:-.025em; flex:1; min-width:0;
+  background:var(--title-grad); -webkit-background-clip:text; background-clip:text;
+  color:var(--title-color);
+}
+.fhead .adr{font-size:12.5px; font-weight:450; color:var(--ink-2); margin:10px 0 0 49px;
+  display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.fhead .facts{display:flex; gap:6px; margin:12px 0 0 49px; flex-wrap:wrap}
+.mini{
+  border:none; background:none; color:var(--ink-3); cursor:pointer; font-size:12px;
+  font-weight:600; padding:6px 10px; border-radius:9px; letter-spacing:-.005em;
+  display:inline-flex; align-items:center; gap:5px; transition:all .15s;
+}
+.mini:hover{background:var(--line-2); color:var(--ink); transform:translateY(-1px)}
+.mini.editon{background:var(--ok-bg); color:var(--ok)}
+select.mini{
+  border:1px solid var(--line); background:var(--card); border-radius:9px;
+  font-size:11.5px; padding:4px 6px; color:var(--ink-2); cursor:pointer; font-weight:600;
+}
+
+.flayout{display:grid; grid-template-columns:236px 1fr; gap:14px; align-items:start}
+.toc{
+  position:sticky; top:136px; background:var(--card); border:1px solid var(--line);
+  border-radius:var(--r); box-shadow:var(--shadow-s); padding:8px;
+  max-height:calc(100vh - 156px); overflow-y:auto;
+}
+.toc a{
+  display:flex; align-items:center; gap:8px; padding:8px 11px; border-radius:10px;
+  font-size:12.5px; font-weight:550; color:var(--ink-2); text-decoration:none;
+  cursor:pointer; letter-spacing:-.005em; transition:all .14s;
+}
+.toc a:hover{background:var(--card-2); color:var(--ink); transform:translateX(2px)}
+.toc a .cnt{margin-left:auto; font-size:10.5px; color:var(--ink-3); font-weight:600}
+@media (max-width:820px){
+  .flayout{display:block}
+  .toc{position:static; max-height:none; display:flex; overflow-x:auto; gap:4px;
+    padding:6px; margin-bottom:12px; scrollbar-width:none}
+  .toc::-webkit-scrollbar{display:none}
+  .toc a{white-space:nowrap; flex-shrink:0}
+  .toc a .cnt{margin-left:6px}
+  .fhead .adr,.fhead .facts{margin-left:0}
+}
+
+.svcblock{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); margin-bottom:12px; overflow:hidden; scroll-margin-top:146px;
+  transition:box-shadow .2s;
+}
+.svcblock:hover{box-shadow:var(--shadow-m)}
+.svcblock>h3{
+  display:flex; align-items:center; gap:9px; padding:13px 17px;
+  font-size:12px; font-weight:700; color:var(--ink); text-transform:uppercase;
+  letter-spacing:.07em; background:var(--card); cursor:pointer; user-select:none;
+  transition:background .15s;
+}
+.svcblock>h3:hover{background:var(--card-2)}
+.svcblock.open>h3{border-bottom:1px solid var(--line-2); color:var(--accent)}
+.svcblock>h3 .caret{color:var(--ink-3); display:grid; place-items:center; transition:transform .25s cubic-bezier(.2,.6,.3,1)}
+.svcblock.open>h3 .caret{transform:rotate(90deg)}
+.svcblock>h3 .cnt{font-size:10.5px; color:var(--ink-3); font-weight:600}
+.svcblock>h3 .sp{flex:1}
+.svcblock .svcinner{display:none}
+.svcblock.open .svcinner{display:block; animation:reveal .25s cubic-bezier(.2,.6,.3,1)}
+@keyframes reveal{from{opacity:0; transform:translateY(-4px)} to{opacity:1; transform:none}}
+
+.bureau{padding:4px 0}
+.bureau>h4{
+  display:flex; align-items:center; gap:8px;
+  padding:11px 17px 4px; font-size:13px; font-weight:650; color:var(--ink);
+  letter-spacing:-.01em;
+}
+.bureau>h4::before{content:''; width:3px; height:14px; border-radius:2px;
+  background:linear-gradient(180deg,var(--bar-a,var(--grad-a)),var(--bar-b,var(--grad-b))); flex-shrink:0}
+.bureau>h4 .cnt{font-size:10.5px; color:var(--ink-3); font-weight:600}
+
+.entry{
+  display:grid; grid-template-columns:minmax(150px, 2fr) 3fr; gap:4px 18px;
+  padding:11px 17px; border-top:1px solid var(--line-2); align-items:start;
+}
+.bureau .entry{padding-left:30px}
+.entry:first-child{border-top:none}
+.entry .elabel{font-size:13px; font-weight:550; color:var(--ink); padding-top:6px;
+  letter-spacing:-.008em; overflow-wrap:break-word}
+.entry .elabel .enote{display:block; font-size:11.5px; font-weight:450; color:var(--ink-3);
+  font-style:italic; margin-top:3px; letter-spacing:-.005em}
+.entry.nolabel{grid-template-columns:1fr}
+.chans{display:flex; flex-wrap:wrap; gap:7px; align-items:center; min-width:0}
+.chan{
+  display:inline-flex; align-items:center; gap:8px; padding:5px 10px 5px 6px;
+  border-radius:12px; background:var(--card-2); border:1px solid var(--line-2);
+  transition:all .16s cubic-bezier(.2,.6,.3,1); min-width:0;
+}
+.chan:hover{border-color:color-mix(in srgb, var(--accent) 30%, var(--line));
+  box-shadow:var(--shadow-s); background:var(--card); transform:translateY(-1px)}
+.chan.dead{opacity:.42}
+.chan[draggable="true"]{cursor:grab}
+.chan[draggable="true"]:active{cursor:grabbing}
+/* mobile : au niveau région, les points laissent passer le clic vers le département */
+@media (hover:none), (max-width:760px){
+  .mapwrap svg.mlvl-reg .mdot{pointer-events:none; cursor:default}
+}
+.dropover{outline:2px dashed var(--accent); outline-offset:-2px;
+  background:color-mix(in srgb, var(--accent) 7%, transparent) !important}
+.tico{width:26px; height:26px; border-radius:8px; display:grid; place-items:center; flex-shrink:0}
+.tico.tel{background:var(--tel-bg); color:var(--tel)}
+.tico.email{background:var(--mail-bg); color:var(--mail)}
+.tico.fax{background:var(--fax-bg); color:var(--fax)}
+.chan a.v{
+  font-weight:600; font-size:13.5px; text-decoration:none; color:var(--ink);
+  letter-spacing:0; word-break:break-all; min-width:0; font-variant-numeric:tabular-nums;
+  transition:color .15s;
+}
+.chan a.v:hover{color:var(--accent)}
+.score{
+  display:inline-flex; align-items:center; gap:3px;
+  font-size:10.5px; font-weight:700; border-radius:7px; padding:2.5px 8px;
+  white-space:nowrap; flex-shrink:0; letter-spacing:0;
+}
+.score.good{color:var(--ok); background:var(--ok-bg)}
+.score.bad{color:var(--ko); background:var(--ko-bg)}
+.chan .acts{display:flex; align-items:center; gap:1px; margin-left:2px; flex-shrink:0}
+.abtn{
+  width:27px; height:27px; border-radius:8px; border:1px solid transparent;
+  background:none; color:var(--ink-3); cursor:pointer;
+  display:grid; place-items:center; transition:all .14s cubic-bezier(.2,.6,.3,1);
+}
+.abtn:hover{background:var(--line-2); color:var(--ink); transform:scale(1.1)}
+.abtn.rok:hover{background:var(--ok-bg); color:var(--ok)}
+.abtn.rko:hover{background:var(--ko-bg); color:var(--ko)}
+@media (hover:hover){
+  .chan .acts .ghost{display:none}
+  .chan:hover .acts .ghost{display:grid}
+}
+@media (max-width:640px){
+  .entry{grid-template-columns:1fr; gap:3px; padding:10px 13px}
+  .bureau .entry{padding-left:22px}
+  .entry .elabel{padding-top:0}
+}
+
+
+/* recherche de juridiction compétente par adresse */
+#toolsback{
+  position:fixed; inset:0; z-index:38; background:rgba(8,9,18,.45);
+  -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  opacity:0; pointer-events:none; transition:opacity .25s;
+}
+#toolsback.show{opacity:1; pointer-events:auto}
+#tools{
+  position:fixed; top:0; right:0; bottom:0; z-index:39; width:min(390px, 94vw);
+  background:var(--card); border-left:1px solid var(--line); box-shadow:var(--shadow-l);
+  transform:translateX(105%); transition:transform .3s cubic-bezier(.2,.6,.3,1);
+  padding:16px; overflow-y:auto;
+}
+#tools.show{transform:none}
+.thead{display:flex; align-items:center; gap:10px; margin-bottom:16px}
+.thead .tt{width:34px; height:34px; border-radius:10px; display:grid; place-items:center;
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b)); color:var(--cta-ink)}
+.thead b{flex:1; font-size:16px; font-weight:750; letter-spacing:-.02em}
+.toolitem{
+  display:flex; align-items:center; gap:11px; padding:12px 13px;
+  border:1px solid var(--line); border-radius:14px; background:var(--card-2);
+  cursor:pointer; user-select:none; transition:all .16s; margin-bottom:8px;
+}
+.toolitem:hover{border-color:color-mix(in srgb, var(--accent) 35%, var(--line));
+  box-shadow:var(--shadow-s); transform:translateY(-1px)}
+.toolitem .tico{width:32px; height:32px; border-radius:10px}
+.toolitem .ti{flex:1; min-width:0}
+.toolitem .ti b{display:block; font-size:13.5px; font-weight:650; letter-spacing:-.01em}
+.toolitem .ti small{display:block; font-size:11.5px; color:var(--ink-3); margin-top:1px}
+.toolitem .caret{color:var(--ink-3); transition:transform .2s}
+.toolitem.open .caret{transform:rotate(90deg)}
+.tbody{display:none; padding:4px 2px 14px}
+.tbody.open{display:block; animation:reveal .25s cubic-bezier(.2,.6,.3,1)}
+#adr{
+  width:100%; padding:11px 13px; font-size:14.5px; color:var(--ink);
+  border:1.5px solid var(--line); border-radius:11px; background:var(--card-2);
+  outline:none; font-family:inherit; letter-spacing:-.011em; transition:all .18s;
+}
+#adr:focus{border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent)}
+.adrsugg{margin-top:6px}
+.adrsugg button{
+  display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+  padding:9px 11px; border:none; background:none; border-radius:9px;
+  font-size:13.5px; color:var(--ink); cursor:pointer; font-family:inherit;
+  letter-spacing:-.008em;
+}
+.adrsugg button:hover{background:var(--card-2); color:var(--accent)}
+.compcard{
+  background:var(--card);
+  border:1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
+  border-radius:var(--r); box-shadow:var(--shadow-s);
+  padding:14px 16px; margin-bottom:14px;
+}
+.adrsugg .compcard{margin-top:10px; margin-bottom:0; padding:12px}
+.comphead{display:flex; align-items:flex-start; gap:8px; font-size:12.5px;
+  color:var(--ink-2); margin-bottom:11px; letter-spacing:-.005em}
+.comphead svg{margin-top:2px; color:var(--accent)}
+.comphead b{color:var(--ink); font-weight:650}
+.comphead .mini{margin-left:auto; flex-shrink:0}
+.compgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:9px}
+.compcell{
+  background:var(--card-2); border:1px solid var(--line-2); border-radius:12px;
+  padding:10px 12px; display:flex; flex-direction:column; gap:4px; min-width:0;
+  transition:all .15s;
+}
+.compcell.here{
+  border-color:color-mix(in srgb, var(--accent) 50%, var(--line));
+  background:color-mix(in srgb, var(--accent) 8%, var(--card-2));
+}
+.compcell .cl{font-size:10px; font-weight:700; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--ink-3)}
+.compcell .cn{font-size:13px; font-weight:650; letter-spacing:-.012em; color:var(--ink)}
+.compcell .cgo{
+  align-self:flex-start; display:inline-flex; align-items:center; gap:5px;
+  font-size:11.5px; font-weight:650; color:var(--accent); cursor:pointer;
+  padding:4px 10px; border-radius:8px; border:1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  background:var(--card); margin-top:2px; transition:all .13s;
+}
+.compcell .cgo:hover{background:color-mix(in srgb, var(--accent) 10%, var(--card)); transform:translateY(-1px)}
+.compcell .chere{display:inline-flex; align-items:center; gap:5px;
+  font-size:11.5px; font-weight:650; color:var(--ok); margin-top:2px}
+.compcell .cabs{font-size:11.5px; color:var(--ink-3); margin-top:2px}
+
+/* bloc « annuaire officiel » (service-public.fr) sur les fiches + fiche générée */
+.spcard{
+  margin:0 0 14px; padding:14px 16px; border-radius:16px;
+  background:var(--card); border:1px solid var(--line);
+  animation:reveal .25s cubic-bezier(.2,.6,.3,1);
+}
+.spcard .comphead{margin-bottom:8px}
+.splink{margin-left:auto; flex-shrink:0; font-size:11px; color:var(--ink-3);
+  text-decoration:none; border-bottom:1px dotted var(--line)}
+.splink:hover{color:var(--accent); border-color:var(--accent)}
+.sprow{display:flex; gap:9px; align-items:flex-start; font-size:13px;
+  color:var(--ink-2); padding:3px 0; line-height:1.55}
+.sprow svg{flex-shrink:0; margin-top:4px; color:var(--ink-3)}
+.sprow b{color:var(--ink); font-weight:650}
+.spnote{color:var(--ink-3); font-size:11.5px}
+.spfoot{font-size:11px; color:var(--ink-3); margin-top:9px; line-height:1.5}
+.spfoot a{color:inherit; text-decoration:underline; text-underline-offset:2px}
+.spfoot a:hover{color:var(--accent)}
+
+
+/* carte de France interactive */
+.mapcard{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); padding:14px 16px; margin:0 auto;
+  max-width:960px;
+}
+.maplayout{display:grid; grid-template-columns:minmax(0,1fr) 220px; gap:14px; align-items:start}
+.mside{
+  display:flex; flex-direction:column; gap:8px;
+  max-height:calc(100vh - 330px); overflow-y:auto;
+}
+.mside .mlegend{flex-direction:column; align-items:stretch; gap:3px; margin:0}
+.mside .mlegend .it{cursor:default}
+.mside .mjlist{flex-direction:column; margin:0; gap:5px}
+.mside .mjlist .schip{justify-content:flex-start; text-align:left}
+.mside .hint{margin:4px 2px 0}
+.msidetitle{font-size:10.5px; font-weight:700; color:var(--ink-3);
+  text-transform:uppercase; letter-spacing:.07em; margin:4px 2px 0}
+@media (max-width:760px){
+  .maplayout{grid-template-columns:1fr}
+  .mside{max-height:none}
+}
+.maphead{display:flex; align-items:center; gap:12px; margin-bottom:4px}
+.maphead h2{font-size:18px; font-weight:750; letter-spacing:-.02em; flex:1;
+  background:var(--title-grad); -webkit-background-clip:text; background-clip:text;
+  color:var(--title-color)}
+.mcrumbs{display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600;
+  color:var(--ink-3); margin-bottom:8px; flex-wrap:wrap}
+.mcrumb{cursor:pointer; padding:3px 9px; border-radius:8px; transition:all .13s}
+.mcrumb:hover{background:var(--line-2); color:var(--ink)}
+.mcrumb.on{color:var(--accent); cursor:default; background:color-mix(in srgb, var(--accent) 9%, transparent)}
+.mapwrap{
+  border-radius:14px; overflow:hidden; border:1px solid var(--line-2);
+  background:
+    radial-gradient(120% 90% at 20% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 55%),
+    radial-gradient(120% 90% at 90% 100%, color-mix(in srgb, var(--mail) 7%, transparent), transparent 55%),
+    var(--card-2);
+}
+.mapwrap svg{display:block; width:100%; height:auto; max-height:calc(100vh - 330px); margin:0 auto}
+.mreg, .mdep{
+  fill:color-mix(in srgb, var(--accent) 7%, var(--card));
+  stroke:color-mix(in srgb, var(--accent) 30%, var(--line));
+  stroke-width:1.1; cursor:pointer; transition:fill .15s;
+}
+.mreg:hover, .mdep:hover{fill:color-mix(in srgb, var(--accent) 22%, var(--card))}
+.mdep.nohover{cursor:default}
+.mdep.nohover:hover{fill:color-mix(in srgb, var(--accent) 7%, var(--card))}
+.mlbl{fill:var(--ink-2); font-family:inherit; font-weight:650; pointer-events:none;
+  text-anchor:middle; letter-spacing:-.01em}
+.mdotlbl{fill:var(--ink); font-family:inherit; font-weight:600; pointer-events:none;
+  text-anchor:middle; paint-order:stroke; stroke:var(--card); stroke-width:3px;
+  stroke-linejoin:round}
+.mdot{cursor:pointer; pointer-events:all; transition:transform .15s, opacity .18s; transform-box:fill-box; transform-origin:center}
+.mdotlbl{transition:opacity .18s}
+.mapwrap svg.hovering .mdot:not(.hl){opacity:.15}
+.mapwrap svg.hovering .mdotlbl:not(.hl){opacity:.12}
+.mdot.hl{transform:scale(1.5)}
+.mdotlbl.hl{font-weight:750}
+.mgroup .mexp{display:none}
+.mgroup.open .mexp{display:initial}
+.mgroup.open .mclu{display:none}
+.mclu{cursor:pointer}
+.mcatch{fill:transparent; pointer-events:all}
+svg.gdim > .mdot, svg.gdim > .mdotlbl, svg.gdim .mgroup:not(.open){opacity:.15; transition:opacity .18s}
+.mapwrap svg.hovering .mclu{opacity:.15}
+.mjlist.hovering .schip:not(.hl){opacity:.35}
+.mjlist .schip{transition:all .16s}
+.mjlist .schip.hl{border-color:var(--accent); color:var(--accent); background:var(--card);
+  transform:translateY(-1px); box-shadow:var(--shadow-s)}
+.mdot:hover{transform:scale(1.35)}
+.mlegend{display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:11px; align-items:center}
+.mlegend .sw{width:10px; height:10px; border-radius:50%; flex-shrink:0}
+.mlegend .it{display:inline-flex; align-items:center; gap:6px; font-size:11.5px;
+  font-weight:600; color:var(--ink-2); cursor:pointer; padding:3px 8px; border-radius:8px}
+.mlegend .it:hover{background:var(--line-2); color:var(--ink)}
+.mlegend .shape{font-size:11.5px; color:var(--ink-3); font-weight:550}
+.mjlist{display:flex; flex-wrap:wrap; gap:7px; margin-top:12px}
+
+
+/* outils ancrés en colonne latérale (accueil, écrans larges) */
+.mainrow{display:grid; grid-template-columns:minmax(0,1fr); gap:16px; align-items:start}
+body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
+#toolsdock:empty{display:none}
+#tools.docked{
+  position:sticky; top:136px; right:auto; bottom:auto; z-index:1;
+  width:auto; transform:none; transition:none;
+  border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow-s); padding:14px;
+  max-height:calc(100vh - 156px); overflow-y:auto;
+}
+#tools.docked .thead .iconbtn{display:none}
+
+
+/* porte d'entrée (authentification) */
+#gate{
+  position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
+  background-color:var(--bg); background-image:var(--bg-image); padding:20px;
+}
+#gate.off{display:none}
+.gcard{
+  width:min(400px, 94vw); background:var(--card); border:1px solid var(--line);
+  border-radius:22px; box-shadow:var(--shadow-l); padding:30px 28px; text-align:center;
+}
+.glogo{
+  width:52px; height:52px; border-radius:15px; margin:0 auto 12px;
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b)); color:var(--cta-ink);
+  display:grid; place-items:center; box-shadow:0 6px 20px var(--glow);
+}
+.gcard h2{font-size:21px; font-weight:750; letter-spacing:-.02em; margin-bottom:4px;
+  background:var(--title-grad); -webkit-background-clip:text; background-clip:text; color:var(--title-color)}
+.gcard input{
+  width:100%; padding:11px 13px; font-size:14.5px; color:var(--ink); margin-bottom:8px;
+  border:1.5px solid var(--line); border-radius:11px; background:var(--card-2);
+  outline:none; font-family:inherit;
+}
+.gcard input:focus{border-color:var(--accent)}
+.gcard .btn{width:100%; margin-bottom:8px}
+.gsep{display:flex; align-items:center; gap:10px; color:var(--ink-3); font-size:12px; margin:6px 0 12px}
+.gsep::before,.gsep::after{content:''; flex:1; border-top:1px solid var(--line)}
+
+/* ==================== bouton flottant ==================== */
+#fab{
+  position:fixed; right:22px; bottom:22px; z-index:30;
+  height:52px; padding:0 22px 0 18px; border-radius:26px; border:none;
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
+  color:var(--cta-ink); font-size:14px; font-weight:650;
+  letter-spacing:-.01em; cursor:pointer; font-family:inherit;
+  display:flex; align-items:center; gap:8px;
+  box-shadow:0 8px 26px var(--glow), var(--shadow-m);
+  transition:all .22s cubic-bezier(.2,.6,.3,1);
+}
+#fab:hover{transform:translateY(-3px) scale(1.03);
+  box-shadow:0 12px 34px var(--glow), var(--shadow-l)}
+@media (max-width:560px){ #fab{padding:0; width:52px; justify-content:center} #fab b{display:none} }
+
+
+#fabmod, #fabtools{
+  position:fixed; right:22px; z-index:30; width:52px; height:44px;
+  border-radius:22px; border:1px solid var(--line);
+  background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--card)), var(--card));
+  color:var(--ink-2); cursor:pointer; display:grid; place-items:center;
+  box-shadow:var(--shadow-m); transition:all .22s cubic-bezier(.2,.6,.3,1);
+}
+#fabmod{bottom:86px}
+#fabtools{bottom:140px}
+#fabmod:hover, #fabtools:hover{transform:translateY(-2px); color:var(--ink)}
+#fabmod.on{
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
+  color:var(--cta-ink); border-color:transparent;
+  box-shadow:0 8px 26px var(--glow);
+}
+@media (max-width:560px){ #fabmod{right:22px} }
+
+
+/* ==================== accueil épuré ====================
+   Sur l'accueil « nu » (aucune recherche, aucune catégorie), la barre de
+   recherche devient l'élément central : l'en-tête cesse d'être collant, se
+   déploie en hauteur, et la barre est resserrée et mise en avant.          */
+body.accueil header{
+  position:static; background:transparent; border-bottom-color:transparent;
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+  padding-top:clamp(38px, 9vh, 104px); padding-bottom:8px;
+}
+body.accueil .searchwrap{max-width:620px; margin:24px auto 0}
+body.accueil #q{
+  padding:17px 54px; font-size:16.5px; border-radius:19px; border-width:2px;
+  box-shadow:0 22px 48px -26px color-mix(in srgb, var(--grad-a) 62%, transparent), var(--shadow-m);
+}
+body.accueil .searchwrap .lens{left:20px}
+body.accueil #clearq{right:12px}
+body.accueil .chips{max-width:820px; margin:14px auto 0; justify-content:center}
+body.accueil #stats{display:none}
+
+/* les trois portes d'entrée */
+.homeacts{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));
+  gap:12px; max-width:620px; margin:26px auto 0;
+}
+.homeact{
+  display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+  padding:16px 16px 15px; text-align:left; cursor:pointer;
+  border:1px solid var(--line); border-radius:16px; background:var(--card);
+  color:var(--ink); font-family:inherit; box-shadow:var(--shadow-s);
+  transition:all .2s cubic-bezier(.2,.6,.3,1);
+}
+.homeact:hover{
+  transform:translateY(-3px); box-shadow:var(--shadow-m);
+  border-color:color-mix(in srgb, var(--accent) 38%, var(--line));
+}
+.homeact .ha-ic{
+  width:36px; height:36px; border-radius:11px; display:grid; place-items:center;
+  margin-bottom:7px; color:var(--cta-ink);
+  background:linear-gradient(135deg, var(--grad-a), var(--grad-b));
+}
+.homeact .ha-tx{display:flex; flex-direction:column; gap:2px; min-width:0}
+.homeact b{font-size:14px; font-weight:650; letter-spacing:-.012em}
+.homeact .hint{font-size:12px}
+
+/* mobile : la recherche se place au centre de l'écran sur l'accueil */
+@media (max-width:760px){
+  /* la recherche occupe le centre de l'écran, les raccourcis se compactent
+     en lignes pour tenir juste en dessous */
+  body.accueil .searchwrap{top:50%; bottom:auto; transform:translateY(-50%); max-width:none; margin:0}
+  body.accueil header{padding-top:14px}
+  body.accueil .chips{margin-top:10px}
+  /* les raccourcis se placent sous la barre centrée (l'en-tête mesure ~132 px) */
+  body.accueil .homeacts{margin-top:calc(50vh - 42px); gap:9px}
+  body.accueil{padding-bottom:40px}
+  .homeact{flex-direction:row; align-items:center; gap:12px; padding:12px 14px}
+  .homeact .ha-ic{margin-bottom:0; width:34px; height:34px; flex-shrink:0}
+}
+
+/* mobile : usage à une main — recherche en bas, outils empilés depuis le bas */
+@media (max-width:760px){
+  :root{--mbot:max(22px, env(safe-area-inset-bottom, 0px))}
+  .searchwrap{
+    position:fixed; left:10px; right:10px; z-index:35;
+    bottom:var(--mbot);
+    background:color-mix(in srgb, var(--bg) 55%, transparent);
+    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+    border-radius:17px;
+    box-shadow:0 14px 34px -8px color-mix(in srgb, var(--grad-a) 55%, transparent),
+               0 4px 14px color-mix(in srgb, var(--grad-a) 26%, transparent);
+  }
+  /* en sombre, --grad-a est blanc : halo adouci */
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .searchwrap{
+      box-shadow:0 0 0 1px color-mix(in srgb, var(--grad-a) 18%, transparent),
+               0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
+               0 6px 18px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"] .searchwrap{
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--grad-a) 18%, transparent),
+               0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
+               0 6px 18px rgba(0,0,0,.5);
+  }
+  body{padding-bottom:calc(148px + var(--mbot))}
+  body.mapmode{padding-bottom:calc(148px + var(--mbot))}
+  #fab{bottom:calc(66px + var(--mbot))}
+  #fabmod{bottom:calc(130px + var(--mbot))}
+  #fabtools{bottom:calc(184px + var(--mbot))}
+  body #toast{bottom:calc(176px + var(--mbot))}   /* #toast est redéclaré plus bas : spécificité accrue */
+  .searchwrap:focus-within #q{
+    background-image:linear-gradient(100deg,
+      transparent 22%,
+      color-mix(in srgb, var(--bar-a) 15%, transparent) 40%,
+      color-mix(in srgb, var(--accent) 20%, transparent) 50%,
+      color-mix(in srgb, var(--bar-b) 15%, transparent) 60%,
+      transparent 78%);
+    background-size:260% 100%; background-repeat:no-repeat;
+    background-position:-130% 0;
+    animation:qsweep 2.8s ease-in-out 1;
+  }
+  @keyframes qsweep{
+    0%{background-position:130% 0}
+    100%{background-position:-130% 0}
+  }
+  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start; padding-bottom:calc(124px + var(--mbot))}
+  #tools .thead{margin-bottom:0; margin-top:14px}
+}
+
+/* ==================== dialogues ==================== */
+dialog{
+  border:none; border-radius:22px; padding:0; max-width:500px; width:calc(100vw - 32px);
+  background:var(--card); color:var(--ink); box-shadow:var(--shadow-l); max-height:88vh;
+  margin:auto; overflow-y:auto;
+}
+dialog::backdrop{background:rgba(8,9,18,.55); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px)}
+.dlg{padding:24px}
+.dlg h2{font-size:17px; font-weight:750; margin-bottom:18px; letter-spacing:-.02em}
+.dlg label{
+  display:block; font-size:11px; font-weight:650; margin:13px 0 6px;
+  color:var(--ink-2); text-transform:uppercase; letter-spacing:.06em;
+}
+.dlg label .hint{text-transform:none; letter-spacing:0; font-weight:450}
+.dlg input,.dlg select,.dlg textarea{
+  width:100%; padding:11px 13px; font-size:14.5px; color:var(--ink);
+  border:1.5px solid var(--line); border-radius:11px; background:var(--card-2);
+  outline:none; font-family:inherit; letter-spacing:-.011em; transition:all .18s;
+}
+.dlg input:focus,.dlg select:focus,.dlg textarea:focus{border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent)}
+.crow{display:flex; gap:7px; margin:7px 0; align-items:center}
+.crow select{width:auto; flex-shrink:0; padding:11px 6px}
+.crow input{flex:1; min-width:0}
+.crow .delrow{flex-shrink:0}
+.dlgbtns{display:flex; gap:8px; justify-content:flex-end; margin-top:22px}
+.btn{
+  padding:11px 20px; border-radius:12px; font-size:13.5px; font-weight:600;
+  letter-spacing:-.01em; cursor:pointer; border:1px solid var(--line);
+  background:var(--card); color:var(--ink); font-family:inherit;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  transition:all .18s cubic-bezier(.2,.6,.3,1);
+}
+.btn:hover{box-shadow:var(--shadow-s); transform:translateY(-1px)}
+.btn.primary{
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
+  color:var(--cta-ink); border-color:transparent;
+  box-shadow:0 4px 14px var(--glow);
+}
+.btn.primary:hover{box-shadow:0 6px 20px var(--glow)}
+.setrow{display:flex; align-items:center; gap:8px; margin:8px 0}
+.setrow .btn{flex:1}
+hr{border:none; border-top:1px solid var(--line); margin:18px 0}
+.hint{font-size:12px; color:var(--ink-3); line-height:1.55; letter-spacing:-.005em}
+
+#toast{
+  position:fixed; left:50%; bottom:92px; transform:translateX(-50%) translateY(8px);
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
+  color:var(--cta-ink); padding:12px 22px; border-radius:14px;
+  font-size:13.5px; font-weight:550; letter-spacing:-.01em; opacity:0; pointer-events:none;
+  transition:all .25s cubic-bezier(.2,.6,.3,1); z-index:40; max-width:90vw; text-align:center;
+  box-shadow:0 8px 26px var(--glow), var(--shadow-l);
+}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+/* mobile : les fenêtres s'ancrent en haut pour rester visibles clavier ouvert */
+@media (max-width:640px){
+  dialog{margin:10px auto auto; max-height:calc(100dvh - 20px)}
+  #dlgAdr .dlg > p.hint:first-of-type{display:none}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header><div class="hwrap">
+  <div class="titrebar">
+    <img class="logo" onclick="goHome()" src="logo-balance-tel.svg" alt="Juritel">
+    <h1 onclick="goHome()">Juritel<small id="count"></small></h1>
+    <div id="syncstate" title="Synchronisation"><span class="dot"></span><span id="synctxt">local</span></div>
+    <button class="iconbtn" id="btntheme" title="Thème"></button>
+    <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
+  </div>
+  <div class="searchwrap">
+    <span class="lens" data-ic="search" data-s="16"></span>
+    <input id="q" type="search" placeholder="Rechercher dans l’annuaire : juridiction, ville, numéro, adresse…"
+      autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button id="clearq" title="Effacer" data-ic="x" data-s="13"></button>
+  </div>
+  <div class="chips" id="chips"></div>
+</div></header>
+
+<main>
+  <div id="stats"></div>
+  <div class="mainrow">
+    <div id="view"></div>
+    <div id="toolsdock"></div>
+  </div>
+</main>
+
+<div id="gate">
+  <div class="gcard">
+    <img class="glogo" src="logo-balance-tel.svg" alt="Juritel">
+    <h2>Juritel</h2>
+    <p class="hint" style="margin-bottom:14px">Annuaire des juridictions — accès réservé.</p>
+    <div id="gforms">
+      <input id="gmail" type="email" placeholder="adresse@exemple.fr" autocomplete="username">
+      <input id="gpass" type="password" placeholder="mot de passe" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')sbLogin()">
+      <button class="btn primary" onclick="sbLogin()">Se connecter</button>
+      <button class="btn" onclick="sbSignup()">Créer un compte</button>
+      <div class="gsep"><span>ou</span></div>
+      <button class="btn" onclick="sbGoogle()">Continuer avec Google</button>
+      <p class="hint" id="gmsg" style="margin-top:10px"></p>
+    </div>
+    <div id="gdenied" style="display:none">
+      <p style="margin:10px 0">Le compte <b id="gwho"></b> n'est pas autorisé.</p>
+      <button class="btn primary" id="gask" onclick="sbAsk()">Demander l'accès</button>
+      <p class="hint" id="gaskmsg" style="margin:4px 0 10px"></p>
+      <button class="btn" onclick="sbLogout()">Changer de compte</button>
+    </div>
+  </div>
+</div>
+
+<div id="toolsback" onclick="closeTools()"></div>
+<aside id="tools">
+  <div class="thead">
+    <span class="tt" data-ic="tool" data-s="15"></span>
+    <b>Outils</b>
+    <button class="iconbtn" onclick="closeTools()" title="Fermer" data-ic="x" data-s="14"></button>
+  </div>
+  <div class="toolitem" onclick="openAdrDlg()">
+    <span class="tico tel" data-ic="pin" data-s="13"></span>
+    <div class="ti"><b>Juridiction compétente</b><small>À partir de n'importe quelle adresse en France</small></div>
+    <span class="caret" data-ic="right" data-s="12"></span>
+  </div>
+  <div class="toolitem" onclick="closeTools();openCarte()">
+    <span class="tico email" data-ic="map" data-s="13"></span>
+    <div class="ti"><b>Carte de France</b><small>Trouver une juridiction par navigation géographique</small></div>
+    <span class="caret" data-ic="right" data-s="12"></span>
+  </div>
+</aside>
+
+<button id="fabtools" title="Outils"></button>
+<button id="fabmod" title="Mode modification"></button>
+<button id="fab" title="Ajouter un contact"><span data-ic="plus" data-s="17"></span><b>Ajouter</b></button>
+<div id="toast"></div>
+
+<dialog id="dlgAdd"><form class="dlg" method="dialog" id="formAdd">
+  <h2 id="addTitle">Ajouter un contact</h2>
+  <label>Juridiction</label>
+  <input id="fJur" list="listJur" placeholder="TJ Melun, CA Paris… (créée si inconnue)" required>
+  <datalist id="listJur"></datalist>
+  <label>Catégorie <span class="hint">(si nouvelle juridiction)</span></label>
+  <select id="fCat">
+    <option value="tj">Tribunal judiciaire</option>
+    <option value="ca">Cour d'appel</option>
+    <option value="cassation">Cour de cassation</option>
+    <option value="penitentiaire">Établissement pénitentiaire</option>
+    <option value="commissariat">Commissariat</option>
+    <option value="cra">CRA</option>
+    <option value="prefecture">Préfecture</option>
+    <option value="douane">Douanes</option>
+    <option value="autre">Autre</option>
+  </select>
+  <label>Service</label>
+  <input id="fSvc" list="listSvc" placeholder="Greffe correctionnel, Parquet, JAF…">
+  <datalist id="listSvc"></datalist>
+  <label>Bureau <span class="hint">(facultatif — ex. Bureau d'ordre pénal)</span></label>
+  <input id="fGrp" list="listGrp">
+  <datalist id="listGrp"></datalist>
+  <label>Libellé <span class="hint">(l'intitulé — ex. Greffe de la 3e chambre)</span></label>
+  <input id="fLib" placeholder="Greffe de la 3e chambre…">
+  <label>Numéros et adresses mail <span class="hint">(autant que nécessaire)</span></label>
+  <div id="fRows"></div>
+  <button type="button" class="mini" id="btnAddRow" style="margin-top:2px"><span data-ic="plus" data-s="13"></span> Ajouter un numéro ou un mail</button>
+  <label>Note <span class="hint">(facultatif)</span></label>
+  <textarea id="fNote" rows="2" placeholder="Précisions, horaires, interlocuteur…"></textarea>
+  <div class="dlgbtns">
+    <button class="btn" value="cancel" formnovalidate>Annuler</button>
+    <button class="btn primary" value="ok" id="addOk">Ajouter</button>
+  </div>
+</form></dialog>
+
+<dialog id="dlgAdr"><div class="dlg">
+  <h2>Juridiction compétente</h2>
+  <p class="hint" style="margin:-8px 0 12px">Tapez une adresse, un code postal ou une ville : Juritel identifie les juridictions compétentes et ouvre la fiche du tribunal judiciaire.</p>
+  <input id="adr" placeholder="Adresse, code postal ou ville…"
+    autocomplete="off" spellcheck="false" oninput="adrInput(this.value)"
+    onkeydown="if(event.key==='Enter'){event.preventDefault();adrEnter(this.value);}">
+  <div class="adrsugg" id="adrsugg"></div>
+  <p class="hint" style="margin-top:12px">Sources officielles : Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</p>
+  <div class="dlgbtns"><button class="btn" onclick="document.getElementById('dlgAdr').close()">Fermer</button></div>
+</div></dialog>
+
+<dialog id="dlgMove"><form class="dlg" method="dialog" id="formMove">
+  <h2>Déplacer vers…</h2>
+  <label>Service de destination</label>
+  <select id="mvSvc"></select>
+  <label>Nouveau service <span class="hint">(si « Nouveau service » choisi)</span></label>
+  <input id="mvNew" placeholder="Nom du nouveau service">
+  <label>Bureau <span class="hint">(facultatif — laissez vide pour aucun)</span></label>
+  <input id="mvGrp" list="mvGrpList" autocomplete="off">
+  <datalist id="mvGrpList"></datalist>
+  <div class="dlgbtns">
+    <button class="btn" value="cancel" formnovalidate>Annuler</button>
+    <button class="btn primary" value="ok">Déplacer</button>
+  </div>
+</form></dialog>
+
+<dialog id="dlgSettings"><div class="dlg">
+  <h2>Réglages</h2>
+  <div class="setrow">
+    <span style="flex:1; font-size:13.5px">Tri des contacts d'une fiche</span>
+    <select class="mini" id="triContacts">
+      <option value="annuaire">Ordre de l'annuaire</option>
+      <option value="alpha">Alphabétique</option>
+      <option value="fiabilite">Fiabilité</option>
+    </select>
+  </div>
+  <div class="setrow">
+    <span style="flex:1; font-size:13.5px">Échelle de l'interface</span>
+    <select class="mini" id="uiScale">
+      <option value="auto">Auto (selon l'écran)</option>
+      <option value="100">100 %</option>
+      <option value="110">110 %</option>
+      <option value="125">125 %</option>
+      <option value="140">140 %</option>
+    </select>
+  </div>
+  <hr>
+  <div id="ownerBox" style="display:none">
+  <div class="setrow"><button class="btn" id="btnExport"><span data-ic="down2" data-s="15"></span> Exporter les données (JSON)</button></div>
+  <div class="setrow"><button class="btn" id="btnImport"><span data-ic="up2" data-s="15"></span> Importer un fichier JSON</button>
+    <input type="file" id="fileImport" accept=".json" hidden></div>
+  </div>
+  <hr>
+  <div id="driveBox" style="display:none">
+    <div class="setrow"><button class="btn primary" id="btnDrive"><span data-ic="cloud" data-s="15"></span> Connecter Google Drive</button></div>
+    <div class="setrow" style="display:none" id="rowDriveOff"><button class="btn" id="btnDriveOff">Déconnecter Google Drive</button></div>
+    <p class="hint" id="driveHint"></p>
+    <div id="shareBox" style="display:none">
+      <label style="display:block; font-size:11px; font-weight:650; margin:12px 0 5px; color:var(--ink-2); text-transform:uppercase; letter-spacing:.06em">Partager la base</label>
+      <div class="setrow">
+        <input id="shareMail" placeholder="adresse@gmail.com" autocomplete="off"
+          style="flex:1; padding:10px 12px; font-size:14px; border:1.5px solid var(--line); border-radius:10px; background:var(--card-2); color:var(--ink); outline:none; font-family:inherit">
+        <button class="btn" id="btnShare" style="flex:0 0 auto">Inviter</button>
+      </div>
+      <p class="hint">La personne invitée reçoit un accès en écriture au fichier de base dans votre Drive. Sur son poste, elle connecte <b>son</b> compte Google puis utilise « Rejoindre ».</p>
+    </div>
+    <div class="setrow"><button class="btn" id="btnJoin"><span data-ic="up2" data-s="15"></span> Rejoindre une base partagée…</button></div>
+    <p class="hint" id="joinHint"></p>
+  </div>
+  <hr>
+  <div id="accBox">
+    <p class="hint" id="accInfo"></p>
+    <div class="setrow"><button class="btn" id="btnLogoutS">Se déconnecter</button></div>
+    <div id="wlBox" style="display:none">
+      <label style="display:block; font-size:11px; font-weight:650; margin:12px 0 5px; color:var(--ink-2); text-transform:uppercase; letter-spacing:.06em">Liste blanche — qui peut accéder à l'annuaire</label>
+      <div id="wlList"></div>
+      <div class="setrow">
+        <input id="wlMail" placeholder="adresse@exemple.fr" autocomplete="off"
+          style="flex:1; padding:10px 12px; font-size:14px; border:1.5px solid var(--line); border-radius:10px; background:var(--card-2); color:var(--ink); outline:none; font-family:inherit">
+        <button class="btn" id="btnWlAdd" style="flex:0 0 auto">Autoriser</button>
+      </div>
+      <p class="hint">La personne se connecte sur la même adresse web (Google ou e-mail/mot de passe) et accède à tout l'annuaire. Retirez-la pour couper l'accès.</p>
+    </div>
+  </div>
+  <hr>
+  <p class="hint" id="metaInfo"></p>
+  <div class="dlgbtns"><button class="btn primary" id="btnCloseSettings">Fermer</button></div>
+</div></dialog>
+
+<script>
+'use strict';
+
+/* ============================ icônes vectorielles ============================ */
+const ICONS = {
+  search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  gear:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/>',
+  fax:'<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  pen:'<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>',
+  trash:'<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+  left:'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  right:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  chev:'<path d="m9 18 6-6-6-6"/>',
+  up:'<path d="m18 15-6-6-6 6"/>',
+  down:'<path d="m6 9 6 6 6-6"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  scale:'<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+  eraser:'<path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/>',
+  cloud:'<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  down2:'<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
+  up2:'<path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/>',
+  moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  contrast:'<circle cx="12" cy="12" r="10"/><path d="M12 18a6 6 0 0 0 0-12v12z"/>',
+  tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  map:'<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+};
+const icn = (n, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||''}</svg>`;
+
+
+/* migration Annuaire Justice -> Juritel : conserve données, Drive et thème */
+(function(){
+  const map = {
+    'annuaireJustice.data':'juritel.data',
+    'annuaireJustice.driveOn':'juritel.driveOn',
+    'annuaireJustice.driveFileId':'juritel.driveFileId',
+    'annuaireJustice.tok':'juritel.tok',
+    'annuaireJustice.hint':'juritel.hint',
+    'annuaireJustice.theme':'juritel.theme',
+  };
+  for(const [o, n] of Object.entries(map)){
+    const v = localStorage.getItem(o);
+    if(v !== null && localStorage.getItem(n) === null){
+      try{ localStorage.setItem(n, v); localStorage.removeItem(o); }catch(e){}
+    }
+  }
+})();
+/* ============================================================
+   CONFIG — synchronisation Google Drive
+   ============================================================ */
+const CLIENT_ID = '1002386733501-oeq2g899a2dlgcttg0qem8a7ugvsh847.apps.googleusercontent.com';
+const DRIVE_FILENAME = 'juritel-data.json';
+const PICKER_API_KEY = 'AIzaSyD2vs6f-XvU6yvxi84Us2nvD-IhbfoVywg';   // clé API Google (console) pour « Rejoindre une base partagée »
+const SUPA_URL = 'https://qkjpzwfucnjawhbfkydh.supabase.co';
+const SUPA_KEY = 'sb_publishable_olObFO7aa5oGUgxilfdStA_iC1F67rz';
+const LS_KEY = 'juritel.data';
+const LS_TRI = 'juritel.tri';   // tri des interlocuteurs dans une fiche
+const LS_DRIVE = 'juritel.driveOn';
+const LS_FILEID = 'juritel.driveFileId';
+
+/* ============================ état ============================ */
+let DATA = null;
+let currentCat = '';
+let shownCards = 60;
+let ficheId = null;          // juridiction affichée en fiche (null = liste)
+let ficheDom = '';           // filtre de domaine dans la fiche ('' = tout)
+let editMode = false;        // mode réorganisation de la fiche
+let mapState = null;         // carte interactive : null | {level:'fr'|'reg'|'dep', code}
+let spState = null;          // fiche officielle service-public : null | {type, nom, loading, data}
+let modifMode = false;       // false = lecture seule (défaut)
+let browseAll = false;       // l'accueil n'affiche les fiches qu'à la demande
+// accueil « nu » : ni recherche, ni catégorie, ni parcours explicite
+const accueilNu = () => !$('#q').value.trim() && !currentCat && !browseAll;
+// sbProp est resolu tres tot (ouverture de la porte) ; tant qu il vaut null on
+// masque les commandes reservees, ce qui est le defaut prudent.
+const estProp = () => sbProp === true;
+const openState = {};        // id -> ouvert/fermé (services, volets)
+const $ = s => document.querySelector(s);
+
+const CATS = {
+  tj:'Tribunaux judiciaires', ca:"Cours d'appel", cassation:'Cour de cassation',
+  penitentiaire:'Établissements pénitentiaires', commissariat:'Commissariats', cra:'CRA',
+  prefecture:'Préfectures', douane:'Douanes', etranger:'Étranger',
+  commerce:'Tribunaux de commerce', autre:'Autres'
+};
+const CAT_LABEL = {
+  tj:'TJ', ca:'CA', cassation:'Cass.', penitentiaire:'Prison',
+  commissariat:'Police', cra:'CRA', prefecture:'Préf.', douane:'Douane',
+  etranger:'Étranger', commerce:'T.Com', autre:'Autre'
+};
+
+/* ============================ utilitaires ============================ */
+const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’‘´`]/g, "'");
+const digits = s => (s||'').replace(/\D/g,'');
+
+/* équivalences acronymes <-> formes développées pour la recherche
+   (les libellés de la base sont en toutes lettres) */
+const SYN = {
+  bo: "bureau d'ordre", bog: "bureau d'ordre general", bop: "bureau d'ordre penal",
+  ji: "juge d'instruction", jld: "juge des libertes", jap: "application des peines",
+  sap: "application des peines", jaf: "affaires familiales", jex: "juge de l'execution",
+  jcp: "contentieux de la protection", je: "juge des enfants", tpe: "tribunal pour enfants",
+  baj: "aide juridictionnelle", bav: "aide aux victimes", bex: "bureau de l'execution",
+  civi: "indemnisation des victimes", cph: "prud", sauj: "accueil",
+  pr: "procureur", crpc: "comparution sur reconnaissance",
+};
+const tokMatch = (txt, t) => txt.includes(t) || (SYN[t] && txt.includes(SYN[t]));
+
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+const fmtDate = ts => ts ? new Date(ts).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'2-digit'}) : '';
+
+/* ============================ persistance ============================ */
+function save(){
+  DATA.updatedAt = Date.now();
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }
+  catch(e){ toast('Stockage local plein : '+e.message); }
+  sbSchedulePush();
+}
+async function load(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(raw){ try{ DATA = JSON.parse(raw); }catch(e){} }
+  if(!DATA){
+    try{
+      const r = await fetch('juritel.json', {cache:'no-cache'});
+      if(r.ok) DATA = await r.json();
+    }catch(e){}
+    if(!DATA) DATA = {version:1, juridictions:[]};
+    DATA.tombstones = DATA.tombstones||{};
+    DATA.updatedAt = Date.now();
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }catch(e){}
+  }
+  DATA.tombstones = DATA.tombstones||{};
+  buildIndex();
+}
+
+/* ============================ index de recherche ============================ */
+function buildIndex(){
+  for(const j of DATA.juridictions){
+    j._txt = norm(j.nom+' '+(CATS[j.categorie]||'')+' '+j.categorie+' '+(j.adresse||''));
+    for(const s of j.services){
+      s._txt = norm(s.nom);
+      for(const c of s.contacts){
+        c._txt = norm((c.libelle||'')+' '+(c.groupe||'')+' '+c.valeur+' '+(c.note||''));
+        c._dig = c.type==='email' ? '' : digits(c.valeur);
+      }
+    }
+  }
+}
+
+/* ============================ notation ============================ */
+const NOW = () => Date.now();
+const J90 = 90*24*3600*1000;
+// Les compteurs affiches cumulent l historique de la base (c.ok/c.ko, fige par
+// le proprietaire) et les votes des membres, stockes a part (champs _v*).
+const cOk     = c => (c.ok||0) + (c._vok||0);
+const cKo     = c => (c.ko||0) + (c._vko||0);
+const cLastOk = c => Math.max(c.lastOk||0, c._vlastOk||0) || null;
+function score(c){
+  const lo = cLastOk(c);
+  let s = cOk(c)*3 - cKo(c)*2;
+  if(lo && NOW()-lo < J90) s += 100;
+  else if(lo) s += 40;
+  return s;
+}
+const isDead = c => cKo(c)>=3 && !(cOk(c)>0);
+
+/* ============================ regroupement en entrées ============================
+   Une « entrée » = un interlocuteur (libellé) avec tous ses canaux
+   (téléphones, mails, fax) regroupés. Les entrées sont elles-mêmes
+   rangées par bureau (champ groupe). */
+function structureService(contacts){
+  const bureaux = new Map();   // clé normalisée -> {nom, entries:Map}
+  const rootKey = '';
+  const gkeys = new Set(contacts.filter(c=>c.groupe).map(c=>norm(c.groupe)));
+  for(const c of contacts){
+    let gk = c.groupe ? norm(c.groupe) : '';
+    let gnom = c.groupe || '';
+    // un libellé identique au nom d'un bureau rejoint ce bureau
+    if(!gk && gkeys.has(norm(c.libelle||''))){ gk = norm(c.libelle); gnom = c.libelle; }
+    if(!bureaux.has(gk)) bureaux.set(gk, {nom:gnom, entries:new Map()});
+    const b = bureaux.get(gk);
+    let lib = c.libelle||'';
+    if(gk && norm(lib)===gk) lib = '';         // pas de répétition bureau/libellé
+    const ek = norm(lib);
+    if(!b.entries.has(ek)) b.entries.set(ek, {lib, chans:[], note:''});
+    const e = b.entries.get(ek);
+    e.chans.push(c);
+    if(c.note && !e.note) e.note = c.note;
+  }
+  // tri des canaux d'une entrée : tél d'abord (les mieux notés en tête), puis mail, fax
+  const rank = {tel:0, email:1, fax:2};
+  for(const b of bureaux.values())
+    for(const e of b.entries.values())
+      e.chans.sort((a,c)=> (rank[a.type]-rank[c.type]) || (score(c)-score(a)) );
+  // tri des interlocuteurs au sein de chaque bureau, selon le reglage
+  const tri = localStorage.getItem(LS_TRI) || 'annuaire';
+  if(tri !== 'annuaire'){
+    for(const b of bureaux.values()){
+      const liste = [...b.entries.entries()];
+      const meilleur = e => e.chans.reduce((m,c)=>Math.max(m, score(c)), -Infinity);
+      liste.sort((x, y) => {
+        const [, a] = x, [, c] = y;
+        // l entree principale (sans libelle) reste en tete dans tous les cas
+        if(!a.lib !== !c.lib) return a.lib ? 1 : -1;
+        return tri === 'alpha' ? a.lib.localeCompare(c.lib, 'fr')
+                               : meilleur(c) - meilleur(a);
+      });
+      b.entries = new Map(liste);
+    }
+  }
+  // racine d'abord, puis bureaux dans l'ordre du document
+  const out = [];
+  if(bureaux.has(rootKey)) out.push(bureaux.get(rootKey));
+  for(const [k,b] of bureaux) if(k!==rootKey) out.push(b);
+  return out;
+}
+
+/* ============================ recherche ============================ */
+function search(){
+  const tokens = norm($('#q').value.trim()).split(/\s+/).filter(Boolean);
+  const results = [];
+  for(const j of DATA.juridictions){
+    if(currentCat && j.categorie!==currentCat) continue;
+    if(!tokens.length){ results.push({j, hits:null, nameHit:0}); continue; }
+    const rest = tokens.filter(t=>!tokMatch(j._txt, t));
+    const nameHit = tokens.length - rest.length;
+    if(!rest.length){ results.push({j, hits:null, nameHit}); continue; }
+    const hits = [];
+    for(const s of j.services){
+      const rest2 = rest.filter(t=>!tokMatch(s._txt, t));
+      const cts = s.contacts.filter(c =>
+        rest2.every(t => tokMatch(c._txt, t) ||
+          (c._dig && digits(t).length>=4 && c._dig.includes(digits(t)))));
+      if(cts.length) hits.push({s, cts});
+    }
+    if(hits.length) results.push({j, hits, nameHit});
+  }
+  results.sort((a,b)=> (b.nameHit-a.nameHit) ||
+    (b.j.services.reduce((m,s)=>m+s.contacts.length,0) - a.j.services.reduce((m,s)=>m+s.contacts.length,0)));
+  // dataset officiel : juridictions correspondantes (dédoublonnées à l'affichage)
+  let offm = [];
+  if(tokens.length){
+    if(!OFF) loadOfficiel();
+    else for(let i=0; i<OFF.j.length; i++){
+      const e = OFF.j[i];
+      if(!tokens.every(t=>tokMatch(e._txt, t) ||
+        (digits(t).length>=4 && e.tels.some(x=>digits(x).includes(digits(t)))))) continue;
+      offm.push(i);
+      if(offm.length>=30) break;
+    }
+  }
+  return {results, tokens, offm};
+}
+
+/* ============================ navigation ============================ */
+function goHome(){ ficheId = null; editMode = false; mapState = null; spState = null; browseAll = false; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
+window.goHome = goHome;
+window.openFiche = id => {
+  const da = document.getElementById('dlgAdr');
+  if(da && da.open) da.close();
+  if(id!==ficheId){ ficheDom = ''; editMode = false; }
+  mapState = null; spState = null;
+  ficheId = id;
+  history.pushState(null,'','#f/'+id);
+  render(); window.scrollTo(0,0);
+};
+window.setFicheDom = d => { ficheDom = d; render(); };
+window.addEventListener('popstate', ()=>{
+  const m = location.hash.match(/^#f\/(.+)$/);
+  ficheId = m ? m[1] : null;
+  const sp = location.hash.match(/^#sp\/([a-z]+)\/(.+)$/);
+  spState = (!ficheId && sp) ? {type:sp[1], nom:decodeURIComponent(sp[2]), loading:true} : null;
+  mapState = location.hash==='#carte' ? (mapState||{level:'fr'}) : null;
+  if(ficheId || spState) mapState = null;
+  if(spState) spResolve();
+  render();
+});
+
+/* ============================ rendu ============================ */
+function render(){
+  setTimeout(chipsFadeAll, 0);
+  document.body.classList.toggle('accueil', !ficheId && !spState && !mapState && accueilNu());   // render() a plusieurs sorties : on couvre toutes les branches
+  $('#clearq').style.display = $('#q').value ? 'grid':'none';
+  document.body.classList.toggle('mapmode', !!mapState && !ficheId);
+  updateToolsDock();
+  if(ficheId){
+    const j = DATA.juridictions.find(x=>x.id===ficheId);
+    if(j){ renderFiche(j); return; }
+    ficheId = null;
+  }
+  if(spState){ renderFicheSP(); return; }
+  if(mapState){ renderCarte(); return; }
+  renderList();
+}
+
+/* ---------- vue liste ---------- */
+function renderList(){
+  const {results, tokens, offm} = search();
+  const offIdx = (offm||[]).filter(i=>!offJurMatch(OFF.j[i])).slice(0,12);
+  const offHtml = offIdx.length
+    ? `<div class="cathead">Annuaire officiel <span class="cnt">· juridictions absentes de votre annuaire</span></div>
+       <div class="grid">${offIdx.map(cardOff).join('')}</div>`
+    : '';
+  const V = $('#view');
+  $('#stats').textContent = tokens.length||currentCat||browseAll ?
+    `${results.length} juridiction${results.length>1?'s':''} — cliquez sur une fiche pour l'ouvrir` : '';
+  if(!results.length){
+    V.innerHTML = offHtml || `<div class="vide"><div class="big">${icn('search',34)}</div>Aucun résultat.<br><br>
+      <button class="btn primary" onclick="openAdd()">＋ Ajouter ce contact</button></div>`;
+    return;
+  }
+  const slice = results.slice(0, shownCards);
+  let html = '';
+  if(!tokens.length && !currentCat && !browseAll){
+    // Accueil : on ne deverse plus toutes les fiches. Trois portes d'entree,
+    // la recherche restant l'element central (mise en forme par body.accueil).
+    const nj = DATA.juridictions.length;
+    V.innerHTML = `<div class="homeacts">
+      <button class="homeact" onclick="openAdrDlg()">
+        <span class="ha-ic">${icn('pin',20)}</span>
+        <span class="ha-tx"><b>Juridiction compétente</b><span class="hint">À partir d’une adresse</span></span>
+      </button>
+      <button class="homeact" onclick="openCarte()">
+        <span class="ha-ic">${icn('map',20)}</span>
+        <span class="ha-tx"><b>Carte de France</b><span class="hint">Parcourir par région</span></span>
+      </button>
+      <button class="homeact" onclick="parcourir()">
+        <span class="ha-ic">${icn('scale',20)}</span>
+        <span class="ha-tx"><b>Parcourir l’annuaire</b><span class="hint">${nj} juridictions</span></span>
+      </button>
+    </div>`;
+    return;
+  }
+  if(!tokens.length && !currentCat){
+    // accueil : aperçu structuré de toutes les catégories
+    const order = ['tj','ca','cassation','penitentiaire','commissariat','cra','prefecture','douane','etranger','commerce','autre'];
+    const bycat = {};
+    for(const r of results) (bycat[r.j.categorie] = bycat[r.j.categorie]||[]).push(r);
+    const CAP = 9;
+    for(const cat of order){
+      const list = bycat[cat]; if(!list) continue;
+      html += `<div class="cathead">${CATS[cat]||cat} <span class="cnt">· ${list.length}</span>`;
+      if(list.length>CAP) html += `<button class="mini" onclick="setCat('${cat}')">tout afficher →</button>`;
+      html += `</div><div class="grid">`;
+      for(const r of list.slice(0,CAP)) html += cardJur(r, null);
+      html += '</div>';
+    }
+    $('#view').innerHTML = html;
+    return;
+  } else {
+    // recherche discriminante : afficher directement les contacts trouvés
+    const withHits = results.filter(r=>r.hits);
+    const totalMatched = withHits.reduce((n,r)=>n+r.hits.reduce((m,h)=>m+h.cts.length,0),0);
+    if(withHits.length && results.length<=12 && totalMatched<=80){
+      for(const r of results) html += r.hits ? suggInline(r) : suggJur(r);
+      V.innerHTML = html + offHtml;
+      return;
+    }
+    // les juridictions dont le NOM correspond passent en grandes suggestions
+    const nameRes = results.filter(r=>r.nameHit>0);
+    const contentRes = results.filter(r=>!r.nameHit);
+    if(nameRes.length){
+      for(const r of nameRes.slice(0,6)) html += suggJur(r);
+      if(nameRes.length>6)
+        html += '<div class="grid">'+nameRes.slice(6, shownCards).map(r=>cardJur(r, tokens)).join('')+'</div>';
+    }
+    if(contentRes.length){
+      html += `<div class="cathead">Trouvé dans le contenu <span class="cnt">· ${contentRes.length}</span></div>`;
+      html += '<div class="grid">'+contentRes.slice(0, shownCards).map(r=>cardJur(r, tokens)).join('')+'</div>';
+      if(contentRes.length > shownCards)
+        html += `<button class="more" onclick="shownCards+=80;render()">Afficher ${contentRes.length-shownCards} fiches de plus</button>`;
+    }
+  }
+  V.innerHTML = html + offHtml;
+}
+
+function suggJur({j, hits}){
+  const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  // raccourcis : les services qui correspondent à la recherche, sinon les premiers
+  const svcs = hits ? hits.map(h=>h.s) : j.services;
+  const chips = svcs.slice(0,5).map(s=>
+    `<button class="schip" onclick="event.stopPropagation();openFicheSvc('${j.id}','${s.id}')">${esc(s.nom)}<span class="n">${s.contacts.length}</span></button>`).join('')
+    + (svcs.length>5 ? `<button class="schip" onclick="event.stopPropagation();openFiche('${j.id}')">+${svcs.length-5} autres…</button>` : '');
+  return `<div class="sugg" onclick="openFiche('${j.id}')">
+    <div class="stop">
+      <div class="snom">${esc(j.nom)}${j.adresse?`<div class="sadr">${icn('pin',11)} ${esc(j.adresse)}</div>`:''}</div>
+      <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+      <span class="ncontacts">${nc}</span>
+    </div>
+    <div class="schips">${chips}</div>
+  </div>`;
+}
+function suggInline({j, hits}){
+  const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  let inner = '';
+  for(const h of hits.slice(0,5)){
+    const bureaux = structureService(h.cts);
+    let rows = '';
+    for(const b of bureaux){
+      let er = '';
+      for(const e of b.entries.values()) er += renderEntry(j, h.s, e);
+      rows += b.nom ? `<div class="bureau"><h4>${esc(b.nom)}</h4>${er}</div>` : er;
+    }
+    inner += `<div class="isvc">
+      <div class="isvchead" onclick="openFicheSvc('${j.id}','${h.s.id}')">
+        ${esc(h.s.nom)} <span class="cnt">${h.cts.length}</span>
+        <span class="goto">fiche complète →</span>
+      </div>${rows}</div>`;
+  }
+  if(hits.length>5)
+    inner += `<button class="schip" style="margin-top:8px" onclick="openFiche('${j.id}')">+${hits.length-5} autres services…</button>`;
+  return `<div class="sugg" style="cursor:default">
+    <div class="stop" style="cursor:pointer" onclick="openFiche('${j.id}')">
+      <div class="snom">${esc(j.nom)}${j.adresse?`<div class="sadr">${icn('pin',11)} ${esc(j.adresse)}</div>`:''}</div>
+      <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+      <span class="ncontacts">${nc}</span>
+    </div>
+    ${inner}
+  </div>`;
+}
+window.openFicheSvc = (jid, sid) => {
+  openState[sid] = true;
+  openFiche(jid);
+  setTimeout(()=>document.getElementById('svc-'+sid)?.scrollIntoView({behavior:'smooth', block:'start'}), 60);
+};
+
+function cardJur({j, hits}, tokens){
+  const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  let snips = '';
+  if(hits){
+    for(const h of hits.slice(0,3)){
+      const c = h.cts[0];
+      const what = c.libelle || c.groupe || h.s.nom;
+      snips += `<div class="snip"><b>${esc(h.s.nom)}</b> — ${esc(what)} · ${esc(c.valeur)}${h.cts.length>1?` <span style="color:var(--ink-3)">+${h.cts.length-1}</span>`:''}</div>`;
+    }
+  }
+  return `<div class="jcard" onclick="openFiche('${j.id}')">
+    <div class="top">
+      <span class="nom">${esc(j.nom)}</span>
+      <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+    </div>
+    ${j.adresse?`<div class="adr">${icn('pin',11)} ${esc(j.adresse)}</div>`:''}
+    ${snips}
+    <div class="foot"><span>${j.services.length} service${j.services.length>1?'s':''}</span><span>·</span><span>${nc} contacts</span></div>
+  </div>`;
+}
+
+/* ---------- vue fiche ---------- */
+const DOMAIN_LABEL = {general:'Général', civil:'Civil', penal:'Pénal',
+  famille:'JAF', autres:'Autres'};
+
+function isOpen(id, dflt){ return openState[id]!==undefined ? openState[id] : dflt; }
+
+function svcMatches(j, s, tokens){
+  if(!tokens.length) return false;
+  const rest = tokens.filter(t=>!tokMatch(j._txt, t));
+  if(!rest.length) return false;
+  const rest2 = rest.filter(t=>!tokMatch(s._txt, t));
+  if(!rest2.length) return true;
+  return s.contacts.some(c => rest2.every(t => tokMatch(c._txt, t) ||
+    (c._dig && digits(t).length>=4 && c._dig.includes(digits(t)))));
+}
+
+function renderFiche(j){
+  const tokens = norm($('#q').value.trim()).split(/\s+/).filter(Boolean);
+  const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  $('#stats').textContent = '';
+  // boutons de filtre par domaine (Tout / Général / Civil / Pénal / JAF / Autres)
+  const domCounts = {};
+  for(const s of j.services){
+    const d = s.domaine||'autres';
+    domCounts[d] = (domCounts[d]||0) + s.contacts.length;
+  }
+  const hasDomains = j.services.some(s=>s.domaine);
+  let fchips = '';
+  if(hasDomains){
+    fchips = `<div class="chips" style="padding:2px 2px 10px">`+
+      `<button class="chip ${!ficheDom?'on':''}" onclick="setFicheDom('')">Tout · ${nc}</button>`;
+    for(const d of ['general','civil','penal','famille','autres']){
+      if(!domCounts[d]) continue;
+      fchips += `<button class="chip ${ficheDom===d?'on':''}" onclick="setFicheDom('${d}')">${DOMAIN_LABEL[d]} · ${domCounts[d]}</button>`;
+    }
+    fchips += '</div>';
+  }
+  let toc = '', blocks = '';
+  for(const s of j.services){
+    if(ficheDom && (s.domaine||'autres')!==ficheDom) continue;
+    toc += `<a onclick="gotoSvc('${s.id}')">${esc(s.nom)}<span class="cnt">${s.contacts.length}</span></a>`;
+    blocks += renderSvcBlock(j, s, svcMatches(j, s, tokens));
+  }
+  if(!blocks) blocks = `<div class="vide">Aucun service dans cette catégorie.</div>`;
+  let band = '';
+  if(COMP_LAST && COMP_LAST.tjId===j.id){
+    band = compCard(COMP_LAST, j.id, false);
+  }
+  $('#view').innerHTML = `
+    ${band}
+    <div class="fhead">
+      <div class="row1">
+        <button id="btnback" onclick="goHome()" title="Retour">${icn('left',15)}</button>
+        <h2>${esc(j.nom)}</h2>
+        <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+      </div>
+      ${j.adresse?`<div class="adr">${icn('pin',11)} ${esc(j.adresse)} <button class="mini" onclick="copyVal('${esc(j.adresse)}')">${icn('copy',11)} copier</button></div>`:''}
+      <div class="facts">
+        ${modifMode ? `<button class="mini" onclick="openAdd('${j.id}')">${icn('plus',13)} ${estProp()?'Ajouter un contact':'Proposer un contact'}</button>
+        ${!estProp() ? '' : `<button class="mini ${editMode?'editon':''}" onclick="toggleEdit()">${editMode?icn('check',13)+' Terminer la réorganisation':icn('pen',13)+' Réorganiser'}</button>`}
+        ${estProp() ? `<button class="mini" onclick="delJur('${j.id}')">${icn('trash',13)} Supprimer la juridiction</button>` : ''}` : ''}
+        <span class="mini" style="cursor:default">${j.services.length} services · ${nc} contacts</span>
+      </div>
+    </div>
+    <div id="spblock"></div>
+    ${fchips}
+    <div class="flayout">
+      <nav class="toc">${toc}</nav>
+      <div>${blocks}</div>
+    </div>`;
+  spFillBlock(j);
+}
+
+function renderSvcBlock(j, s, matchOpen){
+  const open = editMode || isOpen(s.id, !!matchOpen);
+  let inner = '';
+  if(open){
+    const bureaux = structureService(s.contacts);
+    bureaux.forEach((b, bIdx)=>{
+      let rows = '';
+      for(const e of b.entries.values()) rows += renderEntry(j, s, e);
+      if(b.nom){
+        const n = [...b.entries.values()].reduce((m,e)=>m+e.chans.length,0);
+        const bctl = editMode ? `
+          <button class="mini" title="Renommer le bureau" onclick="renameBureau('${j.id}','${s.id}',${bIdx})">${icn('pen',13)}</button>
+          <button class="mini" title="Déplacer le bureau vers un autre service" onclick="moveBureau('${j.id}','${s.id}',${bIdx})">${icn('right',13)}</button>
+          <button class="mini" title="Dissoudre (les contacts restent, sans bureau)" onclick="dissolveBureau('${j.id}','${s.id}',${bIdx})">${icn('eraser',13)}</button>` : '';
+        const bdrop = editMode ? ` ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropTo(event,'${j.id}','${s.id}',${bIdx})"` : '';
+        inner += `<div class="bureau"${bdrop}><h4>${esc(b.nom)} <span class="cnt">${n}</span>${bctl}</h4>${rows}</div>`;
+      } else inner += rows;
+    });
+    inner = `<div class="svcinner">${inner}</div>`;
+  }
+  const DOMS = ['general','civil','penal','famille','autres'];
+  const ectl = editMode ? `
+    <select class="mini" title="Domaine" onclick="event.stopPropagation()"
+      onchange="setSvcDom('${j.id}','${s.id}',this.value)">
+      ${DOMS.map(d=>`<option value="${d}" ${(s.domaine||'autres')===d?'selected':''}>${DOMAIN_LABEL[d]}</option>`).join('')}
+    </select>
+    <button class="mini" title="Renommer le service" onclick="event.stopPropagation();renameSvc('${j.id}','${s.id}')">${icn('pen',13)}</button>
+    <button class="mini" title="Monter" onclick="event.stopPropagation();svcShift('${j.id}','${s.id}',-1)">${icn('up',13)}</button>
+    <button class="mini" title="Descendre" onclick="event.stopPropagation();svcShift('${j.id}','${s.id}',1)">${icn('down',13)}</button>` : '';
+  const sdrop = editMode ? ` ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropTo(event,'${j.id}','${s.id}',-1)"` : '';
+  return `<section class="svcblock ${open?'open':''}" id="svc-${s.id}"${sdrop}>
+    <h3 onclick="${editMode?'':`tgl('${s.id}', ${open})`}">
+      <span class="caret">${icn('chev',12)}</span>
+      ${esc(s.nom)} <span class="cnt">${s.contacts.length}</span><span class="sp"></span>
+      ${ectl}
+      ${modifMode ? `<button class="mini" title="${estProp()?'Ajouter':'Proposer un ajout'}" onclick="event.stopPropagation();openAdd('${j.id}','${s.id}')">${icn('plus',13)}</button>` : ''}
+      ${modifMode && estProp() ? `<button class="mini" onclick="event.stopPropagation();delService('${j.id}','${s.id}')">${icn('trash',13)}</button>` : ''}
+    </h3>
+    ${inner}
+  </section>`;
+}
+window.gotoSvc = sid => {
+  openState[sid] = true;
+  render();
+  document.getElementById('svc-'+sid)?.scrollIntoView({behavior:'smooth', block:'start'});
+};
+
+function renderEntry(j, s, e){
+  let chans = '';
+  for(const c of e.chans) chans += renderChan(c);
+  if(editMode){
+    const ids = e.chans.map(c=>c.id).join(',');
+    chans += `<button class="abtn" style="border:1px dashed var(--line)" title="Déplacer cette entrée vers un autre service ou bureau"
+      onclick="moveEntry('${j.id}','${s.id}','${ids}')">${icn('right',13)}</button>`;
+  }
+  const label = e.lib ? `<div class="elabel">${esc(e.lib)}${e.note?`<span class="enote">${esc(e.note)}</span>`:''}</div>` : (e.note?`<div class="elabel"><span class="enote">${esc(e.note)}</span></div>`:'');
+  return `<div class="entry ${label?'':'nolabel'}">${label}<div class="chans">${chans}</div></div>`;
+}
+
+function renderChan(c){
+  const href = c.type==='email' ? 'mailto:'+c.valeur :
+    'tel:'+(digits(c.valeur).length===10 ? '+33'+digits(c.valeur).slice(1) : digits(c.valeur));
+  const tico = c.type==='email' ? icn('mail',13) : c.type==='fax' ? icn('fax',13) : icn('phone',13);
+  let badge = '';
+  const nOk = cOk(c), nKo = cKo(c), lOk = cLastOk(c);
+  const mien = c._vmien ? ' · votre vote' : '';
+  if(nOk>0) badge = `<span class="score good" title="${nOk} appel(s) réussi(s)${mien}">${icn('check',10)} ${nOk}${lOk?' · '+fmtDate(lOk):''}</span>`;
+  else if(nKo>0) badge = `<span class="score bad" title="${nKo} échec(s)${mien}">${icn('x',10)} ${nKo}</span>`;
+  const drag = editMode ? ` draggable="true" ondragstart="dragC(event,'${c.id}')" title="Glissez vers un autre bureau ou service"` : '';
+  return `<div class="chan ${isDead(c)?'dead':''}" id="ct-${c.id}"${drag}>
+    <span class="tico ${c.type}">${tico}</span>
+    <a class="v" href="${href}" ${c.type==='fax'?'onclick="return false"':''}>${esc(c.valeur)}</a>
+    ${badge}
+    <div class="acts">
+      ${c.type!=='tel' ? `<button class="abtn ghost" title="Copier" onclick="copyVal('${esc(c.valeur)}')">${icn('copy',13)}</button>` : ''}
+      ${modifMode && estProp() ? `<button class="abtn ghost" title="Modifier" onclick="openEdit('${c.id}')">${icn('pen',13)}</button>
+      <button class="abtn ghost" title="Supprimer" onclick="delContact('${c.id}')">${icn('trash',13)}</button>` : ''}
+      ${c.type==='tel' ? `<button class="abtn rok" title="Ça a répondu" onclick="rate('${c.id}',1)">${icn('check',13)}</button>
+      <button class="abtn rko" title="Ne répond pas" onclick="rate('${c.id}',0)">${icn('x',13)}</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderChips(){
+  const counts = {};
+  for(const j of DATA.juridictions) counts[j.categorie]=(counts[j.categorie]||0)+1;
+  let html = `<button class="chip ${!currentCat?'on':''}" onclick="setCat('')">Tout</button>`;
+  for(const [k,v] of Object.entries(CATS)){
+    if(!counts[k]) continue;
+    html += `<button class="chip ${currentCat===k?'on':''}" onclick="setCat('${k}')">${v} · ${counts[k]}</button>`;
+  }
+  $('#chips').innerHTML = html;
+  setTimeout(chipsFadeAll, 0);
+}
+
+/* ---- rangees de filtres : molette verticale = defilement horizontal ---- */
+function chipsFade(el){
+  const max = el.scrollWidth - el.clientWidth;
+  el.classList.toggle('cfl', max > 2 && el.scrollLeft > 2);
+  el.classList.toggle('cfr', max > 2 && el.scrollLeft < max - 2);
+}
+window.chipsFadeAll = () => document.querySelectorAll('.chips').forEach(chipsFade);
+document.addEventListener('wheel', e => {
+  const c = e.target.closest && e.target.closest('.chips');
+  if(!c) return;
+  const max = c.scrollWidth - c.clientWidth;
+  if(max < 2) return;
+  if(Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return;   // geste deja horizontal : natif
+  e.preventDefault();
+  c.scrollLeft += e.deltaY;
+  chipsFade(c);   // l evenement scroll depend des frames : on rafraichit tout de suite
+}, {passive:false});
+document.addEventListener('scroll', e => {
+  const t = e.target;
+  if(t instanceof Element && t.classList.contains('chips')) chipsFade(t);
+}, true);
+window.addEventListener('resize', () => chipsFadeAll());
+
+/* ============================ interactions ============================ */
+window.setCat = c => { currentCat=c; shownCards=60; ficheId=null; spState=null; renderChips(); render(); };
+window.parcourir = () => { browseAll = true; shownCards = 60; render(); };
+window.tgl = (id, cur) => { openState[id] = !cur; render(); };
+window.copyVal = v => { navigator.clipboard?.writeText(v).then(()=>toast('Copié : '+v)); };
+
+function findContact(id){
+  for(const j of DATA.juridictions) for(const s of j.services)
+    for(const c of s.contacts) if(c.id===id) return {j,s,c};
+  return null;
+}
+window.rate = async (id, ok) => {
+  const f = findContact(id); if(!f) return;
+  const c = f.c, avant = c._vmien || 0, valeur = ok ? 1 : -1;
+  // un membre = un vote par numero ; revoter dans le meme sens l annule
+  const nouveau = (avant === valeur) ? 0 : valeur;
+  // mise a jour optimiste de l affichage
+  if(avant === 1) c._vok = (c._vok||0) - 1;
+  if(avant === -1) c._vko = (c._vko||0) - 1;
+  if(nouveau === 1){ c._vok = (c._vok||0) + 1; c._vlastOk = NOW(); }
+  if(nouveau === -1) c._vko = (c._vko||0) + 1;
+  c._vmien = nouveau;
+  render();
+  toast(nouveau === 0 ? 'Vote retiré' : nouveau === 1 ? 'Noté : ce numéro répond' : 'Échec noté');
+  if(!sbUser) return;
+  try{
+    if(nouveau === 0) await sb.from('votes').delete().eq('contact', id);
+    else await sb.from('votes').upsert({contact: id, valeur: nouveau, maj: new Date().toISOString()},
+                                       {onConflict: 'email,contact'});
+  }catch(e){ toast('Vote non enregistré : ' + e.message); }
+};
+
+/* ---- votes communautaires : chargement et application sur les contacts ---- */
+async function sbVotesCharger(){
+  if(!sbAdmis || !sbUser) return;
+  let lignes = [];
+  try{
+    const {data, error} = await sb.from('votes').select('email,contact,valeur,maj');
+    if(error || !data) return;
+    lignes = data;
+  }catch(e){ return; }
+  const par = new Map();
+  const mien = (sbUser.email||'').toLowerCase();
+  for(const v of lignes){
+    let o = par.get(v.contact);
+    if(!o){ o = {ok:0, ko:0, lastOk:0, mien:0}; par.set(v.contact, o); }
+    if(v.valeur > 0){ o.ok++; const t = Date.parse(v.maj||''); if(t > o.lastOk) o.lastOk = t; }
+    else o.ko++;
+    if((v.email||'').toLowerCase() === mien) o.mien = v.valeur > 0 ? 1 : -1;
+  }
+  for(const j of DATA.juridictions) for(const s of j.services) for(const c of s.contacts){
+    const o = par.get(c.id);
+    c._vok = o ? o.ok : 0; c._vko = o ? o.ko : 0;
+    c._vlastOk = o ? o.lastOk : 0; c._vmien = o ? o.mien : 0;
+  }
+  render();
+}
+window.sbVotesCharger = sbVotesCharger;
+window.delContact = async id => {
+  if(!(await sbEstProprietaire())) return;   // suppression : proprietaire uniquement
+  const f = findContact(id); if(!f) return;
+  if(!confirm(`Supprimer ${f.c.valeur} (${f.c.libelle||f.s.nom}) ?`)) return;
+  f.s.contacts = f.s.contacts.filter(c=>c.id!==id);
+  DATA.tombstones[id]=NOW();
+  save(); render(); toast('Contact supprimé');
+};
+window.delService = async (jid,sid) => {
+  if(!(await sbEstProprietaire())) return;   // suppression : proprietaire uniquement
+  const j = DATA.juridictions.find(x=>x.id===jid); if(!j) return;
+  const s = j.services.find(x=>x.id===sid); if(!s) return;
+  if(!confirm(`Supprimer le service « ${s.nom} » et ses ${s.contacts.length} contacts ?`)) return;
+  for(const c of s.contacts) DATA.tombstones[c.id]=NOW();
+  DATA.tombstones[sid]=NOW();
+  j.services = j.services.filter(x=>x.id!==sid);
+  save(); render(); toast('Service supprimé');
+};
+window.delJur = async id => {
+  if(!(await sbEstProprietaire())) return;   // suppression : proprietaire uniquement
+  const j = DATA.juridictions.find(x=>x.id===id); if(!j) return;
+  const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  if(!confirm(`Supprimer « ${j.nom} » et ses ${nc} contacts ?`)) return;
+  for(const s of j.services){ for(const c of s.contacts) DATA.tombstones[c.id]=NOW(); DATA.tombstones[s.id]=NOW(); }
+  DATA.tombstones[id]=NOW();
+  DATA.juridictions = DATA.juridictions.filter(x=>x.id!==id);
+  if(ficheId===id) ficheId=null;
+  save(); renderChips(); render(); toast('Juridiction supprimée');
+};
+
+
+
+
+
+/* ancrage des outils : colonne latérale sur l'accueil (bureau), tiroir sinon */
+function updateToolsDock(){
+  const tools = document.getElementById('tools');
+  const dock = document.getElementById('toolsdock');
+  if(!tools || !dock) return;
+  // mobile : la barre de recherche sort de l en-tête (le backdrop-filter du
+  // header ferait référence pour position:fixed) et se fixe en bas de l écran
+  const sw = document.querySelector('.searchwrap');
+  if(sw){
+    const mobile = window.innerWidth < 760;
+    if(mobile && sw.parentElement !== document.body){
+      document.body.appendChild(sw);
+    } else if(!mobile && sw.parentElement === document.body){
+      const hw = document.querySelector('.hwrap');
+      hw.insertBefore(sw, hw.querySelector('.chips'));
+    }
+  }
+  const wantDock = window.innerWidth >= 1080 && !ficheId && !mapState && !accueilNu();
+  document.body.classList.toggle('toolsdocked', wantDock);
+  tools.classList.toggle('docked', wantDock);
+  const ft = document.getElementById('fabtools');
+  if(ft) ft.style.display = wantDock ? 'none' : '';
+  if(wantDock){
+    if(tools.parentElement !== dock) dock.appendChild(tools);
+    tools.classList.add('show');
+    document.getElementById('toolsback').classList.remove('show');
+  } else if(tools.parentElement === dock){
+    document.body.appendChild(tools);
+    tools.classList.remove('show');
+  }
+}
+let dockTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(dockTimer);
+  dockTimer = setTimeout(updateToolsDock, 120);
+});
+
+/* panneau latéral d'outils */
+window.openTools = () => {
+  if(document.getElementById('tools').classList.contains('docked')) return;
+  document.getElementById('tools').classList.add('show');
+  document.getElementById('toolsback').classList.add('show');
+};
+window.closeTools = () => {
+  const t = document.getElementById('tools');
+  if(t.classList.contains('docked')) return;
+  t.classList.remove('show');
+  document.getElementById('toolsback').classList.remove('show');
+};
+window.openAdrDlg = () => {
+  closeTools();
+  const d = document.getElementById('dlgAdr');
+  d.showModal();
+  loadComp();
+  const inp = document.getElementById('adr');
+  setTimeout(()=>{ inp.focus(); inp.select(); }, 60);
+};
+window.tglTool = id => {
+  const item = document.querySelector(`.toolitem[onclick*="${id}"]`);
+  const body = document.getElementById(id);
+  const open = body.classList.toggle('open');
+  item.classList.toggle('open', open);
+  if(open){
+    const inp = body.querySelector('input');
+    if(inp){ inp.focus(); }
+    loadComp();
+  }
+};
+
+
+const COMP_LBL = {CA:"Cour d'appel", TJ:'Tribunal judiciaire',
+  'Proximité':'Tribunal de proximité', CPH:"Conseil de prud'hommes",
+  TCO:'Tribunal de commerce', TA:'Tribunal administratif',
+  CAA:"Cour administrative d'appel"};
+function compCard(c, curId, inPanel){
+  const cells = c.items.map((x,i)=>{
+    const here = curId && x.jurId===curId;
+    const action = here
+      ? `<span class="chere">${icn('check',11)} fiche affichée</span>`
+      : x.jurId
+        ? `<button class="cgo" onclick="closeTools();openFiche('${x.jurId}')">ouvrir la fiche ${icn('right',11)}</button>`
+        : `<button class="cgo" onclick="openCompSP(${i})" title="Pas de fiche dans l'annuaire — coordonnées officielles service-public.fr">fiche officielle ${icn('right',11)}</button>`;
+    return `<div class="compcell ${here?'here':''}">
+      <span class="cl">${COMP_LBL[x.type]||x.type}</span>
+      <span class="cn">${esc(x.nom)}</span>
+      ${action}</div>`;
+  }).join('');
+  const close = inPanel ? '' :
+    `<button class="mini" title="Masquer" onclick="COMP_LAST=null;render()">${icn('x',12)}</button>`;
+  return `<div class="compcard">
+    <div class="comphead">${icn('pin',13)}
+      <span>Compétence territoriale — <b>${esc(c.adresse)}</b></span>${close}</div>
+    <div class="compgrid">${cells}</div>
+  </div>`;
+}
+window.openCompSP = i => {
+  const x = COMP_LAST && COMP_LAST.items[i];
+  if(x) openFicheSP(x.key, x.nom);
+};
+
+/* ============================ annuaire officiel — lannuaire.service-public.fr ============================
+   API DILA « Annuaire de l'administration » (CORS ouvert, données ministère de la Justice).
+   Sert à : 1. compléter les fiches existantes (adresse, horaires, tél, mail officiels)
+            2. générer une fiche à la volée quand la juridiction n'est pas dans l'annuaire */
+const SP_API = 'https://api-lannuaire.service-public.fr/api/explore/v2.1/catalog/datasets/api-lannuaire-administration/records';
+const SP_PIVOT = {tj:'tgi', ca:'cour_appel', tprx:'ti', cph:'prudhommes', commerce:'tribunal_commerce', ta:'ta', caa:'caa'};
+const SP_TYPE_LBL = {tj:'Tribunal judiciaire', ca:"Cour d'appel", tprx:'Tribunal de proximité',
+  cph:"Conseil de prud'hommes", commerce:'Tribunal de commerce',
+  ta:'Tribunal administratif', caa:"Cour administrative d'appel"};
+const SP_BADGE = {tj:'tj', ca:'ca', tprx:'tj', cph:'autre', commerce:'commerce', ta:'autre', caa:'ca'};
+const SP_BADGE_LBL = {tj:'TJ', ca:'CA', tprx:'Prox.', cph:'CPH', commerce:'T.Com', ta:'TA', caa:'CAA'};
+const SP_TTL = 7*24*3600*1000;   // cache local : 7 jours
+const spJ = s => { try{ return JSON.parse(s||'null')||[]; }catch(e){ return []; } };
+function spCacheGet(k){
+  try{
+    const o = JSON.parse(localStorage.getItem('juritel.sp2.'+k)||'null');
+    if(o && Date.now()-o.t < SP_TTL) return o;
+    if(o) localStorage.removeItem('juritel.sp2.'+k);
+  }catch(e){}
+  return null;
+}
+function spCachePut(k, v){ try{ localStorage.setItem('juritel.sp2.'+k, JSON.stringify({t:Date.now(), v})); }catch(e){} }
+
+function spExtract(r){
+  const adrs = spJ(r.adresse);
+  const adr = adrs.find(a=>a.type_adresse==='Adresse') || adrs[0] || {};
+  const ligne = [adr.numero_voie, adr.complement1, adr.complement2, adr.service_distribution]
+    .map(x=>(x||'').trim()).filter(Boolean).join(', ');
+  const ville = [adr.code_postal, adr.nom_commune].filter(Boolean).join(' ');
+  const horaires = spJ(r.plage_ouverture).map(p=>{
+    const h = t=>(t||'').slice(0,5);
+    const jours = (!p.nom_jour_fin || p.nom_jour_debut===p.nom_jour_fin)
+      ? p.nom_jour_debut : p.nom_jour_debut+' – '+p.nom_jour_fin;
+    // certaines fiches codent 00:00–00:00 et donnent l'horaire réel en commentaire
+    const ok = (a,b)=> h(a) && h(a)!==h(b);
+    let plages = ok(p.valeur_heure_debut_1, p.valeur_heure_fin_1) ? h(p.valeur_heure_debut_1)+'–'+h(p.valeur_heure_fin_1) : '';
+    if(ok(p.valeur_heure_debut_2, p.valeur_heure_fin_2)) plages += (plages?' et ':'')+h(p.valeur_heure_debut_2)+'–'+h(p.valeur_heure_fin_2);
+    return {jours, plages, note:(p.commentaire||'').trim()};
+  }).filter(x=>x.jours && (x.plages||x.note));
+  return {
+    id: r.id, nom: r.nom,
+    adresse: [ligne, ville].filter(Boolean).join(' – '),
+    tels: spJ(r.telephone).map(t=>(t.valeur||'').trim()).filter(Boolean),
+    mails: (r.adresse_courriel||'').split(/[;,\s]+/).filter(x=>x.includes('@')),
+    site: ((spJ(r.site_internet)[0]||{}).valeur||'').trim(),
+    horaires,
+    url: r.url_service_public||'',
+    maj: (r.partenaire_date_modification||r.date_modification||'').split(' ')[0],
+  };
+}
+
+/* recherche d'une juridiction par type + nom ; renvoie null si introuvable (mis en cache) */
+async function spLookup(type, nom){
+  const pivot = SP_PIVOT[type];
+  if(!pivot) return null;
+  // 1. dataset embarqué (instantané, hors-ligne)
+  await loadOfficiel();
+  if(OFF){
+    const cible = normVille(nom);
+    const hit = OFF.j.find(e=>e.t===type && normVille(e.nom)===cible)
+      || OFF.j.find(e=>{ if(e.t!==type) return false; const n = normVille(e.nom);
+           return (n.startsWith(cible)||cible.startsWith(n)) && Math.min(n.length, cible.length)>=4; });
+    if(hit) return hit;
+  }
+  // 2. API en secours (cache 7 jours)
+  const key = type+'/'+normVille(nom);
+  const hit = spCacheGet(key);   // cache = enregistrement brut, extrait à l'affichage
+  if(hit) return hit.v ? spExtract(hit.v) : null;
+  const q = (SP_TYPE_LBL[type]+' '+normVille(nom)).replace(/"/g,' ');
+  const url = SP_API+'?limit=20'
+    +'&select=id,nom,adresse,telephone,adresse_courriel,plage_ouverture,site_internet,url_service_public,partenaire_date_modification,date_modification'
+    +'&where='+encodeURIComponent(`pivot like "${pivot}" and search(nom, "${q}")`);
+  let rec;
+  try{
+    const r = await fetch(url);
+    if(!r.ok) return null;
+    const d = await r.json();
+    const res = d.results||[];
+    const cible = normVille(nom);
+    rec = res.find(x=>normVille(x.nom)===cible)
+       || res.find(x=>{const n=normVille(x.nom); return (n.startsWith(cible)||cible.startsWith(n)) && Math.min(n.length,cible.length)>=4;})
+       || (res.length===1 ? res[0] : null);
+  }catch(e){ return null; }   // erreur réseau : on ne met pas en cache
+  spCachePut(key, rec||null);
+  return rec ? spExtract(rec) : null;
+}
+
+/* pastille de contact (sans notation : donnée officielle, pas un contact de l'annuaire) */
+function spChan(type, v, blank){
+  const href = type==='email' ? 'mailto:'+v
+    : type==='web' ? v
+    : 'tel:'+(digits(v).length===10 ? '+33'+digits(v).slice(1) : digits(v));
+  const ico = type==='email' ? 'mail' : type==='web' ? 'globe' : 'phone';
+  const lbl = type==='web' ? v.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'') : v;
+  return `<div class="chan"><span class="tico ${type==='web'?'fax':type}">${icn(ico,13)}</span>
+    <a class="v" href="${esc(href)}"${type==='web'||blank?' target="_blank" rel="noopener"':''}>${esc(lbl)}</a>
+    <div class="acts"><button class="abtn ghost" title="Copier" onclick="copyVal('${esc(v)}')">${icn('copy',13)}</button></div>
+  </div>`;
+}
+function spHoursHtml(d){
+  if(!d.horaires.length) return '';
+  const rows = d.horaires.map(h=>
+    `<div><b>${esc(h.jours)}</b>${h.plages?' : '+esc(h.plages):''}${h.note?` <span class="spnote">${esc(h.note)}</span>`:''}</div>`).join('');
+  return `<div class="sprow">${icn('clock',13)}<div>${rows}</div></div>`;
+}
+
+/* ---------- fiche générée à la volée (juridiction absente de l'annuaire) ---------- */
+function spResolve(){
+  const st = spState; if(!st) return;
+  spLookup(st.type, st.nom).then(d=>{
+    if(spState!==st) return;
+    st.loading = false; st.data = d;
+    render();
+  });
+}
+window.openFicheSP = (type, nom) => {
+  closeTools();
+  ficheId = null; mapState = null;
+  spState = {type, nom, loading:true};
+  history.pushState(null,'','#sp/'+type+'/'+encodeURIComponent(nom));
+  render(); window.scrollTo(0,0);
+  spResolve();
+};
+
+function renderFicheSP(){
+  const st = spState;
+  $('#stats').textContent = '';
+  const d = st.data;
+  let body;
+  if(st.loading){
+    body = `<div class="vide">Recherche dans l'annuaire officiel…</div>`;
+  } else if(!d){
+    body = `<div class="vide"><div class="big">${icn('search',34)}</div>
+      Juridiction introuvable dans l'annuaire officiel.<br><br>
+      <a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener"
+        href="https://lannuaire.service-public.gouv.fr/recherche?whoWhat=${encodeURIComponent(st.nom)}">
+        Chercher sur lannuaire.service-public.gouv.fr</a></div>`;
+  } else {
+    const chans = d.tels.map(t=>spChan('tel',t)).join('')
+      + d.mails.map(m=>spChan('email',m)).join('')
+      + (d.site ? spChan('web', d.site) : '');
+    body = `
+      <section class="svcblock open">
+        <h3><span class="caret" style="transform:rotate(90deg)">${icn('chev',12)}</span>
+          Coordonnées officielles <span class="cnt">${d.tels.length+d.mails.length}</span></h3>
+        <div class="svcinner">
+          <div class="entry nolabel"><div class="chans">${chans||'<span class="hint">Aucune coordonnée publiée.</span>'}</div></div>
+          <div style="padding:2px 17px 13px">
+            ${spHoursHtml(d)}
+            <div class="spfoot">Source : <a href="${esc(d.url)}" target="_blank" rel="noopener">lannuaire.service-public.gouv.fr</a>
+              — données du ministère de la Justice${d.maj?`, mises à jour le ${esc(d.maj)}`:''}.</div>
+          </div>
+        </div>
+      </section>`;
+  }
+  const nom = d ? d.nom : st.nom;
+  $('#view').innerHTML = `
+    <div class="fhead">
+      <div class="row1">
+        <button id="btnback" onclick="goHome()" title="Retour">${icn('left',15)}</button>
+        <h2>${esc(nom)}</h2>
+        <span class="badge b-${SP_BADGE[st.type]||'autre'}">${SP_BADGE_LBL[st.type]||st.type}</span>
+      </div>
+      ${d&&d.adresse?`<div class="adr">${icn('pin',11)} ${esc(d.adresse)} <button class="mini" onclick="copyVal('${esc(d.adresse)}')">${icn('copy',11)} copier</button></div>`:''}
+      <div class="facts">
+        <span class="mini" style="cursor:default; color:var(--ko); background:var(--ko-bg); border-color:color-mix(in srgb, var(--ko) 25%, transparent)">${icn('scale',13)} Fiche générée depuis l'annuaire officiel — pas encore dans votre annuaire</span>
+        ${d?`<button class="mini" onclick="spAdd()">${icn('plus',13)} Ajouter à l'annuaire</button>`:''}
+      </div>
+    </div>
+    ${body}`;
+}
+
+/* enregistre la fiche générée comme vraie juridiction (synchronisée Drive ensuite) */
+window.spAdd = async () => {
+  if(!spState || !spState.data) return;
+  const d = spState.data, type = spState.type;
+  if(!(await sbEstProprietaire())){
+    // un membre propose la fiche officielle, il ne l ajoute pas lui-meme
+    await propEnvoyer({
+      juridiction: d.nom, categorie: SP_BADGE[type]||'autre', service: 'Accueil / Standard',
+      libelle: 'Accueil', groupe: '', note: d.adresse ? 'Adresse : '+d.adresse : '',
+      canaux: [...d.tels.map(t=>({type:'tel', valeur:t})), ...d.mails.map(m=>({type:'email', valeur:m}))]
+    });
+    return;
+  }
+  const deja = DATA.juridictions.find(x=>normVille(x.nom)===normVille(d.nom));
+  if(deja){ openFiche(deja.id); toast('Déjà dans l\'annuaire'); return; }
+  const s = {id:uid('s'), nom:'Accueil / Standard', domaine:'general', contacts:[]};
+  for(const t of d.tels)
+    s.contacts.push({id:uid('c'), type:'tel', valeur:t, libelle:'Accueil', groupe:'', note:'', ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+  for(const m of d.mails)
+    s.contacts.push({id:uid('c'), type:'email', valeur:m, libelle:'Accueil', groupe:'', note:'', ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+  const j = {id:uid('j'), nom:d.nom, categorie:SP_BADGE[type]||'autre', adresse:d.adresse, services:[s]};
+  DATA.juridictions.push(j);
+  buildIndex(); save(); renderChips();
+  spState = null;
+  openFiche(j.id);
+  toast('Fiche ajoutée à l\'annuaire');
+};
+
+/* ---------- complément officiel sur les fiches existantes ---------- */
+function spTypeFor(j){
+  const n = norm(j.nom);
+  if(/proximit/.test(n)) return 'tprx';
+  if(/prud/.test(n)) return 'cph';
+  if(j.categorie==='ca') return 'ca';
+  if(j.categorie==='commerce') return 'commerce';
+  if(j.categorie==='tj' && /^(tj\b|tribunal judiciaire)/.test(n)) return 'tj';
+  return null;
+}
+let spReq = 0;
+function spFillBlock(j){
+  const type = spTypeFor(j); if(!type) return;
+  const tok = ++spReq;
+  spLookup(type, j.nom).then(d=>{
+    if(tok!==spReq || !d || ficheId!==j.id) return;
+    const el = document.getElementById('spblock');
+    if(!el) return;
+    const chans = d.tels.map(t=>spChan('tel',t)).join('')
+      + d.mails.map(m=>spChan('email',m)).join('')
+      + (d.site ? spChan('web', d.site) : '');
+    el.innerHTML = `<div class="spcard">
+      <div class="comphead">${icn('scale',13)}
+        <span>Annuaire officiel — <b>${esc(d.nom)}</b></span>
+        <a class="splink" href="${esc(d.url)}" target="_blank" rel="noopener">lannuaire.service-public.gouv.fr</a></div>
+      ${d.adresse?`<div class="sprow">${icn('pin',13)}<div>${esc(d.adresse)} <button class="mini" onclick="copyVal('${esc(d.adresse)}')">${icn('copy',11)} copier</button></div></div>`:''}
+      ${spHoursHtml(d)}
+      ${chans?`<div class="chans" style="margin-top:7px">${chans}</div>`:''}
+      ${d.maj?`<div class="spfoot">Données ministère de la Justice, mises à jour le ${esc(d.maj)}.</div>`:''}
+    </div>`;
+  });
+}
+
+
+/* ============================ dataset officiel embarqué ============================
+   Toutes les juridictions de l'annuaire officiel (DILA), précalculées dans
+   officiel.json : alimente la recherche, les fiches générées et le bloc
+   « Annuaire officiel » des fiches existantes (instantané, hors-ligne). */
+let OFF = null, offLoading = false;
+async function loadOfficiel(){
+  if(OFF || offLoading) return OFF;
+  offLoading = true;
+  try{
+    const r = await fetch('officiel.json', {cache:'no-cache'});
+    if(r.ok){
+      OFF = await r.json();
+      for(const e of OFF.j)
+        e._txt = norm(e.nom+' '+(SP_TYPE_LBL[e.t]||'')+' '+e.adresse+' '
+          +e.tels.join(' ')+' '+e.mails.join(' '));
+      if(!ficheId && !mapState) render();
+    }
+  }catch(err){}
+  offLoading = false;
+  return OFF;
+}
+function offJurMatch(e){
+  return e.t==='ca' ? findJurByName(e.nom, ['ca'])
+    : e.t==='tj' ? findJurByName(e.nom, ['tj'])
+    : e.t==='tprx' ? findJurByName(e.nom, null, 'proximit')
+    : e.t==='cph' ? findJurByName(e.nom, null, 'prud')
+    : e.t==='commerce' ? findJurByName(e.nom, null, 'commerc')
+    : e.t==='ta' ? findJurByName(e.nom, null, 'administratif')
+    : findJurByName(e.nom, null, 'administrative');
+}
+window.openFicheOff = i => {
+  const e = OFF.j[i];
+  closeTools();
+  ficheId = null; mapState = null;
+  spState = {type:e.t, nom:e.nom, loading:false, data:e};
+  history.pushState(null,'','#sp/'+e.t+'/'+encodeURIComponent(e.nom));
+  render(); window.scrollTo(0,0);
+};
+function cardOff(i){
+  const e = OFF.j[i];
+  return `<div class="jcard" onclick="openFicheOff(${i})">
+    <div class="top"><span class="nom">${esc(e.nom)}</span><span class="badge b-off">Officiel</span></div>
+    ${e.adresse?`<div class="adr">${icn('pin',11)}<span>${esc(e.adresse)}</span></div>`:''}
+    <div class="foot"><span>${esc(SP_TYPE_LBL[e.t]||e.t)}</span>${e.tels.length?`<span>·</span><span>${esc(e.tels[0])}</span>`:''}</div>
+  </div>`;
+}
+
+/* ============================ juridiction compétente par adresse ============================
+   1. géocodage Base Adresse Nationale (Géoplateforme IGN, données officielles)
+   2. table officielle commune -> juridictions (data.gouv.fr, ministère de la Justice)
+   3. ouverture de la fiche correspondante quand elle existe dans l'annuaire */
+let COMP = null, COMP_LAST = null, ADR_FEATS = [], adrTimer = null;
+async function loadComp(){
+  if(COMP) return COMP;
+  try{
+    const r = await fetch('competences.json', {cache:'no-cache'});
+    if(r.ok) COMP = await r.json();
+  }catch(e){}
+  return COMP;
+}
+async function adrFetch(v, autopick){
+  try{
+    const r = await fetch('https://data.geopf.fr/geocodage/search/?limit=5&autocomplete=1&q='+encodeURIComponent(v));
+    if(!r.ok) return;
+    const d = await r.json();
+    ADR_FEATS = d.features||[];
+    if(autopick && ADR_FEATS.length){ pickAdr(0); return; }
+    const box = document.getElementById('adrsugg');
+    if(!box) return;
+    box.innerHTML = ADR_FEATS.map((f,i)=>
+      `<button onclick="pickAdr(${i})">${icn('pin',12)} ${esc(f.properties.label)}</button>`).join('');
+  }catch(e){}
+}
+window.adrInput = v => {
+  clearTimeout(adrTimer);
+  ADR_FEATS = [];
+  const box = document.getElementById('adrsugg');
+  if(!v || v.trim().length<3){ if(box) box.innerHTML=''; return; }
+  adrTimer = setTimeout(()=>adrFetch(v, false), 250);
+  loadComp();
+};
+window.adrEnter = v => {
+  clearTimeout(adrTimer);
+  if(ADR_FEATS.length){ pickAdr(0); return; }   // suggestion la plus haute
+  if(v && v.trim().length>=3) adrFetch(v, true); // recherche immédiate puis sélection
+};
+function normVille(s){
+  return norm(s).replace(/\(.*\)/g,'')
+    .replace(/^(cour administrative d'appel|tribunal administratif|tribunal de commerce|chambre commerciale du tj|tribunal judiciaire|tribunal de proximite|cour d'appel|conseil de prud'hommes|tj|ca|cph)\s*(de la |de l'|des |du |de |d')?/,'')
+    .replace(/-/g,' ').replace(/\s+/g,' ').trim();
+}
+function findJurByName(nom, cats, require){
+  const cible = normVille(nom);
+  let best = null;
+  for(const j of DATA.juridictions){
+    if(cats && !cats.includes(j.categorie)) continue;
+    if(require && !norm(j.nom).includes(require)) continue;
+    const n = normVille(j.nom);
+    if(n===cible) return j;
+    if(!best && (n.startsWith(cible) || cible.startsWith(n)) && Math.min(n.length,cible.length)>=4) best = j;
+  }
+  return best;
+}
+window.pickAdr = async i => {
+  const f = ADR_FEATS[i]; if(!f) return;
+  const box = document.getElementById('adrsugg');
+  if(box) box.innerHTML = '<div class="hint" style="padding:8px 11px">Recherche de la juridiction compétente…</div>';
+  const comp = await loadComp();
+  if(!comp){ toast('Table des compétences indisponible'); return; }
+  const entry = comp.c[f.properties.citycode];
+  if(!entry){ toast('Commune introuvable dans la table officielle'); if(box) box.innerHTML=''; return; }
+  const types = [['CA','ca'], ['TJ','tj'], ['Proximité','tprx'], ['CPH','cph'], ['TCO','tco']];
+  const items = [];
+  types.forEach(([label, key], k)=>{
+    const idx = entry[k];
+    if(idx===undefined || idx<0) return;
+    const nom = comp[key][idx];
+    const j = key==='ca' ? findJurByName(nom, ['ca'])
+      : key==='tj' ? findJurByName(nom, ['tj'])
+      : key==='tprx' ? findJurByName(nom, null, 'proximit')
+      : key==='tco' ? findJurByName(nom, null, 'commerc')
+      : findJurByName(nom, null, 'prud');
+    items.push({type:label, key: key==='tco' ? 'commerce' : key, nom, jurId: j? j.id : null});
+  });
+  // ordre administratif : ressort départemental (CJA R221-3 et R221-7)
+  const cc = f.properties.citycode;
+  const depa = cc.startsWith('97') ? cc.slice(0,3) : cc.slice(0,2);
+  const tad = comp.tadep && comp.tadep[depa];
+  if(tad){
+    const nta = comp.ta[tad[0]], ncaa = comp.caa[tad[1]];
+    const jta = findJurByName(nta, null, 'administratif');
+    const jcaa = findJurByName(ncaa, null, 'administrative');
+    items.push({type:'TA', key:'ta', nom:nta, jurId: jta ? jta.id : null});
+    items.push({type:'CAA', key:'caa', nom:ncaa, jurId: jcaa ? jcaa.id : null});
+  }
+  const tj = items.find(x=>x.type==='TJ');
+  COMP_LAST = {adresse: f.properties.label, items, tjId: tj && tj.jurId};
+  if(tj && tj.jurId){
+    closeTools();
+    openFiche(tj.jurId);
+    return;
+  }
+  // pas de fiche TJ : afficher la carte de compétence sur place
+  if(box) box.innerHTML = items.length ? compCard(COMP_LAST, null, true)
+    : '<div class="hint" style="padding:8px">Aucune juridiction trouvée.</div>';
+};
+
+
+/* ============================ carte de France interactive ============================ */
+let MAPD = null;
+async function loadCarte(){
+  if(MAPD) return MAPD;
+  try{
+    const r = await fetch('carte.json', {cache:'no-cache'});
+    if(r.ok) MAPD = await r.json();
+  }catch(e){}
+  return MAPD;
+}
+window.openCarte = () => {
+  mapState = {level:'fr'};
+  ficheId = null; spState = null;
+  if(location.hash!=='#carte') history.pushState(null,'','#carte');
+  render(); window.scrollTo(0,0);
+};
+window.carteGo = (level, code) => {
+  mapState = level==='fr' ? {level:'fr'} : {level, code};
+  render();
+};
+const typeColor = t => t==='ca' ? 'var(--mail)' : t==='tprx' ? 'var(--ok)'
+  : t==='cph' ? '#e59a3c' : t==='commerce' ? '#2fb7a5'
+  : (t==='ta'||t==='caa') ? '#e26d8f' : 'var(--accent)';
+function mapTypesFor(level){
+  if(!currentCat) return level==='dep'
+    ? ['tj','ca','tprx','cph','commerce','ta','caa'] : ['tj','ca'];
+  if(currentCat==='tj') return level==='dep' ? ['tj','tprx'] : ['tj'];
+  if(currentCat==='ca') return ['ca'];
+  if(currentCat==='commerce') return level==='dep' ? ['commerce'] : [];
+  return [];   // catégorie non cartographiée
+}
+const cityOf = n => jurShort(n).replace(/^(TJ|CPH|T\.Com|TA|CAA|Prox\.)\s+/,'');
+const jurShort = n => n.replace(/^Tribunal judiciaire de /,'TJ ')
+  .replace(/^Tribunal de proximité (de |d')/,'Prox. ')
+  .replace(/^Cour d'Appel (de |d')/i,'CA ')
+  .replace(/^Conseil de Prud'hommes (de |d')/i,'CPH ')
+  .replace(/^Tribunal de Commerce (de |d')/i,'T.Com ')
+  .replace(/^Tribunal Administratif (de |d')/i,'TA ')
+  .replace(/^Cour administrative d'appel (de |d')/i,'CAA ');
+
+let grpGrace = null;
+window.grpOpen = k => {
+  clearTimeout(grpGrace);
+  const svg = document.querySelector('.mapwrap svg');
+  if(!svg) return;
+  svg.querySelectorAll('.mgroup.open').forEach(g=>g.classList.remove('open'));
+  const g = document.getElementById('mg-'+k);
+  if(g){ g.classList.add('open'); svg.classList.add('gdim'); }
+};
+function grpCloseAll(){
+  const svg = document.querySelector('.mapwrap svg');
+  if(!svg) return;
+  svg.querySelectorAll('.mgroup.open').forEach(g=>g.classList.remove('open'));
+  svg.classList.remove('gdim');
+}
+window.grpClose = () => {
+  clearTimeout(grpGrace);
+  grpGrace = setTimeout(grpCloseAll, 160);   // tolérance : pas de fermeture intempestive
+};
+window.grpCloseNow = grpCloseAll;
+window.carteJur = i => {
+  const j = MAPD.j[i];
+  const f = j.t==='tj' ? findJurByName(j.n, ['tj'])
+    : j.t==='ca' ? findJurByName(j.n, ['ca'])
+    : j.t==='tprx' ? findJurByName(j.n, null, 'proximit')
+    : j.t==='cph' ? findJurByName(j.n, null, 'prud')
+    : j.t==='commerce' ? findJurByName(j.n, null, 'commerc')
+    : j.t==='ta' ? findJurByName(j.n, null, 'administratif')
+    : findJurByName(j.n, null, 'administrative');
+  if(f) openFiche(f.id);
+  else openFicheSP(j.t, j.n);   // pas de fiche locale : fiche générée via l'annuaire officiel
+};
+window.carteDep = code => {
+  const js = MAPD.j.map((j,i)=>({j,i})).filter(x=>x.j.d===code);
+  if(!js.length){ toast('Aucune juridiction recensée dans ce département'); return; }
+  if(js.length===1){ carteJur(js[0].i); return; }
+  carteGo('dep', code);
+};
+
+function renderCarte(){
+  $('#stats').textContent = '';
+  if(!MAPD){
+    $('#view').innerHTML = '<div class="vide">Chargement de la carte…</div>';
+    loadCarte().then(()=>{ if(mapState) render(); });
+    return;
+  }
+  const st = mapState;
+  let titre='France', crumbs='', feats=[], dots=[], showDotLbl=false, sousListe='';
+  if(st.level==='fr'){
+    crumbs = `<span class="mcrumb on">France</span>`;
+    feats = MAPD.r.map(r=>({p:r.p, lbl:'', tip:r.n, cls:'mreg', click:`carteGo('reg','${r.c}')`}));
+  } else if(st.level==='reg'){
+    const reg = MAPD.r.find(r=>r.c===st.code) || MAPD.r[0];
+    titre = reg.n;
+    crumbs = `<span class="mcrumb" onclick="carteGo('fr')">France</span><span>›</span><span class="mcrumb on">${esc(reg.n)}</span>`;
+    const dd = MAPD.d.filter(d=>d.r===st.code);
+    feats = dd.map(d=>({p:d.p, lbl:d.c, tip:d.n, cls:'mdep', click:`carteDep('${d.c}')`}));
+    const dset = new Set(dd.map(d=>d.c));
+    const tset = new Set(mapTypesFor('reg'));
+    dots = MAPD.j.map((j,i)=>({j,i})).filter(x=>dset.has(x.j.d) && tset.has(x.j.t));
+  } else {
+    const dep = MAPD.d.find(d=>d.c===st.code);
+    const reg = MAPD.r.find(r=>r.c===dep.r);
+    titre = dep.n;
+    crumbs = `<span class="mcrumb" onclick="carteGo('fr')">France</span><span>›</span>`+
+      `<span class="mcrumb" onclick="carteGo('reg','${reg.c}')">${esc(reg.n)}</span><span>›</span>`+
+      `<span class="mcrumb on">${esc(dep.n)}</span>`;
+    feats = [{p:dep.p, lbl:'', tip:dep.n, cls:'mdep nohover', click:''}];
+    const tsetd = new Set(mapTypesFor('dep'));
+    dots = MAPD.j.map((j,i)=>({j,i})).filter(x=>x.j.d===st.code && tsetd.has(x.j.t));
+    showDotLbl = true;
+    sousListe = '<div class="mjlist">'+dots.map(x=>
+      `<button class="schip" id="mc-${x.i}" onclick="carteJur(${x.i})" onmouseenter="hlJur(${x.i})" onmouseleave="hlJur(null)"><span class="sw" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${typeColor(x.j.t)};margin-right:2px"></span>${esc(jurShort(x.j.n))}</button>`).join('')+'</div>';
+  }
+  // projection (équirectangulaire corrigée en longitude, figurative)
+  const pts = feats.flatMap(f=>f.p);
+  let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+  for(const [x,y] of pts){ if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; }
+  const kx = Math.cos(((minY+maxY)/2)*Math.PI/180);
+  const W = 700, PAD = 16;
+  const sc = (W-2*PAD)/Math.max((maxX-minX)*kx, 1e-6);
+  const H = Math.min(Math.round((maxY-minY)*sc+2*PAD), 640);
+  const sc2 = Math.min(sc, (H-2*PAD)/Math.max(maxY-minY,1e-6));
+  const ox = (W - (maxX-minX)*kx*sc2)/2, oy = (H - (maxY-minY)*sc2)/2;
+  const fx = x => ox+(x-minX)*kx*sc2, fy = y => oy+(maxY-y)*sc2;
+  let svg = '';
+  for(const f of feats){
+    const d = f.p.map((pt,i)=>(i?'L':'M')+fx(pt[0]).toFixed(1)+','+fy(pt[1]).toFixed(1)).join('')+'Z';
+    svg += `<path class="${f.cls}" d="${d}" ${f.click?`onclick="${f.click}"`:''}><title>${esc(f.tip)}</title></path>`;
+  }
+  for(const f of feats){
+    if(!f.lbl) continue;
+    let cx=0, cy=0;
+    for(const [x,y] of f.p){ cx+=fx(x); cy+=fy(y); }
+    svg += `<text class="mlbl" x="${(cx/f.p.length).toFixed(0)}" y="${(cy/f.p.length).toFixed(0)}" font-size="15">${esc(f.lbl)}</text>`;
+  }
+  // anneaux (cours d'appel) dessinés d'abord, disques par-dessus
+  dots.sort((a,b)=>((a.j.t==='ca'||a.j.t==='caa')?0:1)-((b.j.t==='ca'||b.j.t==='caa')?0:1));
+  const lblPlaced = [];
+  const placeLbl = (px, py) => {
+    let ly = py - 16;
+    for(const cand of [py-16, py+27, py-34, py+45, py-52, py+63]){
+      if(!lblPlaced.some(q=>Math.abs(q.x-px)<108 && Math.abs(q.y-cand)<15)){ ly = cand; break; }
+    }
+    lblPlaced.push({x:px, y:ly});
+    return ly;
+  };
+  const dotSvg = (j, i, px, py, withLbl, lblY) => {
+    const col = typeColor(j.t);
+    const x = px.toFixed(1), y = py.toFixed(1);
+    const tip = `<title>${esc(j.n)}</title>`;
+    const on = `onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)"`;
+    let s;
+    if(j.t==='ca'||j.t==='caa')
+      s = `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?12:10}" fill="none" stroke="${col}" stroke-width="3.8" ${on}>${tip}</circle>`;
+    else if(j.t==='tprx')
+      s = `<rect class="mdot" id="mj-${i}" x="${(px-5.5).toFixed(1)}" y="${(py-5.5).toFixed(1)}" width="11" height="11" rx="3.5" fill="${col}" stroke="var(--card)" stroke-width="1.4" ${on}>${tip}</rect>`;
+    else
+      s = `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?9:7}" fill="${col}" stroke="var(--card)" stroke-width="1.8" ${on}>${tip}</circle>`;
+    if(withLbl)
+      s += `<text class="mdotlbl" id="ml-${i}" x="${x}" y="${lblY.toFixed(1)}" font-size="14">${esc(jurShort(j.n))}</text>`;
+    return s;
+  };
+  if(!showDotLbl){
+    for(const {j,i} of dots) svg += dotSvg(j, i, fx(j.x), fy(j.y), false, 0);
+  } else {
+    // vue département : une ville = un seul point ; l'éventail s'ouvre au survol
+    const groups = [];
+    for(const x of dots){
+      const px = fx(x.j.x), py = fy(x.j.y);
+      let g = groups.find(G=>Math.hypot(G.cx-px, G.cy-py) < 34);
+      if(!g){ g = {sx:0, sy:0, cx:px, cy:py, items:[]}; groups.push(g); }
+      g.items.push({d:x, px, py});
+      g.sx += px; g.sy += py;
+      g.cx = g.sx/g.items.length; g.cy = g.sy/g.items.length;
+    }
+    groups.forEach((g, k)=>{
+      if(g.items.length === 1){
+        const it = g.items[0];
+        svg += dotSvg(it.d.j, it.d.i, it.px, it.py, true, placeLbl(it.px, it.py));
+        return;
+      }
+      const R = Math.max(30, 14 + g.items.length*7);
+      const cx = g.cx.toFixed(1), cy = g.cy.toFixed(1);
+      const ville = cityOf(g.items[0].d.j.n);
+      const ly = placeLbl(g.cx, g.cy);
+      // contenu éclaté (visible au survol) : zone tampon, ancrage, traits, points
+      let inner = `<circle class="mcatch" cx="${cx}" cy="${cy}" r="${(R+24).toFixed(0)}" onclick="grpCloseNow()"/>`
+        + `<circle cx="${cx}" cy="${cy}" r="3" fill="var(--ink-3)" opacity=".55" style="pointer-events:none"/>`;
+      let expd = '';
+      g.items.forEach((it, m)=>{
+        const a2 = -Math.PI/2 + m*2*Math.PI/g.items.length;
+        const X = g.cx + R*Math.cos(a2), Y = g.cy + R*Math.sin(a2);
+        inner += `<line x1="${cx}" y1="${cy}" x2="${X.toFixed(1)}" y2="${Y.toFixed(1)}" stroke="var(--ink-3)" stroke-width="1" opacity=".38" style="pointer-events:none"/>`;
+        const above = Math.sin(a2) < -0.3 || Math.cos(a2) < -0.5;
+        expd += dotSvg(it.d.j, it.d.i, X, Y, true, above ? Y-16 : Y+27);
+      });
+      svg += `<g class="mgroup" id="mg-${k}" onmouseenter="grpOpen(${k})" onmouseleave="grpClose()">`
+        + `<g class="mclu" onclick="grpOpen(${k})">`
+        + `<circle cx="${cx}" cy="${cy}" r="11.5" fill="var(--card)" stroke="var(--accent)" stroke-width="2.6"><title>${esc(ville)} — ${g.items.length} juridictions</title></circle>`
+        + `<text x="${cx}" y="${(g.cy+4).toFixed(1)}" font-size="11" font-weight="700" fill="var(--accent)" text-anchor="middle" style="pointer-events:none">${g.items.length}</text>`
+        + `<text class="mdotlbl" x="${cx}" y="${ly.toFixed(1)}" font-size="14">${esc(ville)}</text>`
+        + `</g><g class="mexp">${inner}${expd}</g></g>`;
+    });
+  }
+  // légende par type de juridiction
+  let legend = '';
+  if(st.level!=='fr'){
+    const ts = new Set(dots.map(x=>x.j.t));
+    const items = [];
+    if(ts.has('tj')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:var(--accent)"></span>● Tribunal judiciaire</span>`);
+    if(ts.has('ca')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:var(--mail)"></span>◯ Cour d'appel</span>`);
+    if(ts.has('tprx')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:var(--ok)"></span>▪ Tribunal de proximité</span>`);
+    if(ts.has('cph')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:#e59a3c"></span>● Prud'hommes</span>`);
+    if(ts.has('commerce')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:#2fb7a5"></span>● Trib. de commerce</span>`);
+    if(ts.has('ta')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:#e26d8f"></span>● Trib. administratif</span>`);
+    if(ts.has('caa')) items.push(`<span class="it" style="cursor:default"><span class="sw" style="background:#e26d8f"></span>◯ Cour adm. d'appel</span>`);
+    if(currentCat && !mapTypesFor(st.level==='dep'?'dep':'reg').length)
+      items.push(`<span class="shape">Le filtre « ${esc((CATS[currentCat]||currentCat))} » n'est pas cartographié — choisissez Tout, Tribunaux judiciaires ou Cours d'appel.</span>`);
+    legend = '<div class="mlegend">'+items.join('')+'</div>';
+  }
+  $('#view').innerHTML = `<div class="mapcard">
+    <div class="maphead">
+      <button id="btnback" onclick="${st.level==='fr'?'goHome()':st.level==='reg'?`carteGo('fr')`:`carteGo('reg','${(MAPD.d.find(d=>d.c===st.code)||{}).r}')`}" title="Retour">${icn('left',15)}</button>
+      <h2>${esc(titre)}</h2>
+      <span class="badge b-tj">Carte</span>
+    </div>
+    <div class="mcrumbs">${crumbs}</div>
+    <div class="maplayout">
+      <div class="mapwrap"><svg class="mlvl-${st.level}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${svg}</svg></div>
+      <div class="mside">
+        ${legend?'<div class="msidetitle">Légende</div>'+legend:''}
+        ${sousListe?'<div class="msidetitle">Juridictions</div>'+sousListe:''}
+        <p class="hint">${st.level==='fr'?'Cliquez sur une région.':st.level==='reg'?'Cliquez sur un département ou directement sur une juridiction. Les filtres en haut de page s\'appliquent à la carte.':'Cliquez sur une juridiction pour ouvrir sa fiche.'}</p>
+      </div>
+    </div>
+  </div>`;
+}
+window.hlJur = i => {
+  const svg = document.querySelector('.mapwrap svg');
+  if(!svg) return;
+  svg.classList.toggle('hovering', i!==null);
+  svg.querySelectorAll('.hl').forEach(e=>e.classList.remove('hl'));
+  if(i!==null){
+    const d = document.getElementById('mj-'+i), l = document.getElementById('ml-'+i);
+    if(d){
+      const g = d.closest('.mgroup');
+      if(g && !g.classList.contains('open')) grpOpen(+g.id.slice(3));
+      d.classList.add('hl');
+    }
+    if(l) l.classList.add('hl');
+  } else {
+    grpClose();
+  }
+};
+window.hlChip = i => {
+  const list = document.querySelector('.mside .mjlist');
+  if(!list) return;
+  list.classList.toggle('hovering', i!==null);
+  list.querySelectorAll('.hl').forEach(e=>e.classList.remove('hl'));
+  if(i!==null){
+    const c = document.getElementById('mc-'+i);
+    if(c){ c.classList.add('hl'); c.scrollIntoView({block:'nearest'}); }
+  }
+};
+window.carteCa = c => {
+  const f = findJurByName(MAPD.cas[c], ['ca']);
+  if(f) openFiche(f.id); else toast('Pas de fiche pour ' + MAPD.cas[c]);
+};
+
+/* ============================ mode lecture seule / modification ============================ */
+window.toggleModif = () => {
+  modifMode = !modifMode;
+  if(!modifMode) editMode = false;
+  document.getElementById('fabmod').classList.toggle('on', modifMode);
+  toast(modifMode ? (estProp() ? 'Mode modification activé' : 'Mode proposition activé')
+                  : 'Mode lecture seule');
+  render();
+};
+
+/* ============================ mode réorganisation ============================ */
+window.toggleEdit = async () => {
+  if(!(await sbEstProprietaire())) return;   // reorganiser touche la base principale
+  editMode = !editMode; render();
+};
+
+function getJS(jid, sid){
+  const j = DATA.juridictions.find(x=>x.id===jid);
+  const s = j && j.services.find(x=>x.id===sid);
+  return j && s ? {j, s} : null;
+}
+window.renameSvc = (jid, sid) => {
+  const f = getJS(jid, sid); if(!f) return;
+  const nom = prompt('Nouveau nom du service :', f.s.nom);
+  if(!nom || !nom.trim()) return;
+  f.s.nom = nom.trim(); f.s.u = NOW();
+  buildIndex(); save(); render();
+};
+window.setSvcDom = (jid, sid, dom) => {
+  const f = getJS(jid, sid); if(!f) return;
+  f.s.domaine = dom; f.s.u = NOW();
+  save(); render();
+};
+window.svcShift = (jid, sid, dir) => {
+  const j = DATA.juridictions.find(x=>x.id===jid); if(!j) return;
+  const i = j.services.findIndex(x=>x.id===sid);
+  const k = i + dir;
+  if(i<0 || k<0 || k>=j.services.length) return;
+  [j.services[i], j.services[k]] = [j.services[k], j.services[i]];
+  j.services[i].u = NOW(); j.services[k].u = NOW();
+  save(); render();
+};
+function bureauAt(s, bIdx){
+  return structureService(s.contacts)[bIdx] || null;
+}
+window.renameBureau = (jid, sid, bIdx) => {
+  const f = getJS(jid, sid); if(!f) return;
+  const b = bureauAt(f.s, bIdx); if(!b || !b.nom) return;
+  const nom = prompt('Nouveau nom du bureau :', b.nom);
+  if(!nom || !nom.trim()) return;
+  const key = norm(b.nom);
+  for(const c of f.s.contacts){
+    if(norm(c.groupe||'')===key){ c.groupe = nom.trim(); c.u = NOW(); }
+    if(norm(c.libelle||'')===key){ c.libelle = nom.trim(); c.u = NOW(); }
+  }
+  buildIndex(); save(); render();
+};
+window.dissolveBureau = (jid, sid, bIdx) => {
+  const f = getJS(jid, sid); if(!f) return;
+  const b = bureauAt(f.s, bIdx); if(!b || !b.nom) return;
+  if(!confirm(`Dissoudre le bureau « ${b.nom} » ? Les contacts restent dans le service, sans bureau.`)) return;
+  const key = norm(b.nom);
+  for(const c of f.s.contacts)
+    if(norm(c.groupe||'')===key){ c.groupe = ''; c.u = NOW(); }
+  buildIndex(); save(); render();
+};
+
+/* glisser-déposer d'un contact (mode réorganisation) */
+window.dragC = (ev, id) => {
+  ev.dataTransfer.setData('text/plain', id);
+  ev.dataTransfer.effectAllowed = 'move';
+};
+window.dragOver = ev => {
+  ev.preventDefault(); ev.stopPropagation();
+  ev.dataTransfer.dropEffect = 'move';
+  ev.currentTarget.classList.add('dropover');
+};
+window.dragLeave = ev => ev.currentTarget.classList.remove('dropover');
+window.dropTo = (ev, jid, sid, bIdx) => {
+  ev.preventDefault(); ev.stopPropagation();
+  ev.currentTarget.classList.remove('dropover');
+  const id = ev.dataTransfer.getData('text/plain'); if(!id) return;
+  const j = DATA.juridictions.find(x=>x.id===jid); if(!j) return;
+  const tgt = j.services.find(x=>x.id===sid); if(!tgt) return;
+  let grp = '';
+  if(bIdx>=0){ const b = structureService(tgt.contacts)[bIdx]; grp = (b && b.nom)||''; }
+  let src=null, c=null;
+  for(const s of j.services){
+    const i = s.contacts.findIndex(x=>x.id===id);
+    if(i>=0){ src=s; c=s.contacts.splice(i,1)[0]; break; }
+  }
+  if(!c) return;
+  c.groupe = grp; c.u = NOW();
+  tgt.contacts.push(c);
+  if(src!==tgt && !src.contacts.length){
+    DATA.tombstones[src.id]=NOW();
+    j.services = j.services.filter(x=>x.id!==src.id);
+  }
+  buildIndex(); save(); render();
+  toast('Déplacé vers '+tgt.nom+(grp?' › '+grp:''));
+};
+
+/* déplacement d'une entrée ou d'un bureau entier */
+let moveCtx = null;
+function openMoveDlg(jid, sid, ids, defaultGrp){
+  const j = DATA.juridictions.find(x=>x.id===jid); if(!j) return;
+  moveCtx = {jid, sid, ids};
+  $('#mvSvc').innerHTML = j.services.map(s=>
+    `<option value="${s.id}" ${s.id===sid?'selected':''}>${esc(s.nom)}</option>`).join('') +
+    `<option value="__new__">+ Nouveau service…</option>`;
+  $('#mvNew').value = '';
+  $('#mvGrp').value = defaultGrp || '';
+  const grps = [...new Set(j.services.flatMap(s=>s.contacts.map(c=>c.groupe).filter(Boolean)))];
+  $('#mvGrpList').innerHTML = grps.map(g=>`<option value="${esc(g)}">`).join('');
+  $('#dlgMove').showModal();
+}
+window.moveEntry = (jid, sid, csv) => openMoveDlg(jid, sid, csv.split(','), null);
+window.moveBureau = (jid, sid, bIdx) => {
+  const f = getJS(jid, sid); if(!f) return;
+  const b = bureauAt(f.s, bIdx); if(!b) return;
+  const ids = [...b.entries.values()].flatMap(e=>e.chans.map(c=>c.id));
+  openMoveDlg(jid, sid, ids, b.nom);
+};
+$('#formMove').addEventListener('submit', e=>{
+  if(e.submitter && e.submitter.value==='cancel'){ moveCtx=null; return; }
+  if(!moveCtx) return;
+  const j = DATA.juridictions.find(x=>x.id===moveCtx.jid); if(!j) return;
+  const src = j.services.find(x=>x.id===moveCtx.sid); if(!src) return;
+  let tgt;
+  if($('#mvSvc').value==='__new__'){
+    const nom = $('#mvNew').value.trim();
+    if(!nom){ e.preventDefault(); alert('Donnez un nom au nouveau service.'); return; }
+    tgt = j.services.find(x=>norm(x.nom)===norm(nom));
+    if(!tgt){
+      tgt = {id:uid('s'), nom, domaine:src.domaine||'autres', contacts:[], u:NOW()};
+      j.services.push(tgt);
+    }
+  } else {
+    tgt = j.services.find(x=>x.id===$('#mvSvc').value);
+  }
+  if(!tgt) return;
+  const grp = $('#mvGrp').value.trim();
+  let moved = 0;
+  for(const id of moveCtx.ids){
+    const i = src.contacts.findIndex(c=>c.id===id);
+    if(i<0) continue;
+    const c = src.contacts.splice(i,1)[0];
+    c.groupe = grp; c.u = NOW();
+    if(tgt!==src) tgt.contacts.push(c); else src.contacts.push(c);
+    moved++;
+  }
+  // service source vidé : on le retire
+  if(tgt!==src && !src.contacts.length){
+    DATA.tombstones[src.id] = NOW();
+    j.services = j.services.filter(x=>x.id!==src.id);
+  }
+  openState[tgt.id] = true;
+  moveCtx = null;
+  buildIndex(); save(); render();
+  toast(moved+' contact'+(moved>1?'s':'')+' déplacé'+(moved>1?'s':'')+' vers '+tgt.nom);
+});
+
+/* ============================ ajout / édition ============================ */
+let addCtx = {};
+function fillLists(){
+  $('#listJur').innerHTML = DATA.juridictions.map(j=>`<option value="${esc(j.nom)}">`).join('');
+  refreshSvcList();
+}
+function refreshSvcList(){
+  const j = DATA.juridictions.find(x=>norm(x.nom)===norm($('#fJur').value.trim()));
+  $('#listSvc').innerHTML = j ? j.services.map(s=>`<option value="${esc(s.nom)}">`).join('') : '';
+  const s = j && j.services.find(x=>norm(x.nom)===norm($('#fSvc').value.trim()));
+  const grps = s ? [...new Set(s.contacts.map(c=>c.groupe).filter(Boolean))] : [];
+  $('#listGrp').innerHTML = grps.map(g=>`<option value="${esc(g)}">`).join('');
+}
+/* lignes dynamiques numéro/mail du formulaire */
+function makeRow(type, val){
+  const div = document.createElement('div');
+  div.className = 'crow';
+  div.innerHTML = `<select>
+      <option value="tel">Tél</option>
+      <option value="email">Mail</option>
+      <option value="fax">Fax</option>
+    </select>
+    <input placeholder="01 23 45 67 89 ou greffe@justice.fr" autocomplete="off">
+    <button type="button" class="mini delrow" title="Retirer">${icn('x',12)}</button>`;
+  div.querySelector('select').value = type||'tel';
+  div.querySelector('input').value = val||'';
+  div.querySelector('input').addEventListener('input', e=>{
+    const v = e.target.value, sel = div.querySelector('select');
+    if(v.includes('@')) sel.value = 'email';
+    else if(sel.value==='email' && digits(v).length>=6) sel.value = 'tel';
+  });
+  div.querySelector('.delrow').addEventListener('click', ()=>{
+    div.remove();
+    if(!$('#fRows').children.length) $('#fRows').appendChild(makeRow());
+  });
+  return div;
+}
+function resetRows(rows){
+  const box = $('#fRows'); box.innerHTML = '';
+  for(const r of (rows && rows.length ? rows : [{}]))
+    box.appendChild(makeRow(r.type, r.val));
+}
+function collectRows(){
+  const out = [];
+  for(const div of $('#fRows').children){
+    let val = div.querySelector('input').value.trim();
+    if(!val) continue;
+    let type = div.querySelector('select').value;
+    if(val.includes('@')) type = 'email';
+    if(type!=='email' && digits(val).length===10)
+      val = digits(val).replace(/(\d\d)(?=\d)/g,'$1 ').trim();
+    out.push({type, val});
+  }
+  return out;
+}
+$('#btnAddRow').addEventListener('click', ()=>{
+  const r = makeRow();
+  $('#fRows').appendChild(r);
+  r.querySelector('input').focus();
+});
+
+window.openAdd = (jid, sid) => {
+  addCtx = {edit:null};
+  $('#addTitle').textContent = 'Ajouter une entrée';
+  $('#addOk').textContent = 'Ajouter';
+  fillLists();
+  const j = (jid && DATA.juridictions.find(x=>x.id===jid)) ||
+            (ficheId && DATA.juridictions.find(x=>x.id===ficheId));
+  $('#fJur').value = j ? j.nom : '';
+  const s = j && sid && j.services.find(x=>x.id===sid);
+  $('#fSvc').value = s ? s.nom : '';
+  $('#fGrp').value=''; $('#fLib').value=''; $('#fNote').value='';
+  resetRows();
+  const q = $('#q').value.trim();
+  if(!j && q && !/\d|@/.test(q)) $('#fJur').value = q;
+  refreshSvcList();
+  $('#dlgAdd').showModal();
+};
+window.openEdit = id => {
+  const f = findContact(id); if(!f) return;
+  addCtx = {edit:id};
+  $('#addTitle').textContent = 'Modifier le contact';
+  $('#addOk').textContent = 'Enregistrer';
+  fillLists();
+  $('#fJur').value = f.j.nom; $('#fSvc').value = f.s.nom;
+  $('#fGrp').value = f.c.groupe||''; $('#fLib').value = f.c.libelle||'';
+  $('#fNote').value = f.c.note||'';
+  resetRows([{type:f.c.type, val:f.c.valeur}]);
+  refreshSvcList();
+  $('#dlgAdd').showModal();
+};
+$('#fJur').addEventListener('input', refreshSvcList);
+$('#fSvc').addEventListener('input', refreshSvcList);
+$('#formAdd').addEventListener('submit', async e=>{
+  if(e.submitter && e.submitter.value==='cancel') return;
+  const rows = collectRows();
+  if(!rows.length){
+    e.preventDefault();
+    alert('Renseignez au moins un numéro ou une adresse mail.');
+    return;
+  }
+  const nomJ = $('#fJur').value.trim();
+  const nomS = $('#fSvc').value.trim()||'Général';
+  // Un membre ne modifie jamais la base principale : sa saisie part en
+  // quarantaine, le proprietaire l integrera ou non depuis les Reglages.
+  if(!(await sbEstProprietaire())){
+    await propEnvoyer({
+      juridiction: nomJ, categorie: $('#fCat').value, service: nomS,
+      libelle: $('#fLib').value.trim(), groupe: $('#fGrp').value.trim(),
+      note: $('#fNote').value.trim(),
+      canaux: rows.map(r => ({type: r.type, valeur: r.val}))
+    });
+    return;
+  }
+  let j = DATA.juridictions.find(x=>norm(x.nom)===norm(nomJ));
+  if(!j){
+    j = {id:uid('j'), nom:nomJ, categorie:$('#fCat').value, adresse:'', services:[], u:NOW()};
+    DATA.juridictions.push(j);
+    DATA.juridictions.sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  }
+  let s = j.services.find(x=>norm(x.nom)===norm(nomS));
+  if(!s){ s = {id:uid('s'), nom:nomS, contacts:[], u:NOW()}; j.services.push(s); }
+  const libelle = $('#fLib').value.trim();
+  const groupe = $('#fGrp').value.trim();
+  const note = $('#fNote').value.trim();
+  if(addCtx.edit){
+    const f = findContact(addCtx.edit);
+    if(f){
+      const first = rows.shift();
+      if(f.s!==s){ f.s.contacts = f.s.contacts.filter(c=>c.id!==addCtx.edit); s.contacts.push(f.c); }
+      Object.assign(f.c, {type:first.type, valeur:first.val, libelle, groupe, note, u:NOW()});
+    }
+    // lignes supplémentaires ajoutées pendant l'édition → nouveaux contacts de la même entrée
+    for(const r of rows)
+      s.contacts.push({id:uid('c'), type:r.type, valeur:r.val, libelle, groupe,
+        note:'', ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+    toast('Contact modifié');
+  } else {
+    rows.forEach((r, i)=>{
+      s.contacts.push({id:uid('c'), type:r.type, valeur:r.val, libelle, groupe,
+        note: i===0 ? note : '', ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+    });
+    toast(rows.length>1 ? rows.length+' contacts ajoutés à '+j.nom : 'Contact ajouté à '+j.nom);
+    ficheId = j.id;
+    history.replaceState(null,'','#f/'+j.id);
+    openState[s.id] = true;
+  }
+  buildIndex(); save(); renderChips(); render();
+});
+$('#fab').addEventListener('click', ()=>openAdd());
+
+/* ============================ propositions des membres ============================
+   Les membres enrichissent l annuaire sans toucher a la base principale : leurs
+   ajouts sont deposes dans la table « propositions » et n apparaissent chez les
+   autres qu une fois integres par le proprietaire.                              */
+async function propEnvoyer(donnees){
+  if(!sbUser){ toast('Connexion requise'); return; }
+  try{
+    const {error} = await sb.from('propositions').insert({donnees});
+    if(error){ toast('Échec : '+error.message); return; }
+    document.getElementById('dlgAdd').close();
+    toast('Proposition envoyée — elle sera examinée avant publication');
+  }catch(e){ toast('Échec : '+e.message); }
+}
+
+function propResume(d){
+  const canaux = (d.canaux||[]).map(c=>esc(c.valeur)).join(', ');
+  return `<b>${esc(d.juridiction||'?')}</b> · ${esc(d.service||'Général')}`
+       + (d.libelle ? ' · '+esc(d.libelle) : '')
+       + `<br><span class="hint">${canaux || '(aucun canal)'}${d.note ? ' — '+esc(d.note) : ''}</span>`;
+}
+
+/* Integration : on rejoue exactement le chemin d ajout du proprietaire. */
+function propIntegrer(d){
+  const nomJ = (d.juridiction||'').trim(); if(!nomJ) return false;
+  const nomS = (d.service||'').trim() || 'Général';
+  let j = DATA.juridictions.find(x=>norm(x.nom)===norm(nomJ));
+  if(!j){
+    j = {id:uid('j'), nom:nomJ, categorie:d.categorie||'autre', adresse:'', services:[], u:NOW()};
+    DATA.juridictions.push(j);
+    DATA.juridictions.sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  }
+  let s = j.services.find(x=>norm(x.nom)===norm(nomS));
+  if(!s){ s = {id:uid('s'), nom:nomS, contacts:[], u:NOW()}; j.services.push(s); }
+  (d.canaux||[]).forEach((r, i) => {
+    s.contacts.push({id:uid('c'), type:r.type||'tel', valeur:r.valeur,
+      libelle:d.libelle||'', groupe:d.groupe||'', note: i===0 ? (d.note||'') : '',
+      ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+  });
+  return true;
+}
+
+window.propOk = async id => {
+  if(!(await sbEstProprietaire())) return;
+  const {data, error} = await sb.from('propositions').select('donnees').eq('id', id).single();
+  if(error || !data){ toast('Proposition introuvable'); return; }
+  if(!propIntegrer(data.donnees)){ toast('Proposition incomplète'); return; }
+  await sb.from('propositions').update({etat:'integree'}).eq('id', id);
+  buildIndex(); save(); renderChips(); render();
+  toast("Proposition intégrée à l’annuaire");
+  sbAccountUI();
+};
+window.propNon = async id => {
+  if(!(await sbEstProprietaire())) return;
+  await sb.from('propositions').update({etat:'refusee'}).eq('id', id);
+  toast('Proposition écartée');
+  sbAccountUI();
+};
+
+/* ============================ réglages / export-import ============================ */
+$('#btnsettings').addEventListener('click', ()=>{
+  const nc = DATA.juridictions.reduce((n,j)=>n+j.services.reduce((m,s)=>m+s.contacts.length,0),0);
+  $('#metaInfo').textContent = `${DATA.juridictions.length} juridictions, ${nc.toLocaleString('fr-FR')} contacts. `+
+    `Dernière modification : ${new Date(DATA.updatedAt).toLocaleString('fr-FR')}.`;
+  sbAccountUI();
+  sbEstProprietaire().then(prop => {
+    document.getElementById('ownerBox').style.display = prop ? '' : 'none';
+  });
+  $('#dlgSettings').showModal();
+});
+$('#btnCloseSettings').addEventListener('click', ()=>$('#dlgSettings').close());
+$('#btnExport').addEventListener('click', async ()=>{
+  if(!(await sbEstProprietaire())) return;
+  const blob = new Blob([JSON.stringify(DATA,(k,v)=>k.startsWith('_')?undefined:v)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'juritel-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+});
+$('#btnImport').addEventListener('click', async ()=>{
+  if(!(await sbEstProprietaire())) return;
+  $('#fileImport').click();
+});
+$('#fileImport').addEventListener('change', async e=>{
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    const d = JSON.parse(await f.text());
+    if(!Array.isArray(d.juridictions)) throw new Error('format invalide');
+    if(!confirm(`Remplacer les données actuelles par « ${f.name} » (${d.juridictions.length} juridictions) ?`)) return;
+    DATA = d; DATA.tombstones = DATA.tombstones||{};
+    buildIndex(); save(); renderChips(); render();
+    toast('Import réussi'); $('#dlgSettings').close();
+  }catch(err){ alert('Import impossible : '+err.message); }
+  e.target.value='';
+});
+
+/* ============================ recherche : événements ============================ */
+let qTimer;
+$('#q').addEventListener('input', ()=>{
+  clearTimeout(qTimer);
+  qTimer = setTimeout(()=>{
+    shownCards = 60;
+    if(ficheId){ ficheId = null; history.pushState(null,'',location.pathname+location.search); }
+    render();
+  }, 90);
+});
+$('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownCards=60; render(); $('#q').focus(); });
+document.addEventListener('keydown', e=>{
+  if(e.key==='/' && document.activeElement!==$('#q') && !document.querySelector('dialog[open]')){
+    e.preventDefault(); $('#q').focus(); $('#q').select();
+  }
+  if(e.key==='Escape' && document.getElementById('tools').classList.contains('show')){
+    closeTools(); return;
+  }
+  if(e.key==='Escape' && ficheId && !document.querySelector('dialog[open]')) goHome();
+});
+
+/* ============================================================
+   SYNCHRONISATION GOOGLE DRIVE (scope drive.file)
+   ============================================================ */
+const Drive = (() => {
+  const LS_TOKEN = 'juritel.tok';
+  const LS_HINT = 'juritel.hint';
+  let token=null, tokenClient=null, fileId=localStorage.getItem(LS_FILEID)||null;
+  try{ token = JSON.parse(localStorage.getItem(LS_TOKEN)||'null'); }catch(e){}
+  let pushTimer=null, busy=false, lastRemoteRev=null;
+  const enabled = () => !!CLIENT_ID;
+  const on = () => enabled() && localStorage.getItem(LS_DRIVE)==='1';
+
+  function setState(cls, txt){
+    $('#syncstate').className = cls; $('#synctxt').textContent = txt;
+  }
+  function refreshSettingsUI(){
+    if(!enabled()){
+      $('#btnDrive').style.display='none'; $('#rowDriveOff').style.display='none';
+      $('#driveHint').textContent = 'Synchronisation Google Drive non configurée.';
+      return;
+    }
+    $('#btnDrive').style.display = on()?'none':'flex';
+    $('#rowDriveOff').style.display = on()?'flex':'none';
+    const sb = document.getElementById('shareBox');
+    if(sb) sb.style.display = on()?'block':'none';
+    $('#driveHint').textContent = on() ?
+      'Connecté : le fichier « '+DRIVE_FILENAME+' » de votre Drive est synchronisé automatiquement entre vos appareils.' :
+      'Vos données seront stockées dans un fichier de votre Google Drive et synchronisées entre tous vos appareils.';
+  }
+  async function saveHint(t){
+    // mémorise l'adresse du compte pour les reconnexions silencieuses
+    if(localStorage.getItem(LS_HINT)) return;
+    try{
+      const r = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)',{headers:H(t)});
+      if(r.ok){
+        const d = await r.json();
+        if(d.user?.emailAddress) localStorage.setItem(LS_HINT, d.user.emailAddress);
+      }
+    }catch(e){}
+  }
+  async function ensureToken(interactive){
+    if(!enabled()) return null;
+    // jeton persistant : un rafraîchissement de page ne redemande rien
+    if(token && token.exp > Date.now()+60000) return token.v;
+    if(!window.google?.accounts?.oauth2){ setState('err','lib Google absente'); return null; }
+    if(!tokenClient){
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id:CLIENT_ID, scope:'https://www.googleapis.com/auth/drive.file',
+        callback:()=>{}, error_callback:()=>{}});
+    }
+    return new Promise(resolve=>{
+      tokenClient.callback = resp=>{
+        if(resp.access_token){
+          token = {v:resp.access_token, exp:Date.now()+(resp.expires_in-60)*1000};
+          try{ localStorage.setItem(LS_TOKEN, JSON.stringify(token)); }catch(e){}
+          saveHint(token.v);
+          resolve(token.v);
+        } else resolve(null);
+      };
+      tokenClient.error_callback = ()=>resolve(null);
+      // prompt:'' = interaction minimale : le consentement ne réapparaît que
+      // si Google l'exige ; avec le compte mémorisé en indice, la reprise de
+      // session est silencieuse
+      const hint = localStorage.getItem(LS_HINT)||undefined;
+      try{ tokenClient.requestAccessToken({prompt:'', hint}); }
+      catch(e){ resolve(null); }
+    });
+  }
+  const H = t => ({'Authorization':'Bearer '+t});
+  const exportJson = () => JSON.stringify(DATA,(k,v)=>k.startsWith('_')?undefined:v);
+
+  async function findOrCreate(t){
+    if(fileId) return fileId;
+    // chercher sous le nom actuel ET l'ancien ; s'il existe plusieurs fichiers
+    // (doublon créé par un poste vierge), prendre le plus gros puis le plus récent
+    const r = await fetch('https://www.googleapis.com/drive/v3/files?q='+
+      encodeURIComponent(`(name='${DRIVE_FILENAME}' or name='annuaire-justice-data.json') and trashed=false`)+
+      '&fields=files(id,name,size,modifiedTime)',{headers:H(t)});
+    if(r.ok){
+      const d = await r.json();
+      const fs = d.files||[];
+      if(fs.length){
+        fs.sort((a,b)=>((+b.size||0)-(+a.size||0)) ||
+          String(b.modifiedTime||'').localeCompare(String(a.modifiedTime||'')));
+        fileId = fs[0].id;
+        if(fs[0].name !== DRIVE_FILENAME){
+          await fetch('https://www.googleapis.com/drive/v3/files/'+fileId,{
+            method:'PATCH', headers:{...H(t),'Content-Type':'application/json'},
+            body:JSON.stringify({name:DRIVE_FILENAME})});
+        }
+      }
+    }
+    if(!fileId){
+      r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{
+        method:'POST', headers:{...H(t),'Content-Type':'multipart/related; boundary=BND'},
+        body:`--BND\r\nContent-Type: application/json\r\n\r\n`+
+          JSON.stringify({name:DRIVE_FILENAME, mimeType:'application/json'})+
+          `\r\n--BND\r\nContent-Type: application/json\r\n\r\n`+exportJson()+`\r\n--BND--`});
+      if(r.ok) fileId = (await r.json()).id;
+    }
+    if(fileId) localStorage.setItem(LS_FILEID, fileId);
+    return fileId;
+  }
+  async function meta(t){
+    const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=version,modifiedTime`,{headers:H(t)});
+    return r.ok ? r.json() : null;
+  }
+  function mergeData(remote){
+    if(!remote || !Array.isArray(remote.juridictions)) return false;
+    // base régénérée (dataset différent) : on adopte la plus récente au lieu
+    // de fusionner, sinon les identifiants différents créeraient des doublons
+    if((remote.dataset||'') !== (DATA.dataset||'')){
+      const remotePleine = (remote.juridictions||[]).length > 0;
+      const localePleine = DATA.juridictions.length > 0;
+      // règle d'or : une base vide ne l'emporte jamais sur une base pleine
+      const adopter = remotePleine &&
+        (!localePleine || (remote.updatedAt||0) > (DATA.updatedAt||0));
+      if(adopter){
+        DATA.juridictions = remote.juridictions;
+        DATA.tombstones = remote.tombstones||{};
+        DATA.dataset = remote.dataset;
+        DATA.updatedAt = remote.updatedAt;
+        toast('Base de données chargée depuis votre Drive');
+      }
+      return true; // sinon : notre base (pleine) est conservée, le push l'imposera
+    }
+    // même génération : si la distante est pleine et la locale vide, adopter telle quelle
+    if(!DATA.juridictions.length && (remote.juridictions||[]).length){
+      DATA.juridictions = remote.juridictions;
+      DATA.tombstones = remote.tombstones||{};
+      DATA.updatedAt = remote.updatedAt||Date.now();
+      toast('Base de données chargée depuis votre Drive');
+      return true;
+    }
+    const tomb = {...(remote.tombstones||{}), ...DATA.tombstones};
+    const byId = arr => Object.fromEntries(arr.map(x=>[x.id,x]));
+    const newer = (a,b) => (a.u||0)>=(b.u||0) ? a : b;
+    // carte globale des contacts locaux : détecte les déplacements entre services
+    const localLoc = new Map();
+    for(const j of DATA.juridictions) for(const s of j.services)
+      for(const c of s.contacts) localLoc.set(c.id, {list:s.contacts, c, sid:s.id});
+    const jl = byId(DATA.juridictions);
+    for(const rj of remote.juridictions){
+      if(!jl[rj.id]){ jl[rj.id]=rj; continue; }
+      const lj = jl[rj.id];
+      const keep = newer(lj, rj);
+      const sl = byId(lj.services);
+      for(const rs of rj.services){
+        if(!sl[rs.id]){ sl[rs.id]=rs; continue; }
+        const ls = sl[rs.id];
+        const cl = byId(ls.contacts);
+        for(const rc of rs.contacts){
+          if(!cl[rc.id]){
+            const loc = localLoc.get(rc.id);
+            if(loc && loc.sid!==rs.id){
+              // le contact existe ailleurs en local : le déplacement le plus
+              // récent l'emporte
+              if((loc.c.u||0) >= (rc.u||0)) continue;
+              const k = loc.list.indexOf(loc.c);
+              if(k>=0) loc.list.splice(k,1);
+            }
+            cl[rc.id]=rc; continue;
+          }
+          const lc = cl[rc.id];
+          cl[rc.id] = {...newer(lc,rc),
+            ok:Math.max(lc.ok||0,rc.ok||0), ko:Math.max(lc.ko||0,rc.ko||0),
+            lastOk:Math.max(lc.lastOk||0,rc.lastOk||0)||null,
+            lastTry:Math.max(lc.lastTry||0,rc.lastTry||0)||null};
+        }
+        ls.contacts = Object.values(cl);
+        const sKeep = newer(ls,rs);
+        ls.nom = sKeep.nom;
+        if(sKeep.domaine) ls.domaine = sKeep.domaine;
+      }
+      lj.services = Object.values(sl);
+      lj.nom = keep.nom; lj.categorie = keep.categorie; lj.adresse = keep.adresse;
+    }
+    let js = Object.values(jl).filter(j=>!(tomb[j.id]>(j.u||0)));
+    for(const j of js){
+      j.services = j.services.filter(s=>!(tomb[s.id]>(s.u||0)));
+      for(const s of j.services)
+        s.contacts = s.contacts.filter(c=>!(tomb[c.id]>(c.u||0)));
+    }
+    DATA.juridictions = js;
+    DATA.tombstones = tomb;
+    return true;
+  }
+  window.mergeRemote = mergeData;
+  async function pull(interactive){
+    if(!on()) return;
+    const t = await ensureToken(interactive); if(!t){ setState('err','hors ligne'); return; }
+    setState('work','sync…'); busy = true;
+    try{
+      if(!await findOrCreate(t)){ setState('err','erreur Drive'); return; }
+      const m = await meta(t);
+      const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,{headers:H(t)});
+      if(r.ok){
+        const remote = await r.json().catch(()=>null);
+        if(remote && mergeData(remote)){
+          buildIndex();
+          try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }catch(e){}
+          renderChips(); render();
+        }
+        lastRemoteRev = m?.version||null;
+        await push(true);
+        setState('on','synchronisé');
+      } else setState('err','erreur lecture');
+    } finally { busy = false; }
+  }
+  async function push(skipCheck){
+    if(!on() || !fileId) return;
+    const t = await ensureToken(false); if(!t){ setState('err','reconnexion requise'); return; }
+    setState('work','envoi…');
+    if(!skipCheck){
+      const m = await meta(t);
+      if(m && lastRemoteRev && m.version!==lastRemoteRev){ await pull(false); return; }
+    }
+    const r = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media&fields=version`,{
+      method:'PATCH', headers:{...H(t),'Content-Type':'application/json'}, body:exportJson()});
+    if(r.ok){ lastRemoteRev = (await r.json()).version; setState('on','synchronisé'); }
+    else setState('err','erreur envoi');
+  }
+  function schedulePush(){
+    if(!on()) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(()=>{ if(!busy) push(false); }, 2500);
+  }
+  async function connect(){
+    const t = await ensureToken(true);
+    if(!t){ toast('Connexion Google refusée'); return; }
+    localStorage.setItem(LS_DRIVE,'1');
+    refreshSettingsUI();
+    await pull(false);
+    if(!DATA.juridictions.length)
+      toast('Drive connecté, mais aucune base trouvée — vérifiez que c\'est le même compte Google que sur votre poste principal');
+    else
+      toast('Google Drive connecté');
+  }
+  function disconnect(){
+    localStorage.removeItem(LS_DRIVE); localStorage.removeItem(LS_FILEID);
+    localStorage.removeItem(LS_TOKEN); localStorage.removeItem(LS_HINT);
+    fileId=null; token=null;
+    setState('','local'); refreshSettingsUI();
+  }
+  function init(){
+    if(!enabled()){ setState('','local'); return; }
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = ()=>{ if(on()) pull(false); };
+    document.head.appendChild(s);
+    if(!on()) setState('','local');
+    document.addEventListener('visibilitychange', ()=>{
+      if(!document.hidden && on() && !busy) pull(false);
+    });
+    setInterval(()=>{ if(on() && !busy && !document.hidden) pull(false); }, 5*60*1000);
+  }
+  const getToken = interactive => ensureToken(!!interactive);
+  function fileIdNow(){ return fileId; }
+  function useFile(id){
+    fileId = id;
+    localStorage.setItem(LS_FILEID, id);
+    localStorage.setItem(LS_DRIVE, '1');
+    lastRemoteRev = null;
+    refreshSettingsUI();
+    pull(false);
+  }
+  return {init, connect, disconnect, schedulePush, refreshSettingsUI, token: getToken, fileIdNow, useFile};
+})();
+$('#btnDrive').addEventListener('click', ()=>Drive.connect());
+$('#btnDriveOff').addEventListener('click', ()=>{ Drive.disconnect(); toast('Drive déconnecté'); });
+$('#btnShare').addEventListener('click', ()=>driveInvite());
+$('#btnJoin').addEventListener('click', ()=>driveJoin());
+// l'indicateur de synchronisation sert de bouton de reconnexion en cas d'erreur
+$('#syncstate').addEventListener('click', ()=>{
+  if($('#syncstate').classList.contains('err')) Drive.connect();
+});
+
+
+/* ============================ thème ============================ */
+// application installable : mise en cache de la coquille pour un demarrage
+// instantane et un fonctionnement sans reseau
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW non enregistre', e));
+  });
+}
+function applyTri(){
+  const sel = document.getElementById('triContacts');
+  if(sel) sel.value = localStorage.getItem(LS_TRI) || 'annuaire';
+}
+applyTri();
+document.getElementById('triContacts').addEventListener('change', e => {
+  localStorage.setItem(LS_TRI, e.target.value);
+  render();
+});
+const LS_UI = 'juritel.uiscale';
+function applyUiScale(){
+  const v = localStorage.getItem(LS_UI) || 'auto';
+  if(v === 'auto') document.documentElement.removeAttribute('data-ui');
+  else document.documentElement.setAttribute('data-ui', v);
+  const sel = document.getElementById('uiScale');
+  if(sel) sel.value = v;
+}
+applyUiScale();
+document.getElementById('uiScale').addEventListener('change', e => {
+  localStorage.setItem(LS_UI, e.target.value);
+  applyUiScale();
+});
+const LS_THEME = 'juritel.theme';
+function currentTheme(){
+  const t = localStorage.getItem(LS_THEME);
+  if(t==='dark' || t==='light') return t;
+  // premier passage : on part du réglage système, puis le choix est mémorisé
+  return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function applyTheme(){
+  const t = currentTheme();
+  document.documentElement.dataset.theme = t;
+  const el = document.getElementById('btntheme');
+  el.innerHTML = icn(t==='dark' ? 'moon' : 'sun', 17);
+  el.title = 'Thème '+(t==='dark' ? 'sombre' : 'clair')+' — cliquer pour basculer';
+}
+document.getElementById('btntheme').addEventListener('click', ()=>{
+  const next = currentTheme()==='dark' ? 'light' : 'dark';
+  localStorage.setItem(LS_THEME, next);
+  applyTheme();
+  toast('Thème '+(next==='dark' ? 'sombre' : 'clair'));
+});
+
+
+/* ---------- partage de la base entre comptes Google ---------- */
+window.driveInvite = async () => {
+  const mail = (document.getElementById('shareMail').value||'').trim();
+  if(!mail.includes('@')){ toast('Adresse e-mail invalide'); return; }
+  const t = await Drive.token(); if(!t){ toast('Reconnectez Google Drive'); return; }
+  const fid = Drive.fileIdNow();
+  if(!fid){ toast('Aucun fichier de base à partager — synchronisez d\'abord'); return; }
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fid}/permissions?sendNotificationEmail=true`,{
+    method:'POST', headers:{'Authorization':'Bearer '+t, 'Content-Type':'application/json'},
+    body: JSON.stringify({role:'writer', type:'user', emailAddress: mail})});
+  if(r.ok){
+    toast('Invitation envoyée à '+mail);
+    document.getElementById('shareMail').value='';
+  } else {
+    const e = await r.json().catch(()=>null);
+    toast('Échec du partage : '+((e&&e.error&&e.error.message)||r.status));
+  }
+};
+let pickerReady = false;
+function loadPicker(){
+  return new Promise(res=>{
+    if(pickerReady) return res(true);
+    const s = document.createElement('script');
+    s.src = 'https://apis.google.com/js/api.js';
+    s.onload = ()=>gapi.load('picker', ()=>{ pickerReady = true; res(true); });
+    s.onerror = ()=>res(false);
+    document.head.appendChild(s);
+  });
+}
+window.driveJoin = async () => {
+  if(!PICKER_API_KEY){
+    document.getElementById('joinHint').textContent =
+      'Fonction à activer : créez une clé API (console Google, API « Google Picker » activée) et transmettez-la pour finaliser.';
+    return;
+  }
+  const t = await Drive.token(true); if(!t){ toast('Connexion Google requise'); return; }
+  if(!await loadPicker()){ toast('Sélecteur Google indisponible'); return; }
+  const view = new google.picker.DocsView(google.picker.ViewId.DOCS)
+    .setMode(google.picker.DocsViewMode.LIST)
+    .setQuery(DRIVE_FILENAME);
+  const shared = new google.picker.DocsView(google.picker.ViewId.DOCS)
+    .setOwnedByMe(false).setMode(google.picker.DocsViewMode.LIST)
+    .setQuery(DRIVE_FILENAME);
+  const picker = new google.picker.PickerBuilder()
+    .setOAuthToken(t).setDeveloperKey(PICKER_API_KEY)
+    .setAppId(CLIENT_ID.split('-')[0])   // enregistre le droit d'accès drive.file au fichier choisi
+    .setTitle('Choisissez le fichier juritel-data.json partagé avec vous')
+    .addView(shared).addView(view)
+    .setCallback(data=>{
+      if(data.action === google.picker.Action.PICKED && data.docs && data.docs[0]){
+        Drive.useFile(data.docs[0].id);
+        toast('Base partagée rejointe — synchronisation…');
+      }
+    })
+    .build();
+  picker.setVisible(true);
+};
+
+
+/* ============================ compte, liste blanche et synchronisation (Supabase) ============================ */
+let sb = null, sbUser = null, sbAdmis = false, sbTimer = null, sbBusy = false, sbTs = null;
+const sbClean = () => JSON.parse(JSON.stringify(DATA, (k,v)=>k.startsWith('_')?undefined:v));
+// L indicateur ne reste affiche que tant qu il a quelque chose a dire : il
+// reapparait des qu un envoi commence et s efface peu apres « synchronise ».
+let sbFadeT = null;
+function sbState(cls, txt){
+  const el = $('#syncstate');
+  clearTimeout(sbFadeT);
+  el.className = cls;                       // retire aussi fade/hidden
+  $('#synctxt').textContent = txt;
+  if(cls === 'on'){
+    sbFadeT = setTimeout(() => {
+      el.classList.add('fade');
+      sbFadeT = setTimeout(() => el.classList.add('hidden'), 400);
+    }, 1600);
+  }
+}
+
+async function sbGateUpdate(){
+  const gate = document.getElementById('gate');
+  if(!sbUser){
+    sbAdmis = false;
+    gate.classList.remove('off');
+    document.getElementById('gforms').style.display = '';
+    document.getElementById('gdenied').style.display = 'none';
+    sbState('', 'hors connexion');
+    return;
+  }
+  // L autorisation est verifiee aupres du serveur. Hors ligne cet appel echoue :
+  // on se rabat alors sur la derniere reponse connue pour ce compte, sinon un
+  // utilisateur pourtant admis verrait « non autorise ». Sans risque : les donnees
+  // sont de toute facon protegees cote serveur (RLS) et seules celles deja
+  // telechargees par ce compte sont lisibles hors ligne.
+  const cleAdmis = 'juritel.admis.' + sbUser.id;
+  let admis = false, reseauKo = !navigator.onLine;
+  try{
+    const {data, error} = await sb.rpc('est_admis');
+    if(error) reseauKo = true;
+    else { admis = data === true; localStorage.setItem(cleAdmis, admis ? '1' : '0'); }
+  }catch(e){ reseauKo = true; }
+  let horsLigne = false;
+  if(!admis && reseauKo && localStorage.getItem(cleAdmis) === '1'){ admis = true; horsLigne = true; }
+  sbAdmis = admis;
+  if(!admis){
+    gate.classList.remove('off');
+    document.getElementById('gforms').style.display = 'none';
+    document.getElementById('gdenied').style.display = '';
+    document.getElementById('gwho').textContent = sbUser.email||'';
+    sbAskState();
+    sbState('err', 'non autorisé');
+    return;
+  }
+  gate.classList.add('off');
+  if(horsLigne){ sbState('', 'hors ligne'); return; }
+  sbPull().then(() => sbVotesCharger());
+  sbNotifDemandes();
+}
+
+window.sbLogin = async () => {
+  const email = document.getElementById('gmail').value.trim();
+  const password = document.getElementById('gpass').value;
+  if(!email || !password){ document.getElementById('gmsg').textContent = 'Renseignez e-mail et mot de passe.'; return; }
+  document.getElementById('gmsg').textContent = 'Connexion…';
+  const {error} = await sb.auth.signInWithPassword({email, password});
+  document.getElementById('gmsg').textContent = error ? 'Échec : '+error.message : '';
+};
+window.sbSignup = async () => {
+  const email = document.getElementById('gmail').value.trim();
+  const password = document.getElementById('gpass').value;
+  if(!email || !password){ document.getElementById('gmsg').textContent = 'Renseignez e-mail et mot de passe (6 caractères min.).'; return; }
+  const {data, error} = await sb.auth.signUp({email, password});
+  document.getElementById('gmsg').textContent = error ? 'Échec : '+error.message
+    : (data.session ? '' : 'Compte créé — vérifiez votre boîte mail pour confirmer, puis connectez-vous.');
+};
+window.sbGoogle = async () => {
+  const {error} = await sb.auth.signInWithOAuth({provider:'google',
+    options:{redirectTo: location.origin + location.pathname}});
+  if(error) document.getElementById('gmsg').textContent =
+    'Connexion Google non disponible ('+error.message+') — utilisez e-mail/mot de passe.';
+};
+window.sbLogout = async () => { await sb.auth.signOut(); location.reload(); };
+window.sbAsk = async () => {
+  if(!sbUser) return;
+  const email = (sbUser.email||'').toLowerCase();
+  const {error} = await sb.from('demandes').insert({email});
+  const msg = document.getElementById('gaskmsg');
+  if(!error || (error.code==='23505')){   // 23505 = déjà demandé
+    msg.textContent = 'Demande envoyée — le propriétaire la verra à sa prochaine connexion.';
+    document.getElementById('gask').style.display = 'none';
+  } else {
+    msg.textContent = 'Échec : '+error.message;
+  }
+};
+async function sbAskState(){
+  // sur l'écran refusé : la demande est-elle déjà déposée ?
+  try{
+    const {data} = await sb.from('demandes').select('email').limit(1);
+    if(data && data.length){
+      document.getElementById('gask').style.display = 'none';
+      document.getElementById('gaskmsg').textContent = 'Demande en attente de validation par le propriétaire.';
+    } else {
+      document.getElementById('gask').style.display = '';
+      document.getElementById('gaskmsg').textContent = '';
+    }
+  }catch(e){}
+}
+
+async function sbPull(){
+  if(!sbAdmis || sbBusy) return;
+  sbBusy = true; sbState('work','sync…');
+  try{
+    const {data, error} = await sb.from('base').select('data,updated_at').eq('id',1).maybeSingle();
+    if(error){ sbState('err','erreur lecture'); return; }
+    if(data && data.data && (data.data.juridictions||[]).length){
+      mergeRemote(data.data);
+      buildIndex();
+      try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }catch(e){}
+      renderChips(); render();
+    }
+    sbTs = data ? data.updated_at : null;
+    // première synchro du propriétaire : la base locale pleine remplit le serveur
+    if(DATA.juridictions.length && (!data || !(data.data && (data.data.juridictions||[]).length)))
+      await sbPush(true);
+    sbState('on','synchronisé');
+  } finally { sbBusy = false; }
+}
+async function sbPush(skipCheck){
+  if(!sbAdmis) return;
+  // Seul le proprietaire ecrit la base principale. C est double : la regle RLS
+  // de la table « base » refuse deja l ecriture aux autres, ce garde-fou evite
+  // simplement des erreurs inutiles et un indicateur d erreur trompeur.
+  if(!(await sbEstProprietaire())) return;
+  if(!skipCheck && sbTs){
+    const {data} = await sb.from('base').select('updated_at').eq('id',1).maybeSingle();
+    if(data && data.updated_at !== sbTs){ await sbPull(); }
+  }
+  sbState('work','envoi…');
+  const now = new Date().toISOString();
+  const {data, error} = await sb.from('base')
+    .upsert({id:1, data: sbClean(), updated_at: now})
+    .select('updated_at').single();
+  if(error){ sbState('err','erreur envoi'); return; }
+  sbTs = data ? data.updated_at : now;
+  sbState('on','synchronisé');
+}
+window.sbSchedulePush = () => {
+  if(!sbAdmis) return;
+  clearTimeout(sbTimer);
+  sbTimer = setTimeout(()=>{ if(!sbBusy) sbPush(false); }, 2500);
+};
+
+async function sbNotifDemandes(){
+  try{
+    if(!(await sbEstProprietaire())) return;   // seul le proprietaire arbitre
+    const {data, error} = await sb.from('demandes').select('email');
+    const gear = document.getElementById('btnsettings');
+    if(!error && data && data.length){
+      gear.classList.add('notif');
+      toast(data.length + ' demande' + (data.length>1?'s':'') + " d'accès en attente — voir Réglages");
+    } else {
+      gear.classList.remove('notif');
+    }
+  }catch(e){}
+}
+let sbProp = null;                       // null = pas encore verifie
+async function sbEstProprietaire(){
+  if(sbProp !== null) return sbProp;
+  try{
+    const {data, error} = await sb.rpc('est_proprietaire');
+    if(!error){ sbProp = data === true; if(sbProp) render(); return sbProp; }
+  }catch(e){}
+  // repli si la fonction n est pas exposee : on lit SA PROPRE ligne
+  try{
+    const mail = (sbUser && sbUser.email || '').toLowerCase();
+    const {data} = await sb.from('acces').select('role').eq('email', mail).maybeSingle();
+    sbProp = !!(data && data.role === 'owner');
+    if(sbProp) render();
+  }catch(e){ sbProp = false; }
+  return sbProp;
+}
+async function sbAccountUI(){
+  const info = document.getElementById('accInfo');
+  if(!sbUser){ info.textContent = 'Non connecté.'; return; }
+  info.textContent = 'Connecté : ' + (sbUser.email||'');
+  const wl = document.getElementById('wlBox');
+  wl.style.display = 'none';
+  // La gestion de la liste blanche est reservee au proprietaire. On interroge le
+  // serveur (fonction est_proprietaire) au lieu de deduire le role du fait que
+  // la lecture a reussi : masquer l interface ne protege rien, c est la regle
+  // RLS de la table « acces » qui fait foi cote base.
+  if(!(await sbEstProprietaire())) return;
+  const {data, error} = await sb.from('acces').select('email,role').order('email');
+  if(error || !data) return;
+  wl.style.display = 'block';
+  // demandes en attente
+  let demHtml = '';
+  try{
+    const dem = await sb.from('demandes').select('email,created_at').order('created_at');
+    if(dem.data && dem.data.length){
+      demHtml = `<div style="margin-bottom:10px">`+
+        `<span class="hint" style="font-weight:650; color:var(--ko)">Demandes d'accès en attente :</span>`+
+        dem.data.map(d=>`<div class="setrow" style="margin:5px 0">
+          <span style="flex:1; font-size:13.5px">${esc(d.email)}</span>
+          <button class="mini" style="color:var(--ok)" onclick="sbDemOk('${esc(d.email)}')">${icn('check',12)} autoriser</button>
+          <button class="mini" style="color:var(--ko)" onclick="sbDemNo('${esc(d.email)}')">${icn('x',12)} refuser</button>
+        </div>`).join('')+`</div>`;
+    }
+  }catch(e){}
+  // propositions d ajout en attente
+  let propHtml = '';
+  try{
+    const pr = await sb.from('propositions').select('id,email,cree,donnees')
+                       .eq('etat','attente').order('cree');
+    if(pr.data && pr.data.length){
+      propHtml = `<div style="margin-bottom:12px">`+
+        `<span class="hint" style="font-weight:650">Ajouts proposés (${pr.data.length}) :</span>`+
+        pr.data.map(x=>`<div style="border:1px solid var(--line); border-radius:11px; padding:9px 11px; margin:6px 0">
+          <div style="font-size:13px">${propResume(x.donnees||{})}</div>
+          <div class="hint" style="margin-top:3px">par ${esc(x.email||'?')}</div>
+          <div style="display:flex; gap:6px; margin-top:6px">
+            <button class="mini" style="color:var(--ok)" onclick="propOk('${x.id}')">${icn('check',12)} intégrer</button>
+            <button class="mini" style="color:var(--ko)" onclick="propNon('${x.id}')">${icn('x',12)} écarter</button>
+          </div>
+        </div>`).join('')+`</div>`;
+    }
+  }catch(e){}
+  document.getElementById('wlList').innerHTML = demHtml + propHtml + data.map(r=>
+    `<div class="setrow" style="margin:4px 0">
+      <span style="flex:1; font-size:13.5px">${esc(r.email)} ${r.role==='owner'?'<span class="hint">(propriétaire)</span>':''}</span>
+      ${r.role==='owner'?'':`<button class="mini" onclick="sbWlDel('${esc(r.email)}')">${icn('trash',12)} retirer</button>`}
+    </div>`).join('');
+}
+window.sbDemOk = async mail => {
+  if(!(await sbEstProprietaire())) return;
+  const r1 = await sb.from('acces').insert({email: mail});
+  if(r1.error && r1.error.code !== '23505'){ toast('Échec : '+r1.error.message); return; }
+  await sb.from('demandes').delete().eq('email', mail);
+  toast(mail + ' autorisé');
+  sbAccountUI(); sbNotifDemandes();
+};
+window.sbDemNo = async mail => {
+  if(!(await sbEstProprietaire())) return;
+  if(!confirm('Refuser la demande de '+mail+' ?')) return;
+  await sb.from('demandes').delete().eq('email', mail);
+  toast('Demande refusée');
+  sbAccountUI(); sbNotifDemandes();
+};
+window.sbWlAdd = async () => {
+  if(!(await sbEstProprietaire())) return;
+  const mail = (document.getElementById('wlMail').value||'').trim().toLowerCase();
+  if(!mail.includes('@')){ toast('Adresse invalide'); return; }
+  const {error} = await sb.from('acces').insert({email: mail});
+  if(error){ toast('Échec : '+error.message); return; }
+  document.getElementById('wlMail').value = '';
+  toast(mail+' autorisé');
+  sbAccountUI();
+};
+window.sbWlDel = async mail => {
+  if(!(await sbEstProprietaire())) return;
+  if(!confirm('Retirer l\'accès de '+mail+' ?')) return;
+  const {error} = await sb.from('acces').delete().eq('email', mail);
+  if(error){ toast('Échec : '+error.message); return; }
+  toast('Accès retiré');
+  sbAccountUI();
+};
+
+async function sbInit(){
+  if(!window.supabase){ sbState('err','lib manquante'); return; }
+  sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+  sb.auth.onAuthStateChange((_e, session)=>{
+    const u = session ? session.user : null;
+    if((u&&u.id) !== (sbUser&&sbUser.id)){ sbUser = u; sbProp = null; sbGateUpdate(); }
+  });
+  const {data:{session}} = await sb.auth.getSession();
+  sbUser = session ? session.user : null;
+  await sbGateUpdate();
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden && sbAdmis && !sbBusy) sbPull();
+  });
+  setInterval(()=>{ if(sbAdmis && !sbBusy && !document.hidden) sbPull(); }, 5*60*1000);
+}
+document.getElementById('btnLogoutS').addEventListener('click', ()=>sbLogout());
+document.getElementById('btnWlAdd').addEventListener('click', ()=>sbWlAdd());
+
+/* ============================ démarrage ============================ */
+(async function(){
+  document.querySelectorAll('[data-ic]').forEach(el=>{el.innerHTML = icn(el.dataset.ic, +(el.dataset.s||16));});
+  const fm = document.getElementById('fabmod');
+  fm.innerHTML = icn('pen',16);
+  fm.addEventListener('click', toggleModif);
+  const ft = document.getElementById('fabtools');
+  ft.innerHTML = icn('tool',16);
+  ft.addEventListener('click', ()=>openTools());
+  applyTheme();
+  await load();
+  const m = location.hash.match(/^#f\/(.+)$/);
+  if(m && DATA.juridictions.some(j=>j.id===m[1])) ficheId = m[1];
+  const sp = location.hash.match(/^#sp\/([a-z]+)\/(.+)$/);
+  if(!ficheId && sp){ spState = {type:sp[1], nom:decodeURIComponent(sp[2]), loading:true}; spResolve(); }
+  if(location.hash==='#carte') mapState = {level:'fr'};
+  renderChips(); render();
+  sbInit();
+  setTimeout(loadOfficiel, 2000);   // préchargement du dataset officiel
+})();
+</script>
+</body>
+</html>

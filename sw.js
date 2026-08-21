@@ -4,7 +4,7 @@
                        publiée est donc prise en compte dès le lancement suivant) ;
    - fichiers du site : cache d'abord, rafraîchi en arrière-plan ;
    - Supabase        : jamais mis en cache (données vivantes et authentification).   */
-const VERSION = 'juritel-v2';
+const VERSION = 'juritel-v3';
 const COQUILLE = [
   './', './index.html', './manifest.json',
   './logo-balance-tel.svg', './icon-192.png', './icon-512.png',
@@ -40,11 +40,18 @@ self.addEventListener('fetch', e => {
     e.respondWith((async () => {
       try{
         const rep = await fetch(req);
-        const c = await caches.open(VERSION);
-        // les DEUX cles de navigation doivent suivre, sinon « ./ » reste fige
-        // sur la version installee au premier jour
-        const a = rep.clone(), b = rep.clone();
-        await Promise.all([c.put('./index.html', a), c.put('./', b)]);
+        // On ne met a jour la coquille QUE pour la page de l application.
+        // Toute autre page servie sous la meme portee (page d essai, etc.)
+        // ecraserait sinon l application en cache.
+        const racine = new URL('./', self.registration.scope).pathname;
+        const estApp = url.pathname === racine || url.pathname === racine + 'index.html';
+        if(estApp && rep && rep.ok){
+          const c = await caches.open(VERSION);
+          // les DEUX cles de navigation doivent suivre, sinon « ./ » reste fige
+          // sur la version installee au premier jour
+          const a = rep.clone(), b = rep.clone();
+          await Promise.all([c.put('./index.html', a), c.put('./', b)]);
+        }
         return rep;
       }catch(err){
         return (await caches.match('./index.html')) || (await caches.match('./')) || Response.error();
