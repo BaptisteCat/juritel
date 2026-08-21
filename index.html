@@ -1007,9 +1007,11 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     </select>
   </div>
   <hr>
+  <div id="ownerBox" style="display:none">
   <div class="setrow"><button class="btn" id="btnExport"><span data-ic="down2" data-s="15"></span> Exporter les données (JSON)</button></div>
   <div class="setrow"><button class="btn" id="btnImport"><span data-ic="up2" data-s="15"></span> Importer un fichier JSON</button>
     <input type="file" id="fileImport" accept=".json" hidden></div>
+  </div>
   <hr>
   <div id="driveBox" style="display:none">
     <div class="setrow"><button class="btn primary" id="btnDrive"><span data-ic="cloud" data-s="15"></span> Connecter Google Drive</button></div>
@@ -1124,6 +1126,9 @@ let editMode = false;        // mode réorganisation de la fiche
 let mapState = null;         // carte interactive : null | {level:'fr'|'reg'|'dep', code}
 let spState = null;          // fiche officielle service-public : null | {type, nom, loading, data}
 let modifMode = false;       // false = lecture seule (défaut)
+// sbProp est resolu tres tot (ouverture de la porte) ; tant qu il vaut null on
+// masque les commandes reservees, ce qui est le defaut prudent.
+const estProp = () => sbProp === true;
 const openState = {};        // id -> ouvert/fermé (services, volets)
 const $ = s => document.querySelector(s);
 
@@ -1206,13 +1211,19 @@ function buildIndex(){
 /* ============================ notation ============================ */
 const NOW = () => Date.now();
 const J90 = 90*24*3600*1000;
+// Les compteurs affiches cumulent l historique de la base (c.ok/c.ko, fige par
+// le proprietaire) et les votes des membres, stockes a part (champs _v*).
+const cOk     = c => (c.ok||0) + (c._vok||0);
+const cKo     = c => (c.ko||0) + (c._vko||0);
+const cLastOk = c => Math.max(c.lastOk||0, c._vlastOk||0) || null;
 function score(c){
-  let s = (c.ok||0)*3 - (c.ko||0)*2;
-  if(c.lastOk && NOW()-c.lastOk < J90) s += 100;
-  else if(c.lastOk) s += 40;
+  const lo = cLastOk(c);
+  let s = cOk(c)*3 - cKo(c)*2;
+  if(lo && NOW()-lo < J90) s += 100;
+  else if(lo) s += 40;
   return s;
 }
-const isDead = c => (c.ko||0)>=3 && !(c.ok>0);
+const isDead = c => cKo(c)>=3 && !(cOk(c)>0);
 
 /* ============================ regroupement en entrées ============================
    Une « entrée » = un interlocuteur (libellé) avec tous ses canaux
@@ -1516,9 +1527,9 @@ function renderFiche(j){
       </div>
       ${j.adresse?`<div class="adr">${icn('pin',11)} ${esc(j.adresse)} <button class="mini" onclick="copyVal('${esc(j.adresse)}')">${icn('copy',11)} copier</button></div>`:''}
       <div class="facts">
-        ${modifMode ? `<button class="mini" onclick="openAdd('${j.id}')">${icn('plus',13)} Ajouter un contact</button>
-        <button class="mini ${editMode?'editon':''}" onclick="toggleEdit()">${editMode?icn('check',13)+' Terminer la réorganisation':icn('pen',13)+' Réorganiser'}</button>
-        <button class="mini" onclick="delJur('${j.id}')">${icn('trash',13)} Supprimer la juridiction</button>` : ''}
+        ${modifMode ? `<button class="mini" onclick="openAdd('${j.id}')">${icn('plus',13)} ${estProp()?'Ajouter un contact':'Proposer un contact'}</button>
+        ${!estProp() ? '' : `<button class="mini ${editMode?'editon':''}" onclick="toggleEdit()">${editMode?icn('check',13)+' Terminer la réorganisation':icn('pen',13)+' Réorganiser'}</button>`}
+        ${estProp() ? `<button class="mini" onclick="delJur('${j.id}')">${icn('trash',13)} Supprimer la juridiction</button>` : ''}` : ''}
         <span class="mini" style="cursor:default">${j.services.length} services · ${nc} contacts</span>
       </div>
     </div>
@@ -1566,8 +1577,8 @@ function renderSvcBlock(j, s, matchOpen){
       <span class="caret">${icn('chev',12)}</span>
       ${esc(s.nom)} <span class="cnt">${s.contacts.length}</span><span class="sp"></span>
       ${ectl}
-      ${modifMode ? `<button class="mini" onclick="event.stopPropagation();openAdd('${j.id}','${s.id}')">${icn('plus',13)}</button>
-      <button class="mini" onclick="event.stopPropagation();delService('${j.id}','${s.id}')">${icn('trash',13)}</button>` : ''}
+      ${modifMode ? `<button class="mini" title="${estProp()?'Ajouter':'Proposer un ajout'}" onclick="event.stopPropagation();openAdd('${j.id}','${s.id}')">${icn('plus',13)}</button>` : ''}
+      ${modifMode && estProp() ? `<button class="mini" onclick="event.stopPropagation();delService('${j.id}','${s.id}')">${icn('trash',13)}</button>` : ''}
     </h3>
     ${inner}
   </section>`;
@@ -1595,8 +1606,10 @@ function renderChan(c){
     'tel:'+(digits(c.valeur).length===10 ? '+33'+digits(c.valeur).slice(1) : digits(c.valeur));
   const tico = c.type==='email' ? icn('mail',13) : c.type==='fax' ? icn('fax',13) : icn('phone',13);
   let badge = '';
-  if(c.ok>0) badge = `<span class="score good" title="${c.ok} appel(s) réussi(s)">${icn('check',10)} ${c.ok}${c.lastOk?' · '+fmtDate(c.lastOk):''}</span>`;
-  else if(c.ko>0) badge = `<span class="score bad" title="${c.ko} échec(s)">${icn('x',10)} ${c.ko}</span>`;
+  const nOk = cOk(c), nKo = cKo(c), lOk = cLastOk(c);
+  const mien = c._vmien ? ' · votre vote' : '';
+  if(nOk>0) badge = `<span class="score good" title="${nOk} appel(s) réussi(s)${mien}">${icn('check',10)} ${nOk}${lOk?' · '+fmtDate(lOk):''}</span>`;
+  else if(nKo>0) badge = `<span class="score bad" title="${nKo} échec(s)${mien}">${icn('x',10)} ${nKo}</span>`;
   const drag = editMode ? ` draggable="true" ondragstart="dragC(event,'${c.id}')" title="Glissez vers un autre bureau ou service"` : '';
   return `<div class="chan ${isDead(c)?'dead':''}" id="ct-${c.id}"${drag}>
     <span class="tico ${c.type}">${tico}</span>
@@ -1604,7 +1617,7 @@ function renderChan(c){
     ${badge}
     <div class="acts">
       ${c.type!=='tel' ? `<button class="abtn ghost" title="Copier" onclick="copyVal('${esc(c.valeur)}')">${icn('copy',13)}</button>` : ''}
-      ${modifMode ? `<button class="abtn ghost" title="Modifier" onclick="openEdit('${c.id}')">${icn('pen',13)}</button>
+      ${modifMode && estProp() ? `<button class="abtn ghost" title="Modifier" onclick="openEdit('${c.id}')">${icn('pen',13)}</button>
       <button class="abtn ghost" title="Supprimer" onclick="delContact('${c.id}')">${icn('trash',13)}</button>` : ''}
       ${c.type==='tel' ? `<button class="abtn rok" title="Ça a répondu" onclick="rate('${c.id}',1)">${icn('check',13)}</button>
       <button class="abtn rko" title="Ne répond pas" onclick="rate('${c.id}',0)">${icn('x',13)}</button>` : ''}
@@ -1657,21 +1670,63 @@ function findContact(id){
     for(const c of s.contacts) if(c.id===id) return {j,s,c};
   return null;
 }
-window.rate = (id, ok) => {
+window.rate = async (id, ok) => {
   const f = findContact(id); if(!f) return;
-  if(ok){ f.c.ok=(f.c.ok||0)+1; f.c.lastOk=NOW(); toast('Noté : ce numéro répond'); }
-  else { f.c.ko=(f.c.ko||0)+1; toast('Échec noté'); }
-  f.c.lastTry=NOW(); f.c.u=NOW();
-  save(); render();
+  const c = f.c, avant = c._vmien || 0, valeur = ok ? 1 : -1;
+  // un membre = un vote par numero ; revoter dans le meme sens l annule
+  const nouveau = (avant === valeur) ? 0 : valeur;
+  // mise a jour optimiste de l affichage
+  if(avant === 1) c._vok = (c._vok||0) - 1;
+  if(avant === -1) c._vko = (c._vko||0) - 1;
+  if(nouveau === 1){ c._vok = (c._vok||0) + 1; c._vlastOk = NOW(); }
+  if(nouveau === -1) c._vko = (c._vko||0) + 1;
+  c._vmien = nouveau;
+  render();
+  toast(nouveau === 0 ? 'Vote retiré' : nouveau === 1 ? 'Noté : ce numéro répond' : 'Échec noté');
+  if(!sbUser) return;
+  try{
+    if(nouveau === 0) await sb.from('votes').delete().eq('contact', id);
+    else await sb.from('votes').upsert({contact: id, valeur: nouveau, maj: new Date().toISOString()},
+                                       {onConflict: 'email,contact'});
+  }catch(e){ toast('Vote non enregistré : ' + e.message); }
 };
-window.delContact = id => {
+
+/* ---- votes communautaires : chargement et application sur les contacts ---- */
+async function sbVotesCharger(){
+  if(!sbAdmis || !sbUser) return;
+  let lignes = [];
+  try{
+    const {data, error} = await sb.from('votes').select('email,contact,valeur,maj');
+    if(error || !data) return;
+    lignes = data;
+  }catch(e){ return; }
+  const par = new Map();
+  const mien = (sbUser.email||'').toLowerCase();
+  for(const v of lignes){
+    let o = par.get(v.contact);
+    if(!o){ o = {ok:0, ko:0, lastOk:0, mien:0}; par.set(v.contact, o); }
+    if(v.valeur > 0){ o.ok++; const t = Date.parse(v.maj||''); if(t > o.lastOk) o.lastOk = t; }
+    else o.ko++;
+    if((v.email||'').toLowerCase() === mien) o.mien = v.valeur > 0 ? 1 : -1;
+  }
+  for(const j of DATA.juridictions) for(const s of j.services) for(const c of s.contacts){
+    const o = par.get(c.id);
+    c._vok = o ? o.ok : 0; c._vko = o ? o.ko : 0;
+    c._vlastOk = o ? o.lastOk : 0; c._vmien = o ? o.mien : 0;
+  }
+  render();
+}
+window.sbVotesCharger = sbVotesCharger;
+window.delContact = async id => {
+  if(!(await sbEstProprietaire())) return;   // suppression : proprietaire uniquement
   const f = findContact(id); if(!f) return;
   if(!confirm(`Supprimer ${f.c.valeur} (${f.c.libelle||f.s.nom}) ?`)) return;
   f.s.contacts = f.s.contacts.filter(c=>c.id!==id);
   DATA.tombstones[id]=NOW();
   save(); render(); toast('Contact supprimé');
 };
-window.delService = (jid,sid) => {
+window.delService = async (jid,sid) => {
+  if(!(await sbEstProprietaire())) return;   // suppression : proprietaire uniquement
   const j = DATA.juridictions.find(x=>x.id===jid); if(!j) return;
   const s = j.services.find(x=>x.id===sid); if(!s) return;
   if(!confirm(`Supprimer le service « ${s.nom} » et ses ${s.contacts.length} contacts ?`)) return;
@@ -1680,7 +1735,8 @@ window.delService = (jid,sid) => {
   j.services = j.services.filter(x=>x.id!==sid);
   save(); render(); toast('Service supprimé');
 };
-window.delJur = id => {
+window.delJur = async id => {
+  if(!(await sbEstProprietaire())) return;   // suppression : proprietaire uniquement
   const j = DATA.juridictions.find(x=>x.id===id); if(!j) return;
   const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
   if(!confirm(`Supprimer « ${j.nom} » et ses ${nc} contacts ?`)) return;
@@ -1968,9 +2024,18 @@ function renderFicheSP(){
 }
 
 /* enregistre la fiche générée comme vraie juridiction (synchronisée Drive ensuite) */
-window.spAdd = () => {
+window.spAdd = async () => {
   if(!spState || !spState.data) return;
   const d = spState.data, type = spState.type;
+  if(!(await sbEstProprietaire())){
+    // un membre propose la fiche officielle, il ne l ajoute pas lui-meme
+    await propEnvoyer({
+      juridiction: d.nom, categorie: SP_BADGE[type]||'autre', service: 'Accueil / Standard',
+      libelle: 'Accueil', groupe: '', note: d.adresse ? 'Adresse : '+d.adresse : '',
+      canaux: [...d.tels.map(t=>({type:'tel', valeur:t})), ...d.mails.map(m=>({type:'email', valeur:m}))]
+    });
+    return;
+  }
   const deja = DATA.juridictions.find(x=>normVille(x.nom)===normVille(d.nom));
   if(deja){ openFiche(deja.id); toast('Déjà dans l\'annuaire'); return; }
   const s = {id:uid('s'), nom:'Accueil / Standard', domaine:'general', contacts:[]};
@@ -2443,12 +2508,16 @@ window.toggleModif = () => {
   modifMode = !modifMode;
   if(!modifMode) editMode = false;
   document.getElementById('fabmod').classList.toggle('on', modifMode);
-  toast(modifMode ? 'Mode modification activé' : 'Mode lecture seule');
+  toast(modifMode ? (estProp() ? 'Mode modification activé' : 'Mode proposition activé')
+                  : 'Mode lecture seule');
   render();
 };
 
 /* ============================ mode réorganisation ============================ */
-window.toggleEdit = () => { editMode = !editMode; render(); };
+window.toggleEdit = async () => {
+  if(!(await sbEstProprietaire())) return;   // reorganiser touche la base principale
+  editMode = !editMode; render();
+};
 
 function getJS(jid, sid){
   const j = DATA.juridictions.find(x=>x.id===jid);
@@ -2689,7 +2758,7 @@ window.openEdit = id => {
 };
 $('#fJur').addEventListener('input', refreshSvcList);
 $('#fSvc').addEventListener('input', refreshSvcList);
-$('#formAdd').addEventListener('submit', e=>{
+$('#formAdd').addEventListener('submit', async e=>{
   if(e.submitter && e.submitter.value==='cancel') return;
   const rows = collectRows();
   if(!rows.length){
@@ -2699,6 +2768,17 @@ $('#formAdd').addEventListener('submit', e=>{
   }
   const nomJ = $('#fJur').value.trim();
   const nomS = $('#fSvc').value.trim()||'Général';
+  // Un membre ne modifie jamais la base principale : sa saisie part en
+  // quarantaine, le proprietaire l integrera ou non depuis les Reglages.
+  if(!(await sbEstProprietaire())){
+    await propEnvoyer({
+      juridiction: nomJ, categorie: $('#fCat').value, service: nomS,
+      libelle: $('#fLib').value.trim(), groupe: $('#fGrp').value.trim(),
+      note: $('#fNote').value.trim(),
+      canaux: rows.map(r => ({type: r.type, valeur: r.val}))
+    });
+    return;
+  }
   let j = DATA.juridictions.find(x=>norm(x.nom)===norm(nomJ));
   if(!j){
     j = {id:uid('j'), nom:nomJ, categorie:$('#fCat').value, adresse:'', services:[], u:NOW()};
@@ -2736,23 +2816,88 @@ $('#formAdd').addEventListener('submit', e=>{
 });
 $('#fab').addEventListener('click', ()=>openAdd());
 
+/* ============================ propositions des membres ============================
+   Les membres enrichissent l annuaire sans toucher a la base principale : leurs
+   ajouts sont deposes dans la table « propositions » et n apparaissent chez les
+   autres qu une fois integres par le proprietaire.                              */
+async function propEnvoyer(donnees){
+  if(!sbUser){ toast('Connexion requise'); return; }
+  try{
+    const {error} = await sb.from('propositions').insert({donnees});
+    if(error){ toast('Échec : '+error.message); return; }
+    document.getElementById('dlgAdd').close();
+    toast('Proposition envoyée — elle sera examinée avant publication');
+  }catch(e){ toast('Échec : '+e.message); }
+}
+
+function propResume(d){
+  const canaux = (d.canaux||[]).map(c=>esc(c.valeur)).join(', ');
+  return `<b>${esc(d.juridiction||'?')}</b> · ${esc(d.service||'Général')}`
+       + (d.libelle ? ' · '+esc(d.libelle) : '')
+       + `<br><span class="hint">${canaux || '(aucun canal)'}${d.note ? ' — '+esc(d.note) : ''}</span>`;
+}
+
+/* Integration : on rejoue exactement le chemin d ajout du proprietaire. */
+function propIntegrer(d){
+  const nomJ = (d.juridiction||'').trim(); if(!nomJ) return false;
+  const nomS = (d.service||'').trim() || 'Général';
+  let j = DATA.juridictions.find(x=>norm(x.nom)===norm(nomJ));
+  if(!j){
+    j = {id:uid('j'), nom:nomJ, categorie:d.categorie||'autre', adresse:'', services:[], u:NOW()};
+    DATA.juridictions.push(j);
+    DATA.juridictions.sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  }
+  let s = j.services.find(x=>norm(x.nom)===norm(nomS));
+  if(!s){ s = {id:uid('s'), nom:nomS, contacts:[], u:NOW()}; j.services.push(s); }
+  (d.canaux||[]).forEach((r, i) => {
+    s.contacts.push({id:uid('c'), type:r.type||'tel', valeur:r.valeur,
+      libelle:d.libelle||'', groupe:d.groupe||'', note: i===0 ? (d.note||'') : '',
+      ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+  });
+  return true;
+}
+
+window.propOk = async id => {
+  if(!(await sbEstProprietaire())) return;
+  const {data, error} = await sb.from('propositions').select('donnees').eq('id', id).single();
+  if(error || !data){ toast('Proposition introuvable'); return; }
+  if(!propIntegrer(data.donnees)){ toast('Proposition incomplète'); return; }
+  await sb.from('propositions').update({etat:'integree'}).eq('id', id);
+  buildIndex(); save(); renderChips(); render();
+  toast("Proposition intégrée à l’annuaire");
+  sbAccountUI();
+};
+window.propNon = async id => {
+  if(!(await sbEstProprietaire())) return;
+  await sb.from('propositions').update({etat:'refusee'}).eq('id', id);
+  toast('Proposition écartée');
+  sbAccountUI();
+};
+
 /* ============================ réglages / export-import ============================ */
 $('#btnsettings').addEventListener('click', ()=>{
   const nc = DATA.juridictions.reduce((n,j)=>n+j.services.reduce((m,s)=>m+s.contacts.length,0),0);
   $('#metaInfo').textContent = `${DATA.juridictions.length} juridictions, ${nc.toLocaleString('fr-FR')} contacts. `+
     `Dernière modification : ${new Date(DATA.updatedAt).toLocaleString('fr-FR')}.`;
   sbAccountUI();
+  sbEstProprietaire().then(prop => {
+    document.getElementById('ownerBox').style.display = prop ? '' : 'none';
+  });
   $('#dlgSettings').showModal();
 });
 $('#btnCloseSettings').addEventListener('click', ()=>$('#dlgSettings').close());
-$('#btnExport').addEventListener('click', ()=>{
+$('#btnExport').addEventListener('click', async ()=>{
+  if(!(await sbEstProprietaire())) return;
   const blob = new Blob([JSON.stringify(DATA,(k,v)=>k.startsWith('_')?undefined:v)],{type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'juritel-'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
 });
-$('#btnImport').addEventListener('click', ()=>$('#fileImport').click());
+$('#btnImport').addEventListener('click', async ()=>{
+  if(!(await sbEstProprietaire())) return;
+  $('#fileImport').click();
+});
 $('#fileImport').addEventListener('change', async e=>{
   const f = e.target.files[0]; if(!f) return;
   try{
@@ -3208,7 +3353,7 @@ async function sbGateUpdate(){
   }
   gate.classList.add('off');
   if(horsLigne){ sbState('', 'hors ligne'); return; }
-  sbPull();
+  sbPull().then(() => sbVotesCharger());
   sbNotifDemandes();
 }
 
@@ -3282,6 +3427,10 @@ async function sbPull(){
 }
 async function sbPush(skipCheck){
   if(!sbAdmis) return;
+  // Seul le proprietaire ecrit la base principale. C est double : la regle RLS
+  // de la table « base » refuse deja l ecriture aux autres, ce garde-fou evite
+  // simplement des erreurs inutiles et un indicateur d erreur trompeur.
+  if(!(await sbEstProprietaire())) return;
   if(!skipCheck && sbTs){
     const {data} = await sb.from('base').select('updated_at').eq('id',1).maybeSingle();
     if(data && data.updated_at !== sbTs){ await sbPull(); }
@@ -3319,13 +3468,14 @@ async function sbEstProprietaire(){
   if(sbProp !== null) return sbProp;
   try{
     const {data, error} = await sb.rpc('est_proprietaire');
-    if(!error){ sbProp = data === true; return sbProp; }
+    if(!error){ sbProp = data === true; if(sbProp) render(); return sbProp; }
   }catch(e){}
   // repli si la fonction n est pas exposee : on lit SA PROPRE ligne
   try{
     const mail = (sbUser && sbUser.email || '').toLowerCase();
     const {data} = await sb.from('acces').select('role').eq('email', mail).maybeSingle();
     sbProp = !!(data && data.role === 'owner');
+    if(sbProp) render();
   }catch(e){ sbProp = false; }
   return sbProp;
 }
@@ -3357,7 +3507,25 @@ async function sbAccountUI(){
         </div>`).join('')+`</div>`;
     }
   }catch(e){}
-  document.getElementById('wlList').innerHTML = demHtml + data.map(r=>
+  // propositions d ajout en attente
+  let propHtml = '';
+  try{
+    const pr = await sb.from('propositions').select('id,email,cree,donnees')
+                       .eq('etat','attente').order('cree');
+    if(pr.data && pr.data.length){
+      propHtml = `<div style="margin-bottom:12px">`+
+        `<span class="hint" style="font-weight:650">Ajouts proposés (${pr.data.length}) :</span>`+
+        pr.data.map(x=>`<div style="border:1px solid var(--line); border-radius:11px; padding:9px 11px; margin:6px 0">
+          <div style="font-size:13px">${propResume(x.donnees||{})}</div>
+          <div class="hint" style="margin-top:3px">par ${esc(x.email||'?')}</div>
+          <div style="display:flex; gap:6px; margin-top:6px">
+            <button class="mini" style="color:var(--ok)" onclick="propOk('${x.id}')">${icn('check',12)} intégrer</button>
+            <button class="mini" style="color:var(--ko)" onclick="propNon('${x.id}')">${icn('x',12)} écarter</button>
+          </div>
+        </div>`).join('')+`</div>`;
+    }
+  }catch(e){}
+  document.getElementById('wlList').innerHTML = demHtml + propHtml + data.map(r=>
     `<div class="setrow" style="margin:4px 0">
       <span style="flex:1; font-size:13.5px">${esc(r.email)} ${r.role==='owner'?'<span class="hint">(propriétaire)</span>':''}</span>
       ${r.role==='owner'?'':`<button class="mini" onclick="sbWlDel('${esc(r.email)}')">${icn('trash',12)} retirer</button>`}
