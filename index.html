@@ -4,8 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Juritel</title>
-<meta name="theme-color" content="#0d0f1e">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f5f8">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0c0e13">
 <link rel="icon" type="image/svg+xml" href="logo-balance-tel.svg">
+<!-- application installable (PWA) : meme icone que le favicon -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="application-name" content="Juritel">
+<meta name="apple-mobile-web-app-title" content="Juritel">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&display=swap" rel="stylesheet">
@@ -125,6 +134,7 @@ svg{display:block; flex-shrink:0}
 /* ==================== en-tête ==================== */
 header{
   position:sticky; top:0; z-index:20; padding:14px 18px 12px;
+  padding-top:calc(14px + env(safe-area-inset-top, 0px));
   background:color-mix(in srgb, var(--bg) 76%, transparent);
   -webkit-backdrop-filter:blur(18px) saturate(1.5); backdrop-filter:blur(18px) saturate(1.5);
   border-bottom:1px solid var(--line);
@@ -3056,6 +3066,13 @@ $('#syncstate').addEventListener('click', ()=>{
 
 
 /* ============================ thème ============================ */
+// application installable : mise en cache de la coquille pour un demarrage
+// instantane et un fonctionnement sans reseau
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW non enregistre', e));
+  });
+}
 const LS_UI = 'juritel.uiscale';
 function applyUiScale(){
   const v = localStorage.getItem(LS_UI) || 'auto';
@@ -3165,11 +3182,20 @@ async function sbGateUpdate(){
     sbState('', 'hors connexion');
     return;
   }
-  let admis = false;
+  // L autorisation est verifiee aupres du serveur. Hors ligne cet appel echoue :
+  // on se rabat alors sur la derniere reponse connue pour ce compte, sinon un
+  // utilisateur pourtant admis verrait « non autorise ». Sans risque : les donnees
+  // sont de toute facon protegees cote serveur (RLS) et seules celles deja
+  // telechargees par ce compte sont lisibles hors ligne.
+  const cleAdmis = 'juritel.admis.' + sbUser.id;
+  let admis = false, reseauKo = !navigator.onLine;
   try{
     const {data, error} = await sb.rpc('est_admis');
-    admis = !error && data === true;
-  }catch(e){}
+    if(error) reseauKo = true;
+    else { admis = data === true; localStorage.setItem(cleAdmis, admis ? '1' : '0'); }
+  }catch(e){ reseauKo = true; }
+  let horsLigne = false;
+  if(!admis && reseauKo && localStorage.getItem(cleAdmis) === '1'){ admis = true; horsLigne = true; }
   sbAdmis = admis;
   if(!admis){
     gate.classList.remove('off');
@@ -3181,6 +3207,7 @@ async function sbGateUpdate(){
     return;
   }
   gate.classList.add('off');
+  if(horsLigne){ sbState('', 'hors ligne'); return; }
   sbPull();
   sbNotifDemandes();
 }
