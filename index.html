@@ -696,6 +696,12 @@ select.mini{
 .mgroup.open .mclu{display:none}
 .mclu{cursor:pointer}
 .mclubtn{transition:transform .16s cubic-bezier(.2,.6,.3,1); transform-box:fill-box; transform-origin:center}
+/* vue éclatée : contre-échelle du zoom, sinon points et libellés se chevauchent */
+.mgroup.open .mexp .mdot{transform:scale(var(--unzoom, 1))}
+.mgroup.open .mexp .mdot.hl{transform:scale(calc(var(--unzoom, 1) * 1.5))}
+.mgroup.open .mexp .mdotlbl{
+  transform:scale(var(--unzoom, 1)); transform-box:fill-box; transform-origin:center;
+}
 .mclu:hover .mclubtn{transform:scale(1.16)}
 .mclu:hover .mdotlbl{font-weight:750}
 .mgroup.open .mcatch{cursor:default}
@@ -3067,13 +3073,21 @@ window.grpOpen = (k, zoomer = true) => {
   // se contente d'ouvrir : déplacer la carte sous le curseur le ferait sortir
   // de la pastille et refermerait aussitôt la vue.
   const c = zoomer && g.querySelector('.mclu circle');
-  if(c) mapZoom(+c.getAttribute('cx'), +c.getAttribute('cy'), window.innerWidth < 760 ? 2.6 : 1.9);
+  if(c){
+    const z = window.innerWidth < 760 ? 2.6 : 1.9;
+    mapZoom(+c.getAttribute('cx'), +c.getAttribute('cy'), z);
+    // Le zoom agrandit tout, y compris les points et les noms de la vue éclatée,
+    // qui se chevauchaient. On les ramène à leur taille d'origine : ils restent
+    // écartés par le zoom, donc bien plus faciles à distinguer.
+    svg.style.setProperty('--unzoom', (1/z).toFixed(3));
+  }
 };
 function grpCloseAll(){
   const svg = document.querySelector('.mapwrap svg');
   if(!svg) return;
   svg.querySelectorAll('.mgroup.open').forEach(g=>g.classList.remove('open'));
   svg.classList.remove('gdim');
+  svg.style.removeProperty('--unzoom');
   mapZoomReset();
 }
 window.grpClose = () => {
@@ -3178,7 +3192,10 @@ function renderCarte(){
   // toucher « large » en unités SVG ne fait que quelques pixels sous le doigt.
   const larg = Math.max(260, Math.min(window.innerWidth, 1100) - 36);
   const ech = W / larg;                       // unités SVG par pixel d'écran
-  const K = petit ? Math.min(3, ech * 1.15) : 1;
+  // Le dessin n'est grossi qu'au niveau département : en vue région les points
+  // sont nombreux et serrés, les agrandir les ferait se chevaucher.
+  const K = (petit && st.level === 'dep') ? Math.min(3, ech * 1.15) : 1;
+  // la zone de toucher, elle, reste large à tous les niveaux : elle est invisible
   const TOUCH = petit ? Math.round(20 * ech) : 0;   // ≈ 40 px de diamètre au doigt
 
   const dotSvg = (j, i, px, py, withLbl, lblY) => {
