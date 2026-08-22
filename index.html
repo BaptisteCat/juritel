@@ -1245,12 +1245,19 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
 @media (max-width:760px){
   :root{--mbot:max(34px, calc(env(safe-area-inset-bottom, 0px) + 12px))}
 
-  /* ---- bloc de recherche ancré en bas : position stable, jamais déplacée ----
-     Les catégories se déplient VERS LE HAUT (colonne inversée) pour ne pas
-     pousser la barre sous le pouce. */
+  /* ---- bloc de recherche posé sous le sous-titre ----
+     Il reste ancré au CORPS de page et non à l'en-tête : celui-ci porte un
+     backdrop-filter, qui ferait de lui la référence de position:fixed, et son
+     z-index l'enferme sous le voile de mise au point — la barre y serait
+     floutée avec le reste. Ancrée au corps, elle passe au-dessus (35 > 31).
+     Sa hauteur est reportée dans --szh pour que le contenu démarre dessous.
+     Au clic, elle DESCEND au centre de l'écran : le clavier réduit la fenêtre,
+     donc « 50% » tombe pile au milieu de ce qui reste visible. */
   #searchzone{
-    position:fixed; left:10px; right:10px; bottom:var(--mbot); z-index:35;
-    flex-direction:column-reverse;
+    position:fixed; left:10px; right:10px; top:calc(var(--htop, 60px) + 12px);
+    bottom:auto; z-index:35;
+    flex-direction:column;
+    transition:top .34s cubic-bezier(.2,.6,.3,1), transform .34s cubic-bezier(.2,.6,.3,1);
     /* le conteneur et ses rangées débordent en hauteur au-dessus de la barre :
        leurs zones transparentes captaient les clics destinés au bouton flottant.
        Seules les commandes réelles reçoivent les clics. */
@@ -1259,6 +1266,10 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
   #searchzone > *{pointer-events:none}
   #searchzone .searchwrap, #searchzone .filtbtn{pointer-events:auto}
   body.filtres #searchzone .chips{pointer-events:auto}
+  body.qfocus #searchzone{top:50%; transform:translateY(calc(var(--szbar, 50px) / -2))}
+  /* le contenu commence sous le bloc entier, ligne de filtres comprise */
+  main{padding-top:calc(var(--szh, 88px) + 24px)}
+  body.fiche main{padding-top:16px}      /* la barre s'efface sur une fiche */
   .searchwrap{
     background:color-mix(in srgb, var(--bg) 55%, transparent);
     -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
@@ -1278,10 +1289,10 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
                0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
                0 6px 18px rgba(0,0,0,.5);
   }
-  /* Bouton de filtre et catégories sur UNE SEULE ligne, juste au-dessus de la
+  /* Bouton de filtre et catégories sur UNE SEULE ligne, juste au-dessous de la
      barre. Les catégories se déploient horizontalement depuis le bouton, comme
      si elles en sortaient : c'est la largeur qui s'anime, pas la hauteur. */
-  .filterline{display:flex; align-items:center; gap:8px; margin:0 0 9px; padding-left:4px}
+  .filterline{display:flex; align-items:center; gap:8px; margin:9px 0 0; padding-left:4px}
   .filtrow{justify-content:flex-start; margin:0; padding:0; flex:0 0 auto}
   #chips{
     flex:1 1 auto; min-width:0; max-width:0; opacity:0; padding:0;
@@ -1307,7 +1318,7 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
 
   /* ---- un seul bouton flottant : le tiroir rassemble toutes les actions ---- */
   #fab, #fabmod{display:none !important}
-  #fabtools{bottom:calc(72px + var(--mbot))}
+  #fabtools{bottom:calc(12px + var(--mbot))}   /* la barre a quitté le bas */
   #toast{bottom:calc(140px + var(--mbot))}
   body, body.mapmode{padding-bottom:calc(120px + var(--mbot))}
 
@@ -2523,6 +2534,15 @@ function majHauteurEntete(){
   // la barre de fiche tient sur une ou deux lignes selon la largeur : on mesure
   r.setProperty('--fbar', haut(document.querySelector('.fbar')));
   r.setProperty('--fsticky', haut(document.querySelector('.fsticky')));
+  // mobile : la barre de recherche flotte au-dessus du contenu, qui doit
+  // démarrer dessous. Sa hauteur varie (filtres dépliés, deux lignes...).
+  // Deux mesures distinctes : le BLOC entier (barre + ligne de filtres) tient
+  // le contenu à distance, tandis que le centrage au clic porte sur la seule
+  // BARRE — centrer le bloc la laisserait au-dessus du milieu.
+  const sz = document.getElementById('searchzone');
+  const flottante = sz && sz.parentElement === document.body;
+  r.setProperty('--szh', flottante ? haut(sz) : '0px');
+  r.setProperty('--szbar', flottante ? haut(sz.querySelector('.searchwrap')) : '0px');
 }
 window.addEventListener('resize', majHauteurEntete);
 
