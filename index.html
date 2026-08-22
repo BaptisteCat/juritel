@@ -694,8 +694,11 @@ select.mini{
 .mgroup .mexp{display:none}
 .mgroup.open .mexp{display:initial}
 .mgroup.open .mclu{display:none}
-.mclu{cursor:zoom-in}
-.mgroup.open .mcatch{cursor:zoom-out}
+.mclu{cursor:pointer}
+.mclubtn{transition:transform .16s cubic-bezier(.2,.6,.3,1); transform-box:fill-box; transform-origin:center}
+.mclu:hover .mclubtn{transform:scale(1.16)}
+.mclu:hover .mdotlbl{font-weight:750}
+.mgroup.open .mcatch{cursor:default}
 .mzoom{transform-origin:0 0; transition:transform .38s cubic-bezier(.22,.61,.36,1)}
 .mcatch{fill:transparent; pointer-events:all}
 svg.gdim > .mdot, svg.gdim > .mdotlbl, svg.gdim .mgroup:not(.open){opacity:.15; transition:opacity .18s}
@@ -3233,8 +3236,10 @@ function renderCarte(){
       svg += `<g class="mgroup" id="mg-${k}">`
         + `<g class="mclu" onclick="grpOpen(${k})">`
         + (TOUCH ? `<circle class="mhit" cx="${cx}" cy="${cy}" r="${TOUCH + 6}"/>` : '')
+        + `<g class="mclubtn">`
         + `<circle cx="${cx}" cy="${cy}" r="${(11.5*K).toFixed(1)}" fill="var(--card)" stroke="var(--accent)" stroke-width="${(2.6*K).toFixed(1)}"><title>${esc(ville)} — ${g.items.length} juridictions</title></circle>`
         + `<text x="${cx}" y="${(g.cy + 4*K).toFixed(1)}" font-size="${(11*K).toFixed(0)}" font-weight="700" fill="var(--accent)" text-anchor="middle" style="pointer-events:none">${g.items.length}</text>`
+        + `</g>`
         + `<text class="mdotlbl" x="${cx}" y="${ly.toFixed(1)}" font-size="${(14*K).toFixed(0)}">${esc(ville)}</text>`
         + `</g><g class="mexp">${inner}${expd}</g></g>`;
     });
