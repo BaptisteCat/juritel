@@ -455,19 +455,34 @@ select.mini{
 }
 .toc a:hover{background:var(--card-2); color:var(--ink); transform:translateX(2px)}
 .toc a .cnt{margin-left:auto; font-size:10.5px; color:var(--ink-3); font-weight:600}
-/* L'ascenseur du navigateur peignait un rail opaque dans la gouttière : il
-   débordait l'arrondi et carrait les deux coins droits. Rail transparent, pouce
-   arrondi et flottant — le fond du sommaire reprend ses quatre coins.
+/* Ascenseur réduit à l'essentiel : un simple trait de 3 px, sans rail, qui ne
+   se montre qu'au survol du sommaire. Au repos il n'y a rien à voir — et le
+   fond du sommaire garde ses quatre coins, que le rail opaque du navigateur
+   carrait en débordant l'arrondi.
    Déclaré ICI, avant la version mobile qui masque l'ascenseur horizontal. */
-.toc{scrollbar-width:thin; scrollbar-color:color-mix(in srgb, var(--ink-3) 45%, transparent) transparent}
-.toc::-webkit-scrollbar{width:10px; height:10px}
+/* Ne PAS déclarer scrollbar-width ici : Chromium ignore tout le stylage
+   ::-webkit-scrollbar dès que la propriété standard est posée, et impose sa
+   propre gouttière de 10 px. On la réserve donc à Firefox, qui n'a pas les
+   pseudo-éléments — le trait y sera un peu plus large, sans autre conséquence. */
+@supports (-moz-appearance:none){
+  .toc{scrollbar-width:thin; scrollbar-color:transparent transparent}
+  .toc:hover, .toc:focus-within{scrollbar-color:color-mix(in srgb, var(--ink-3) 38%, transparent) transparent}
+}
+.toc::-webkit-scrollbar{width:6px; height:6px}
 .toc::-webkit-scrollbar-track{background:transparent}
+/* la bordure transparente amincit le trait sans réduire la zone de saisie.
+   Propriété longue et non le raccourci « background » : celui-ci, dès qu'il
+   contient une variable, ne survit pas tel quel et emporte background-clip. */
 .toc::-webkit-scrollbar-thumb{
-  background:color-mix(in srgb, var(--ink-3) 42%, transparent);
-  border:3px solid transparent; background-clip:content-box; border-radius:999px;
+  background-color:transparent; background-clip:content-box;
+  border:1.5px solid transparent; border-radius:999px;
+  transition:background-color .18s ease;
+}
+.toc:hover::-webkit-scrollbar-thumb, .toc:focus-within::-webkit-scrollbar-thumb{
+  background-color:color-mix(in srgb, var(--ink-3) 38%, transparent);
 }
 .toc::-webkit-scrollbar-thumb:hover{
-  background:color-mix(in srgb, var(--ink-2) 60%, transparent); background-clip:content-box;
+  background-color:color-mix(in srgb, var(--ink-2) 62%, transparent);
 }
 @media (max-width:820px){
   .flayout{display:block}
