@@ -844,7 +844,7 @@ body.accueil .hero{display:block}
 }
 
 /* ---- recherche de service à l'intérieur d'une fiche ---- */
-.svcsearch{position:relative; margin:0 0 11px; max-width:330px}
+.svcsearch{position:relative; margin:0 0 11px auto; max-width:330px}
 .svcsearch .lens{
   position:absolute; left:14px; top:50%; transform:translateY(-50%);
   color:var(--ink-3); pointer-events:none; display:grid; place-items:center;
@@ -1166,6 +1166,43 @@ dialog::backdrop{background:rgba(8,9,18,.55); -webkit-backdrop-filter:blur(4px);
 hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 .hint{font-size:12px; color:var(--ink-3); line-height:1.55; letter-spacing:-.005em}
 
+/* « Sources officielles » : pastille i, le detail s'ouvre en bulle (survol ou clic) */
+.srcinfo{
+  position:relative; display:inline-flex; align-items:center; gap:6px;
+  font:inherit; font-size:12px; color:var(--ink-3); letter-spacing:-.005em;
+  background:none; border:none; padding:0; cursor:pointer;
+}
+.srcinfo .ri{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:15px; height:15px; flex-shrink:0; border-radius:50%;
+  border:1.2px solid currentColor; font-size:9.5px; font-weight:700;
+  font-style:italic; line-height:1; transition:all .18s;
+}
+.srcinfo:hover, .srcinfo.on, .srcinfo:focus-visible{color:var(--ink-2); outline:none}
+.srcinfo:hover .ri, .srcinfo.on .ri, .srcinfo:focus-visible .ri{
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
+  border-color:transparent; color:var(--cta-ink);
+}
+.srcinfo-bulle{
+  position:absolute; left:0; bottom:calc(100% + 10px); z-index:5;
+  width:min(330px, calc(100vw - 64px)); padding:11px 13px; border-radius:12px;
+  background:var(--card-2); color:var(--ink-2); border:1px solid var(--line);
+  box-shadow:var(--shadow-l); font-size:12px; line-height:1.55; text-align:left;
+  opacity:0; visibility:hidden; transform:translateY(4px); pointer-events:none;
+  transition:opacity .18s, transform .18s, visibility .18s;
+}
+.srcinfo-bulle::after{
+  content:''; position:absolute; left:14px; top:100%; margin-top:-5px;
+  width:9px; height:9px; background:var(--card-2); transform:rotate(45deg);
+  border-right:1px solid var(--line); border-bottom:1px solid var(--line);
+}
+.srcinfo.on .srcinfo-bulle, .srcinfo:focus-visible .srcinfo-bulle{
+  opacity:1; visibility:visible; transform:none;
+}
+@media (hover:hover){
+  .srcinfo:hover .srcinfo-bulle{opacity:1; visibility:visible; transform:none}
+}
+
 #toast{
   position:fixed; left:50%; bottom:92px; transform:translateX(-50%) translateY(8px);
   background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
@@ -1321,7 +1358,9 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     autocomplete="off" spellcheck="false" oninput="adrInput(this.value)"
     onkeydown="if(event.key==='Enter'){event.preventDefault();adrEnter(this.value);}">
   <div class="adrsugg" id="adrsugg"></div>
-  <p class="hint" style="margin-top:12px">Sources officielles : Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</p>
+  <p class="hint" style="margin-top:12px">
+    <button type="button" class="srcinfo" aria-expanded="false" onclick="srcInfoTgl(event)">Sources officielles<span class="ri" aria-hidden="true">i</span><span class="srcinfo-bulle" role="tooltip">Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</span></button>
+  </p>
   <div class="dlgbtns"><button class="btn" onclick="document.getElementById('dlgAdr').close()">Fermer</button></div>
 </div></dialog>
 
@@ -2322,10 +2361,26 @@ window.closeTools = () => {
 window.openAdrDlg = () => {
   closeTools();
   const d = document.getElementById('dlgAdr');
+  srcInfoClose();
   d.showModal();
   loadComp();
   const inp = document.getElementById('adr');
   setTimeout(()=>{ inp.focus(); inp.select(); }, 60);
+};
+
+/* bulle « Sources officielles » : survol sur ordinateur (CSS), clic sur mobile */
+function srcInfoClose(){
+  document.querySelectorAll('.srcinfo.on').forEach(b=>{
+    b.classList.remove('on'); b.setAttribute('aria-expanded', 'false');
+  });
+}
+window.srcInfoTgl = e => {
+  e.stopPropagation();
+  const b = e.currentTarget, on = !b.classList.contains('on');
+  srcInfoClose();
+  if(!on) return;
+  b.classList.add('on'); b.setAttribute('aria-expanded', 'true');
+  setTimeout(()=>document.addEventListener('click', srcInfoClose, {once:true}), 0);
 };
 window.tglTool = id => {
   const item = document.querySelector(`.toolitem[onclick*="${id}"]`);
