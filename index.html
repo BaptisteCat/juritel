@@ -843,6 +843,30 @@ body.accueil .hero{display:block}
   .sugg .sadr{display:none}
 }
 
+/* ---- recherche de service à l'intérieur d'une fiche ---- */
+.svcsearch{position:relative; margin:14px 0 4px}
+.svcsearch .lens{
+  position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  color:var(--ink-3); pointer-events:none; display:grid; place-items:center;
+}
+.svcsearch:focus-within .lens{color:var(--accent)}
+#qsvc{
+  width:100%; padding:10px 38px; font-size:13.5px; font-weight:450; color:var(--ink);
+  font-family:inherit; letter-spacing:-.008em;
+  border:1px solid var(--line); border-radius:999px; background:var(--card);
+  outline:none; transition:all .18s;
+}
+#qsvc::placeholder{color:var(--ink-3); font-weight:400}
+#qsvc:focus{border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent)}
+#clearsvc{
+  position:absolute; right:9px; top:50%; transform:translateY(-50%);
+  border:none; background:var(--line-2); color:var(--ink-2); cursor:pointer;
+  width:24px; height:24px; border-radius:50%; display:none; place-items:center;
+  transition:all .15s;
+}
+#clearsvc:hover{background:var(--line); color:var(--ink)}
+
 /* ---- fiche ouverte : la recherche s'efface, la fiche occupe l'écran ---- */
 body.fiche #searchzone{display:none}
 body.accueil .titrebar h1 small{display:none}   /* le grand titre porte déjà le sous-titre */
@@ -865,11 +889,24 @@ body.accueil .titrebar h1 small{display:none}   /* le grand titre porte déjà l
 }
 .fadr{display:flex; gap:8px; font-size:14px; line-height:1.5; color:var(--ink)}
 .fadr svg{flex-shrink:0; margin-top:3px; color:var(--ink-3)}
-.fhoraires{font-size:13px; line-height:1.55}
-.hrow{display:flex; flex-wrap:wrap; gap:4px 10px; padding:2px 0}
-.hrow b{font-weight:600; min-width:118px; color:var(--ink-2)}
-.hrow span{color:var(--ink); font-variant-numeric:tabular-nums}
-.hrow em{font-style:normal; font-size:12px; color:var(--ink-3); flex-basis:100%}
+.fhoraires{font-size:13px; line-height:1.5}
+.hsem{display:flex; gap:5px; margin-bottom:11px}
+.hj{
+  width:27px; height:27px; border-radius:9px; display:grid; place-items:center;
+  font-size:11px; font-weight:700; color:var(--ink-3); background:var(--line-2);
+}
+.hj.on{background:linear-gradient(135deg,var(--grad-a),var(--grad-b)); color:var(--cta-ink)}
+.hj.auj{box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent)}
+.hbloc + .hbloc{margin-top:9px; padding-top:9px; border-top:1px solid var(--line)}
+.hjours{font-size:12px; font-weight:650; color:var(--ink-2); letter-spacing:-.005em}
+.hplages{display:flex; flex-wrap:wrap; gap:6px; margin-top:5px}
+.hplage{
+  font-size:12.5px; font-weight:600; padding:4px 10px; border-radius:9px;
+  background:var(--card-2); border:1px solid var(--line); color:var(--ink);
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.hlibre{margin-top:4px; color:var(--ink)}
+.hnote{margin-top:4px; font-size:12px; color:var(--ink-3)}
 .statut{
   font-size:10.5px; font-weight:700; letter-spacing:.04em; text-transform:none;
   padding:2px 9px; border-radius:20px;
@@ -1919,7 +1956,7 @@ function renderFiche(j){
   let toc = '', blocks = '';
   for(const s of j.services){
     if(ficheDom && (s.domaine||'autres')!==ficheDom) continue;
-    toc += `<a onclick="gotoSvc('${s.id}')">${esc(s.nom)}<span class="cnt">${s.contacts.length}</span></a>`;
+    toc += `<a data-sid="${s.id}" onclick="gotoSvc('${s.id}')">${esc(s.nom)}<span class="cnt">${s.contacts.length}</span></a>`;
     blocks += renderSvcBlock(j, s, svcMatches(j, s, tokens));
   }
   if(!blocks) blocks = `<div class="vide">Aucun service dans cette catégorie.</div>`;
@@ -1936,15 +1973,15 @@ function renderFiche(j){
         <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
       </div>
       <div class="fgrid">
+        <div class="fcol"><div class="fblock" id="fcontact"></div></div>
         <div class="fcol">
           ${j.adresse?`<div class="fblock" id="fadr">
             <h4>Adresse</h4>
             <div class="fadr">${icn('pin',13)}<div>${esc(j.adresse)}
               <button class="mini" onclick="copyVal('${esc(j.adresse)}')">${icn('copy',11)} copier</button></div></div>
           </div>`:`<div class="fblock" id="fadr"></div>`}
-          <div class="fblock" id="fcontact"></div>
+          <div id="fhoraires"></div>
         </div>
-        <div class="fcol" id="fhoraires"></div>
       </div>
       <div class="fsource" id="fsource"></div>
       ${modifMode ? `<div class="facts">
@@ -1954,12 +1991,49 @@ function renderFiche(j){
       </div>` : ''}
     </div>
     ${fchips}
+    <div class="svcsearch">
+      <span class="lens" data-ic="search" data-s="15"></span>
+      <input id="qsvc" type="text" placeholder="Rechercher un service"
+        autocomplete="off" autocapitalize="off" spellcheck="false" oninput="filtreSvc(this.value)">
+      <button id="clearsvc" title="Effacer" onclick="filtreSvc('', true)" data-ic="x" data-s="12"></button>
+    </div>
     <div class="flayout">
       <nav class="toc">${toc}</nav>
       <div>${blocks}</div>
     </div>`;
   spFillBlock(j);
 }
+
+/* Filtre les services affichés dans la fiche. On masque/affiche les éléments
+   déjà rendus plutôt que de relancer le rendu : celui-ci remplace tout le HTML
+   de la vue et le champ perdrait le focus à chaque caractère. */
+window.filtreSvc = (v, vider) => {
+  const champ = document.getElementById('qsvc');
+  if(vider && champ){ champ.value = ''; v = ''; champ.focus(); }
+  const t = norm((v||'').trim()).split(/\s+/).filter(Boolean);
+  const cx = document.getElementById('clearsvc');
+  if(cx) cx.style.display = t.length ? 'grid' : 'none';
+  let visibles = 0;
+  for(const sec of document.querySelectorAll('#view .svcblock')){
+    const sid = sec.id.replace(/^svc-/, '');
+    const nom = norm(sec.querySelector('h3')?.textContent || '');
+    const ok = !t.length || t.every(x => nom.includes(x));
+    sec.style.display = ok ? '' : 'none';
+    const lien = document.querySelector(`#view .toc a[data-sid="${sid}"]`);
+    if(lien) lien.style.display = ok ? '' : 'none';
+    if(ok) visibles++;
+  }
+  let vide = document.getElementById('svcvide');
+  if(!visibles && t.length){
+    if(!vide){
+      vide = document.createElement('div');
+      vide.id = 'svcvide'; vide.className = 'vide';
+      vide.textContent = 'Aucun service ne correspond.';
+      document.querySelector('#view .flayout > div:last-child')?.appendChild(vide);
+    }
+    vide.style.display = '';
+  } else if(vide) vide.style.display = 'none';
+};
 
 function renderSvcBlock(j, s, matchOpen){
   const open = editMode || isOpen(s.id, !!matchOpen);
@@ -2575,16 +2649,31 @@ function spFillBlock(j){
     if(d.horaires && d.horaires.length){
       const st = spStatut(d);
       const pastille = st ? `<span class="statut ${st.ouvert?'ouvert':'ferme'}">${st.ouvert?'Ouvert':'Fermé'}</span>` : '';
+      // bandeau de semaine : un jeton par jour, les jours d'ouverture marqués,
+      // le jour courant cerclé
+      const ouverts = new Set();
+      for(const x of d.horaires) spJours(x.jours).forEach(i => ouverts.add(i));
+      const auj = (new Date().getDay() + 6) % 7;
+      const semaine = ['L','M','M','J','V','S','D'].map((l,i) =>
+        `<span class="hj${ouverts.has(i)?' on':''}${i===auj?' auj':''}" title="${SP_JOURS[i]}">${l}</span>`).join('');
+
+      const hhmm = m => String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
       const lignes = d.horaires.map(x => {
-        // quand « plages » est vide, l'horaire est rédigé en clair dans « note »
-        const plages = (x.plages||'').trim();
-        const heures = plages || (x.note||'').trim();
-        const reste  = plages ? (x.note||'').trim() : '';
-        return `<div class="hrow"><b>${esc(x.jours)}</b><span>${esc(heures||'—')}</span>
-          ${reste?`<em>${esc(reste)}</em>`:''}</div>`;
+        const brut = (x.plages||'').trim() || (x.note||'').trim();
+        const pl = spPlages(brut);
+        // les plages reconnues sont réécrites au même format, ce qui uniformise
+        // les horaires rédigés en clair
+        const corps = pl.length
+          ? `<div class="hplages">${pl.map(([a,b]) => `<span class="hplage">${hhmm(a)} – ${hhmm(b)}</span>`).join('')}</div>`
+          : `<div class="hlibre">${esc(brut||'—')}</div>`;
+        const reste = (x.plages||'').trim() && (x.note||'').trim() ? x.note : '';
+        return `<div class="hbloc"><div class="hjours">${esc(x.jours)}</div>${corps}
+          ${reste?`<div class="hnote">${esc(reste)}</div>`:''}</div>`;
       }).join('');
+
       ho.innerHTML = `<div class="fblock">
         <h4>Horaires du greffe ${pastille}</h4>
+        <div class="hsem">${semaine}</div>
         <div class="fhoraires">${lignes}</div>
       </div>`;
     }
