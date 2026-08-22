@@ -878,6 +878,19 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 }
 @media (max-width:560px){ #fabmod{right:22px} }
 
+/* Sur une fiche, les boutons passent devant tout : main est remontée à 32 le
+   temps d'une recherche, ils doivent rester au-dessus en toute circonstance. */
+body.fiche #fab, body.fiche #fabmod, body.fiche #fabtools{z-index:33}
+/* Ils surplombent le bas de la colonne de droite. Le sommaire et les services
+   se resserrent juste ce qu'il faut pour passer à CÔTÉ plutôt que dessous ;
+   la barre de titre, elle, garde toute sa largeur et son centrage.
+   Le retrait fond dès que la marge de la page suffit d'elle-même. */
+@media (min-width:761px){
+  body.fiche .flayout{
+    padding-right:max(0px, calc(160px - max(0px, (100vw - var(--maxw)) / 2)));
+  }
+}
+
 
 .hero{text-align:center; cursor:pointer; user-select:none; display:none}
 body.accueil .hero{display:block}
@@ -924,10 +937,10 @@ body.accueil .hero{display:block}
   /* backdrop-filter ne floute que ce qui est peint EN DESSOUS : remonter le
      contenu au-dessus du voile suffit a le garder net. Uniquement quand une
      recherche est en cours : sinon les raccourcis d'accueil resteraient nets. */
-  body.qfocus.qactive main{position:relative; z-index:32}
+  body.qfocus.qactive:not(.fiche) main{position:relative; z-index:32}
   /* pendant la recherche, le bouton Outils s'efface : rien ne doit détourner
      l'attention ni rester cliquable derrière le voile */
-  body.qfocus #fabtools{opacity:0; pointer-events:none; transform:translateY(6px)}
+  body.qfocus:not(.fiche) #fabtools{opacity:0; pointer-events:none; transform:translateY(6px)}
 
   /* Résultats : une carte se limite au nom de la juridiction. Les raccourcis de
      service ne s'affichent que lorsque la recherche a désigné un service précis
@@ -1128,9 +1141,12 @@ body.accueil header{
   body.qfocus:not(.fiche) header, body.qactive:not(.fiche) header{padding-top:clamp(15px, 2.8vh, 32px)}
   body.qfocus .hero, body.qactive .hero,
   body.qfocus .homeacts,
-  body.qfocus #fab, body.qactive #fab,
-  body.qfocus #fabmod, body.qactive #fabmod,
-  body.qfocus #fabtools, body.qactive #fabtools{
+  /* :not(.fiche) — sans ce garde-fou, une fiche ouverte depuis une recherche
+     gardait « qactive » (le champ contient toujours le texte cherché) et les
+     trois boutons y restaient flous, pâles et surtout INERTES. */
+  body.qfocus:not(.fiche) #fab, body.qactive:not(.fiche) #fab,
+  body.qfocus:not(.fiche) #fabmod, body.qactive:not(.fiche) #fabmod,
+  body.qfocus:not(.fiche) #fabtools, body.qactive:not(.fiche) #fabtools{
     filter:blur(5px); opacity:.45; pointer-events:none;
   }
   .hero, .homeacts, #fab, #fabmod, #fabtools{transition:filter .25s ease, opacity .25s ease}
