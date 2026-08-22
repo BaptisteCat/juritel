@@ -1170,7 +1170,8 @@ dialog::backdrop{background:rgba(8,9,18,.55); -webkit-backdrop-filter:blur(4px);
 hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 .hint{font-size:12px; color:var(--ink-3); line-height:1.55; letter-spacing:-.005em}
 
-/* « Sources officielles » : pastille i, le detail s'ouvre en bulle (survol ou clic) */
+/* « Sources officielles » : pastille i, le détail se déplie en bulle sous le bouton */
+.srcbloc{margin-top:12px}
 .srcinfo{
   position:relative; display:inline-flex; align-items:center; gap:6px;
   font:inherit; font-size:12px; color:var(--ink-3); letter-spacing:-.005em;
@@ -1187,29 +1188,33 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
   border-color:transparent; color:var(--cta-ink);
 }
-.srcinfo-bulle{
-  position:absolute; left:0; top:calc(100% + 10px); z-index:5;
-  width:min(330px, calc(100vw - 64px)); padding:11px 13px; border-radius:12px;
-  background:var(--card-2); color:var(--ink-2); border:1px solid var(--line);
-  box-shadow:var(--shadow-l); font-size:12px; line-height:1.55; text-align:left;
-  opacity:0; visibility:hidden; transform:translateY(-4px); pointer-events:none;
-  transition:opacity .18s, transform .18s, visibility .18s;
-}
-/* la pointe est portée par le bouton, pas par la bulle : elle vise donc la
-   pastille i quelle que soit la largeur de la bulle */
+/* la pointe est portée par le bouton : elle vise donc la pastille i quelle
+   que soit la largeur de la bulle */
 .srcinfo::after{
-  content:''; position:absolute; right:3px; top:calc(100% + 5px); z-index:6;
+  content:''; position:absolute; right:3px; top:calc(100% + 4px); z-index:2;
   width:9px; height:9px; background:var(--card-2); transform:rotate(45deg);
   border-left:1px solid var(--line); border-top:1px solid var(--line);
-  opacity:0; visibility:hidden; transition:opacity .18s, visibility .18s;
+  opacity:0; transition:opacity .2s;
 }
-.srcinfo.on .srcinfo-bulle, .srcinfo:focus-visible .srcinfo-bulle{
-  opacity:1; visibility:visible; transform:none;
+/* la bulle pousse le contenu au lieu de le recouvrir : jamais rognée par le
+   bas de la fenêtre, quelle que soit la hauteur du texte */
+.srcinfo-bulle{
+  display:grid; grid-template-rows:0fr; opacity:0;
+  transition:grid-template-rows .22s cubic-bezier(.2,.6,.3,1), margin-top .22s, opacity .18s;
 }
-.srcinfo.on::after, .srcinfo:focus-visible::after{opacity:1; visibility:visible}
+.srcinfo-bulle > div{overflow:hidden}
+.srcinfo-bulle p{
+  margin:0; padding:11px 13px; border-radius:12px; max-width:340px;
+  background:var(--card-2); color:var(--ink-2); border:1px solid var(--line);
+  box-shadow:var(--shadow-s); font-size:12px; line-height:1.55;
+}
+.srcinfo.on + .srcinfo-bulle, .srcinfo:focus-visible + .srcinfo-bulle{
+  grid-template-rows:1fr; opacity:1; margin-top:9px;
+}
+.srcinfo.on::after, .srcinfo:focus-visible::after{opacity:1}
 @media (hover:hover){
-  .srcinfo:hover .srcinfo-bulle{opacity:1; visibility:visible; transform:none}
-  .srcinfo:hover::after{opacity:1; visibility:visible}
+  .srcbloc:hover .srcinfo-bulle{grid-template-rows:1fr; opacity:1; margin-top:9px}
+  .srcbloc:hover .srcinfo::after{opacity:1}
 }
 
 #toast{
@@ -1367,9 +1372,10 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     autocomplete="off" spellcheck="false" oninput="adrInput(this.value)"
     onkeydown="if(event.key==='Enter'){event.preventDefault();adrEnter(this.value);}">
   <div class="adrsugg" id="adrsugg"></div>
-  <p class="hint" style="margin-top:12px">
-    <button type="button" class="srcinfo" aria-expanded="false" onclick="srcInfoTgl(event)">Sources officielles<span class="ri" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="3.3" r="1.05"/><rect x="5.05" y="5.2" width="1.9" height="4.6" rx=".95"/></svg></span><span class="srcinfo-bulle" role="tooltip">Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</span></button>
-  </p>
+  <div class="srcbloc">
+    <button type="button" class="srcinfo" aria-expanded="false" aria-controls="srcBulle" onclick="srcInfoTgl(event)">Sources officielles<span class="ri" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="3.3" r="1.05"/><rect x="5.05" y="5.2" width="1.9" height="4.6" rx=".95"/></svg></span></button>
+    <div class="srcinfo-bulle" id="srcBulle"><div><p>Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</p></div></div>
+  </div>
   <div class="dlgbtns"><button class="btn" onclick="document.getElementById('dlgAdr').close()">Fermer</button></div>
 </div></dialog>
 
@@ -2391,8 +2397,6 @@ window.srcInfoTgl = e => {
   srcInfoClose();
   if(!on) return;
   b.classList.add('on'); b.setAttribute('aria-expanded', 'true');
-  /* la bulle descend : sur petit ecran elle peut depasser le bas de la fenetre */
-  b.querySelector('.srcinfo-bulle').scrollIntoView({block:'nearest', behavior:'smooth'});
   setTimeout(()=>document.addEventListener('click', srcInfoClose, {once:true}), 0);
 };
 window.tglTool = id => {
@@ -2945,21 +2949,60 @@ const jurShort = n => n.replace(/^Tribunal judiciaire de /,'TJ ')
   .replace(/^Cour administrative d'appel (de |d')/i,'CAA ');
 
 let grpGrace = null;
+
+/* Au toucher, le navigateur émule le survol : le premier appui déclenche
+   mouseenter (ouverture) puis mouseleave au relâchement (fermeture), si bien
+   qu'il fallait un second appui. On mémorise le mode d'interaction pour ignorer
+   les fermetures par survol sur écran tactile. */
+let tactile = false;
+// pointerover suit le mode d'entrée courant : sur un portable tactile utilisé
+// à la souris, le survol reprend la main dès le premier mouvement
+window.addEventListener('pointerover', e => { tactile = e.pointerType !== 'mouse'; },
+  {passive:true, capture:true});
+window.addEventListener('touchstart', () => { tactile = true; }, {passive:true, capture:true});
+
+/* Zoom de la vue éclatée sur mobile : on resserre le viewBox autour de la ville
+   pour que les points soient assez gros et espacés pour être touchés. */
+function mapZoom(cx, cy, z){
+  const svg = document.querySelector('.mapwrap svg');
+  if(!svg) return;
+  if(!svg.dataset.vb0) svg.dataset.vb0 = svg.getAttribute('viewBox') || '';
+  const base = (svg.dataset.vb0 || '').split(/[\s,]+/).map(Number);
+  if(base.length !== 4 || base.some(isNaN)) return;
+  const [x0, y0, w0, h0] = base;
+  const w = w0 / z, ht = h0 / z;
+  const x = Math.max(x0, Math.min(cx - w/2,  x0 + w0 - w));
+  const y = Math.max(y0, Math.min(cy - ht/2, y0 + h0 - ht));
+  svg.setAttribute('viewBox', `${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${ht.toFixed(1)}`);
+}
+function mapZoomReset(){
+  const svg = document.querySelector('.mapwrap svg');
+  if(svg && svg.dataset.vb0) svg.setAttribute('viewBox', svg.dataset.vb0);
+}
+
 window.grpOpen = k => {
   clearTimeout(grpGrace);
   const svg = document.querySelector('.mapwrap svg');
   if(!svg) return;
   svg.querySelectorAll('.mgroup.open').forEach(g=>g.classList.remove('open'));
   const g = document.getElementById('mg-'+k);
-  if(g){ g.classList.add('open'); svg.classList.add('gdim'); }
+  if(!g) return;
+  g.classList.add('open');
+  svg.classList.add('gdim');
+  if(window.innerWidth < 760){
+    const c = g.querySelector('.mclu circle');
+    if(c) mapZoom(+c.getAttribute('cx'), +c.getAttribute('cy'), 2.6);
+  }
 };
 function grpCloseAll(){
   const svg = document.querySelector('.mapwrap svg');
   if(!svg) return;
   svg.querySelectorAll('.mgroup.open').forEach(g=>g.classList.remove('open'));
   svg.classList.remove('gdim');
+  mapZoomReset();
 }
 window.grpClose = () => {
+  if(tactile) return;            // au toucher, seul un appui explicite referme
   clearTimeout(grpGrace);
   grpGrace = setTimeout(grpCloseAll, 160);   // tolérance : pas de fermeture intempestive
 };
