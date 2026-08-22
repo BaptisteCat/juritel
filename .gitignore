@@ -1,5 +1,6 @@
 # données confidentielles : jamais sur GitHub
 juritel.json
+juritel-*.json
 annuaire.json
 annuaire_raw.md
 annuaire_clean.md

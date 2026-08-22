@@ -289,6 +289,43 @@ body.mapmode{padding-bottom:10px}
   display:flex; flex-direction:column; gap:7px; min-width:0;
 }
 .jcard:hover{box-shadow:var(--shadow-m); transform:translateY(-3px)}
+
+/* ---- favoris ---- */
+.favbtn{
+  flex-shrink:0; display:grid; place-items:center; width:26px; height:26px;
+  border:0; background:none; border-radius:8px; cursor:pointer;
+  color:var(--ink-3); opacity:.45; transition:opacity .15s, color .15s, background .15s;
+}
+.favbtn:hover{opacity:1; background:var(--card-2); color:var(--accent)}
+/* étoile pleine une fois le favori posé : le contour seul se lit mal en petit */
+.favbtn.on{opacity:1; color:var(--accent)}
+.favbtn.on svg{fill:currentColor}
+.favbar{margin:0 0 18px}
+.favlbl{
+  display:flex; align-items:center; gap:6px; margin-bottom:9px;
+  font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--ink-3);
+}
+.favchips{display:flex; flex-wrap:wrap; gap:8px}
+.favchip{
+  display:inline-flex; align-items:center; gap:8px; max-width:100%;
+  padding:8px 10px 8px 13px; border:1px solid var(--line); border-radius:999px;
+  background:var(--card); box-shadow:var(--shadow-s); cursor:pointer;
+  font-size:12.5px; font-weight:600; color:var(--ink-2); letter-spacing:-.01em;
+  transition:border-color .15s, color .15s, transform .15s;
+}
+.favchip:hover{border-color:var(--accent); color:var(--ink); transform:translateY(-1px)}
+.favchip .fnom{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.favchip .fx{
+  display:grid; place-items:center; width:17px; height:17px; flex-shrink:0;
+  border-radius:50%; color:var(--ink-3); opacity:.55; transition:opacity .15s, background .15s;
+}
+.favchip .fx:hover{opacity:1; background:var(--card-2); color:var(--ink)}
+@media (max-width:760px){
+  .favchips{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; padding-bottom:2px}
+  .favchips::-webkit-scrollbar{display:none}
+  .favchip{flex-shrink:0; max-width:62vw}
+}
 .jcard .top{display:flex; align-items:center; gap:10px}
 .jcard .nom{font-weight:650; font-size:14.5px; letter-spacing:-.015em; flex:1; min-width:0}
 .jcard .adr{
@@ -909,7 +946,8 @@ body.accueil .hero{display:block}
 .fbar .row1{position:relative; display:flex; align-items:center;
   justify-content:center; min-height:38px}
 .fbar .row1 #btnback{position:absolute; left:0; top:50%; transform:translateY(-50%)}
-.fbar .row1 .badge{position:absolute; right:0; top:50%; transform:translateY(-50%)}
+.fbar .row1 .badge{position:absolute; right:30px; top:50%; transform:translateY(-50%)}
+.fbar .row1 .favbtn{position:absolute; right:0; top:50%; transform:translateY(-50%)}
 .fbar .row1 h2{
   text-align:center; max-width:calc(100% - 210px);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
@@ -1572,6 +1610,8 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   <hr>
   <div id="ownerBox" style="display:none">
   <div class="setrow"><button class="btn" id="btnExport"><span data-ic="down2" data-s="15"></span> Exporter les données (JSON)</button></div>
+  <div class="setrow"><button class="btn" id="btnExportPlus"><span data-ic="down2" data-s="15"></span> Exporter la base enrichie (JSON)</button></div>
+  <p class="hint">L'export enrichi complète votre annuaire avec les juridictions de l'annuaire officiel qui y manquent.</p>
   <div class="setrow"><button class="btn" id="btnImport"><span data-ic="up2" data-s="15"></span> Importer un fichier JSON</button>
     <input type="file" id="fileImport" accept=".json" hidden></div>
   </div>
@@ -1646,6 +1686,7 @@ const ICONS = {
   tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
   map:'<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/>',
   clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  star:'<path d="M11.05 3.69a1.06 1.06 0 0 1 1.9 0l2.2 4.46 4.92.72a1.06 1.06 0 0 1 .59 1.8l-3.56 3.47.84 4.9a1.06 1.06 0 0 1-1.54 1.12L12 17.85l-4.4 2.31a1.06 1.06 0 0 1-1.54-1.12l.84-4.9-3.56-3.47a1.06 1.06 0 0 1 .59-1.8l4.91-.72z"/>',
   globe:'<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
 };
 const icn = (n, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||''}</svg>`;
@@ -1737,6 +1778,50 @@ const SYN = {
 const tokMatch = (txt, t) => txt.includes(t) || (SYN[t] && txt.includes(SYN[t]));
 
 const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+/* ---------------- favoris : propres à chaque utilisateur ----------------
+   Ils ne touchent pas la base commune : une table à part, filtrée par RLS sur
+   l'adresse du compte. Le stockage local garde l'accès rapide hors ligne et
+   avant la première synchronisation. */
+const LS_FAV = 'juritel.favoris';
+let FAV = new Set();
+try{ FAV = new Set(JSON.parse(localStorage.getItem(LS_FAV) || '[]')); }catch(e){}
+const favSave = () => { try{ localStorage.setItem(LS_FAV, JSON.stringify([...FAV])); }catch(e){} };
+const estFav = id => FAV.has(id);
+/* juridictions favorites encore présentes dans la base, dans l'ordre du nom */
+function favJuris(){
+  return DATA ? DATA.juridictions.filter(j => FAV.has(j.id))
+    .sort((a,b)=>a.nom.localeCompare(b.nom,'fr')) : [];
+}
+function favBtn(id, taille){
+  const on = estFav(id);
+  return `<button class="favbtn${on?' on':''}" title="${on?'Retirer des favoris':'Ajouter aux favoris'}"
+    aria-pressed="${on}" onclick="togFav(event,'${id}')">${icn('star', taille||15)}</button>`;
+}
+window.togFav = async (ev, id) => {
+  if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+  const ajout = !FAV.has(id);
+  if(ajout) FAV.add(id); else FAV.delete(id);
+  favSave();
+  render();
+  toast(ajout ? 'Ajouté aux favoris' : 'Retiré des favoris');
+  if(!sb || !sbUser) return;
+  const email = (sbUser.email||'').toLowerCase();
+  try{
+    if(ajout) await sb.from('favoris').upsert({email, juridiction:id});
+    else await sb.from('favoris').delete().eq('email', email).eq('juridiction', id);
+  }catch(e){ toast('Favori non enregistré : ' + e.message); }
+};
+async function favCharger(){
+  if(!sbAdmis || !sbUser) return;
+  try{
+    // la règle RLS ne rend que les lignes du compte : quelques centaines d'octets
+    const {data, error} = await sb.from('favoris').select('juridiction');
+    if(error || !data) return;
+    FAV = new Set(data.map(r=>r.juridiction));
+    favSave(); render();
+  }catch(e){}
+}
 const esc = s => (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 function toast(msg){
@@ -1953,7 +2038,7 @@ function renderList(){
     // Accueil : on ne deverse plus toutes les fiches. Trois portes d'entree,
     // la recherche restant l'element central (mise en forme par body.accueil).
     const nj = DATA.juridictions.length;
-    V.innerHTML = `<div class="homeacts">
+    V.innerHTML = favBar() + `<div class="homeacts">
       <button class="homeact" onclick="openAdrDlg(this)">
         <span class="ha-ic">${icn('pin',20)}</span>
         <span class="ha-tx"><b>Juridiction compétente</b><span class="hint">À partir d’une adresse</span></span>
@@ -1977,6 +2062,13 @@ function renderList(){
   const slice = results.slice(0, shownCards);
   let html = '';
   if(!tokens.length && !currentCat){
+    // parcours complet : les favoris ouvrent la liste, avant les catégories
+    const favs = results.filter(r => FAV.has(r.j.id));
+    if(favs.length){
+      html += `<div class="cathead">Favoris <span class="cnt">· ${favs.length}</span></div><div class="grid">`;
+      for(const r of favs) html += cardJur(r, null);
+      html += '</div>';
+    }
     // accueil : aperçu structuré de toutes les catégories
     const order = ['tj','ca','cassation','penitentiaire','commissariat','cra','prefecture','douane','etranger','commerce','autre'];
     const bycat = {};
@@ -2107,6 +2199,20 @@ window.openFicheSvc = (jid, sid) => {
   setTimeout(()=>document.getElementById('svc-'+sid)?.scrollIntoView({behavior:'smooth', block:'start'}), 60);
 };
 
+/* ruban d'accès rapide : rien à afficher tant qu'aucun favori n'est posé */
+function favBar(){
+  const js = favJuris();
+  if(!js.length) return '';
+  const chips = js.map(j => `<button class="favchip" onclick="openFiche('${j.id}')" title="${esc(j.nom)}">
+    <span class="fnom">${esc(j.nom)}</span>
+    <span class="fx" title="Retirer des favoris" onclick="togFav(event,'${j.id}')">${icn('x',11)}</span>
+  </button>`).join('');
+  return `<div class="favbar">
+    <div class="favlbl">${icn('star',12)} Accès rapide</div>
+    <div class="favchips">${chips}</div>
+  </div>`;
+}
+
 function cardJur({j, hits}, tokens){
   const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
   let snips = '';
@@ -2121,6 +2227,7 @@ function cardJur({j, hits}, tokens){
     <div class="top">
       <span class="nom">${esc(j.nom)}</span>
       <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+      ${favBtn(j.id, 14)}
     </div>
     ${j.adresse?`<div class="adr">${icn('pin',11)} ${esc(j.adresse)}</div>`:''}
     ${snips}
@@ -2184,6 +2291,7 @@ function renderFiche(j){
         <button id="btnback" onclick="goHome()" title="Retour">${icn('left',15)}</button>
         <h2 title="${esc(j.nom)}">${esc(jurLong(j))}</h2>
         <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+        ${favBtn(j.id, 17)}
       </div>
     </div>
     <div class="fhead">
@@ -2469,20 +2577,41 @@ window.rate = async (id, ok) => {
 /* ---- votes communautaires : chargement et application sur les contacts ---- */
 async function sbVotesCharger(){
   if(!sbAdmis || !sbUser) return;
-  let lignes = [];
+  const mien = (sbUser.email||'').toLowerCase();
+  let agg = [], miens = [];
   try{
-    const {data, error} = await sb.from('votes').select('email,contact,valeur,maj');
-    if(error || !data) return;
-    lignes = data;
+    // Les compteurs sont calculés par le serveur. On rapatriait la table
+    // entière — tous les votes de tous les membres — pour n'en tirer que des
+    // totaux : un volume qui croissait comme le carré du nombre d'utilisateurs.
+    // Le résumé est borné par le nombre de contacts notés, plus par les membres.
+    const [a, b] = await Promise.all([
+      sb.rpc('votes_resume'),
+      sb.from('votes').select('contact,valeur').eq('email', mien),
+    ]);
+    miens = b.data || [];
+    if(a.error || !a.data){
+      // la fonction n'existe pas encore côté serveur : on retombe sur l'ancien
+      // comptage local pour ne pas priver l'application de ses votes
+      const {data, error} = await sb.from('votes').select('contact,valeur,maj');
+      if(error || !data) return;
+      const cpt = new Map();
+      for(const v of data){
+        let o = cpt.get(v.contact);
+        if(!o){ o = {contact:v.contact, ok:0, ko:0, dernier_ok:null}; cpt.set(v.contact, o); }
+        if(v.valeur > 0){ o.ok++; if(!o.dernier_ok || v.maj > o.dernier_ok) o.dernier_ok = v.maj; }
+        else o.ko++;
+      }
+      agg = [...cpt.values()];
+    } else agg = a.data;
   }catch(e){ return; }
   const par = new Map();
-  const mien = (sbUser.email||'').toLowerCase();
-  for(const v of lignes){
+  for(const v of agg)
+    par.set(v.contact, {ok:v.ok||0, ko:v.ko||0,
+      lastOk: v.dernier_ok ? Date.parse(v.dernier_ok) : 0, mien:0});
+  for(const v of miens){
     let o = par.get(v.contact);
     if(!o){ o = {ok:0, ko:0, lastOk:0, mien:0}; par.set(v.contact, o); }
-    if(v.valeur > 0){ o.ok++; const t = Date.parse(v.maj||''); if(t > o.lastOk) o.lastOk = t; }
-    else o.ko++;
-    if((v.email||'').toLowerCase() === mien) o.mien = v.valeur > 0 ? 1 : -1;
+    o.mien = v.valeur > 0 ? 1 : -1;
   }
   for(const j of DATA.juridictions) for(const s of j.services) for(const c of s.contacts){
     const o = par.get(c.id);
@@ -3967,6 +4096,53 @@ $('#btnExport').addEventListener('click', async ()=>{
   a.download = 'juritel-'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
 });
+/* Export enrichi : la base personnelle, complétée par l'annuaire officiel là
+   où elle est muette. Les juridictions absentes sont créées avec leur accueil,
+   les fiches existantes ne reçoivent que ce qui leur manque — jamais de
+   réécriture d'une donnée saisie à la main, qui prime toujours. */
+function fusionOfficiel(){
+  const out = JSON.parse(JSON.stringify(DATA, (k,v)=>k.startsWith('_')?undefined:v));
+  const parId = new Map(out.juridictions.map(j=>[j.id, j]));
+  let ajoutees = 0, comblees = 0;
+  for(const e of OFF.j){
+    const dejaLa = offJurMatch(e);
+    if(dejaLa){
+      const cible = parId.get(dejaLa.id);
+      if(!cible) continue;
+      let touche = false;
+      if(!cible.adresse && e.adresse){ cible.adresse = e.adresse; touche = true; }
+      if(touche) comblees++;
+      continue;
+    }
+    const s = {id:uid('s'), nom:'Accueil / Standard', domaine:'general', contacts:[]};
+    const ct = (type, valeur) => ({id:uid('c'), type, valeur, libelle:'Accueil', groupe:'',
+      note:'', ok:0, ko:0, lastOk:null, lastTry:null, u:NOW()});
+    for(const t of e.tels)  s.contacts.push(ct('tel', t));
+    for(const m of e.mails) s.contacts.push(ct('email', m));
+    if(!s.contacts.length && !e.adresse) continue;   // fiche officielle vide : sans intérêt
+    out.juridictions.push({
+      id: uid('j'), nom: e.nom, categorie: SP_BADGE[e.t]||'autre',
+      adresse: e.adresse || '', services: [s],
+      origine: 'officiel', officielType: e.t, officielMaj: e.maj || '',
+    });
+    ajoutees++;
+  }
+  out.juridictions.sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  return {out, ajoutees, comblees};
+}
+$('#btnExportPlus').addEventListener('click', async ()=>{
+  if(!(await sbEstProprietaire())) return;
+  await loadOfficiel();
+  if(!OFF){ toast('Annuaire officiel indisponible'); return; }
+  const {out, ajoutees, comblees} = fusionOfficiel();
+  const blob = new Blob([JSON.stringify(out)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'juritel-enrichi-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`${out.juridictions.length} juridictions — ${ajoutees} ajoutées, ${comblees} complétées`);
+});
 $('#btnImport').addEventListener('click', async ()=>{
   if(!(await sbEstProprietaire())) return;
   $('#fileImport').click();
@@ -4438,7 +4614,13 @@ window.driveJoin = async () => {
 
 
 /* ============================ compte, liste blanche et synchronisation (Supabase) ============================ */
-let sb = null, sbUser = null, sbAdmis = false, sbTimer = null, sbBusy = false, sbTs = null;
+let sb = null, sbUser = null, sbAdmis = false, sbTimer = null, sbBusy = false;
+// L'horodatage survit à la session : au démarrage suivant, la base gardée en
+// stockage local suffit si le serveur n'a pas bougé — plus aucun transfert.
+// Il n'a de sens que si cette base locale existe vraiment.
+const LS_TS = 'juritel.sbts';
+let sbTs = localStorage.getItem(LS_KEY) ? (localStorage.getItem(LS_TS) || null) : null;
+const sbTsSet = v => { sbTs = v || null; try{ localStorage.setItem(LS_TS, sbTs || ''); }catch(e){} };
 const sbClean = () => JSON.parse(JSON.stringify(DATA, (k,v)=>k.startsWith('_')?undefined:v));
 // L indicateur ne reste affiche que tant qu il a quelque chose a dire : il
 // reapparait des qu un envoi commence et s efface peu apres « synchronise ».
@@ -4492,7 +4674,7 @@ async function sbGateUpdate(){
   }
   gate.classList.add('off');
   if(horsLigne){ sbState('', 'hors ligne'); return; }
-  sbPull().then(() => sbVotesCharger());
+  sbPull().then(() => { sbVotesCharger(); favCharger(); });
   sbNotifDemandes();
 }
 
@@ -4545,10 +4727,20 @@ async function sbAskState(){
   }catch(e){}
 }
 
-async function sbPull(){
+async function sbPull(force){
   if(!sbAdmis || sbBusy) return;
   sbBusy = true; sbState('work','sync…');
   try{
+    // Sonder l'horodatage SEUL avant de rapatrier quoi que ce soit. La base ne
+    // change que lorsque le propriétaire l'édite, or chaque client la
+    // retéléchargeait entière toutes les 5 minutes : le trafic sortant du plan
+    // gratuit se consumait en synchronisations qui ne changeaient rien.
+    // ~200 octets au lieu de ~200 Ko.
+    if(!force && sbTs && DATA && (DATA.juridictions||[]).length){
+      const {data:t, error:e0} = await sb.from('base').select('updated_at').eq('id',1).maybeSingle();
+      if(e0){ sbState('err','erreur lecture'); return; }
+      if(t && t.updated_at === sbTs){ sbState('on','synchronisé'); return; }
+    }
     const {data, error} = await sb.from('base').select('data,updated_at').eq('id',1).maybeSingle();
     if(error){ sbState('err','erreur lecture'); return; }
     if(data && data.data && (data.data.juridictions||[]).length){
@@ -4557,7 +4749,7 @@ async function sbPull(){
       try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }catch(e){}
       renderChips(); render();
     }
-    sbTs = data ? data.updated_at : null;
+    sbTsSet(data ? data.updated_at : null);
     // première synchro du propriétaire : la base locale pleine remplit le serveur
     if(DATA.juridictions.length && (!data || !(data.data && (data.data.juridictions||[]).length)))
       await sbPush(true);
@@ -4572,7 +4764,8 @@ async function sbPush(skipCheck){
   if(!(await sbEstProprietaire())) return;
   if(!skipCheck && sbTs){
     const {data} = await sb.from('base').select('updated_at').eq('id',1).maybeSingle();
-    if(data && data.updated_at !== sbTs){ await sbPull(); }
+    // l'horodatage vient d'être lu et diffère : inutile de le resonder
+    if(data && data.updated_at !== sbTs){ await sbPull(true); }
   }
   sbState('work','envoi…');
   const now = new Date().toISOString();
@@ -4580,7 +4773,7 @@ async function sbPush(skipCheck){
     .upsert({id:1, data: sbClean(), updated_at: now})
     .select('updated_at').single();
   if(error){ sbState('err','erreur envoi'); return; }
-  sbTs = data ? data.updated_at : now;
+  sbTsSet(data ? data.updated_at : now);
   sbState('on','synchronisé');
 }
 window.sbSchedulePush = () => {
