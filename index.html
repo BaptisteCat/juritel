@@ -873,14 +873,14 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 #fabmod, #fabtools{
   position:fixed; right:22px; z-index:30; width:52px; height:44px;
   border-radius:22px; border:1px solid var(--line);
-  /* Un cran plus soutenu que l'origine (16 % / 0), pas davantage : le second
-     arrêt valait le blanc pur de la carte et se perdait dans le fond crème,
-     mais ces boutons doivent rester des pastilles claires et discrètes.
+  /* À peine plus soutenu que l'origine (16 % / 0) : juste de quoi que le
+     second arrêt cesse d'être le blanc pur de la carte, qui se perdait dans le
+     fond crème. Ces boutons restent des pastilles claires et discrètes.
      La proportion d'accent joue dans le bon sens des deux côtés : en thème
      clair elle assombrit, en sombre elle éclaircit. */
   background:linear-gradient(135deg,
-    color-mix(in srgb, var(--accent) 24%, var(--card)),
-    color-mix(in srgb, var(--accent) 10%, var(--card)));
+    color-mix(in srgb, var(--accent) 19%, var(--card)),
+    color-mix(in srgb, var(--accent) 5%, var(--card)));
   color:var(--ink-2); cursor:pointer; display:grid; place-items:center;
   box-shadow:var(--shadow-m); transition:all .22s cubic-bezier(.2,.6,.3,1);
 }
