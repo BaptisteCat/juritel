@@ -1208,7 +1208,17 @@ dialog{
 .dlg::-webkit-scrollbar-thumb:hover, #tools::-webkit-scrollbar-thumb:hover{
   background:color-mix(in srgb, var(--ink-2) 60%, transparent); background-clip:content-box;
 }
-dialog::backdrop{background:rgba(8,9,18,.55); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px)}
+dialog::backdrop{background:rgba(8,9,18,.42);
+  -webkit-backdrop-filter:blur(9px) saturate(.9); backdrop-filter:blur(9px) saturate(.9)}
+/* fenêtre large : la carte a besoin de place */
+dialog.dlgwide{max-width:min(1120px, 96vw); width:96vw}
+dialog.dlgwide .dlg{padding:16px 18px 18px}
+.maphead .iconbtn{margin-left:auto}
+.maphead .tico{width:26px; height:26px; border-radius:8px; flex-shrink:0}
+@media (max-width:760px){
+  dialog.dlgwide{width:calc(100vw - 16px); max-width:none}
+  dialog.dlgwide .dlg{padding:12px 12px 14px}
+}
 .dlg{padding:24px}
 .dlg h2{font-size:17px; font-weight:750; margin-bottom:18px; letter-spacing:-.02em}
 .dlg label{
@@ -1441,6 +1451,8 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <button class="btn primary" value="ok" id="addOk">Ajouter</button>
   </div>
 </form></dialog>
+
+<dialog id="dlgCarte" class="dlgwide"><div class="dlg" id="carteBody"></div></dialog>
 
 <dialog id="dlgAdr"><div class="dlg">
   <h2>Juridiction compétente</h2>
@@ -1837,8 +1849,6 @@ window.addEventListener('popstate', ()=>{
   ficheId = m ? m[1] : null;
   const sp = location.hash.match(/^#sp\/([a-z]+)\/(.+)$/);
   spState = (!ficheId && sp) ? {type:sp[1], nom:decodeURIComponent(sp[2]), loading:true} : null;
-  mapState = location.hash==='#carte' ? (mapState||{level:'fr'}) : null;
-  if(ficheId || spState) mapState = null;
   if(spState) spResolve();
   render();
 });
@@ -1852,7 +1862,6 @@ function render(){
   document.body.classList.toggle('fiche', !!ficheId || !!spState);
   setTimeout(majHauteurEntete, 0);   // render() a plusieurs sorties : on couvre toutes les branches
   $('#clearq').style.display = $('#q').value ? 'grid':'none';
-  document.body.classList.toggle('mapmode', !!mapState && !ficheId);
   updateToolsDock();
   if(ficheId){
     const j = DATA.juridictions.find(x=>x.id===ficheId);
@@ -1860,7 +1869,6 @@ function render(){
     ficheId = null;
   }
   if(spState){ renderFicheSP(); return; }
-  if(mapState){ renderCarte(); return; }
   renderList();
 }
 
@@ -1880,11 +1888,11 @@ function renderList(){
     // la recherche restant l'element central (mise en forme par body.accueil).
     const nj = DATA.juridictions.length;
     V.innerHTML = `<div class="homeacts">
-      <button class="homeact" onclick="openAdrDlg()">
+      <button class="homeact" onclick="openAdrDlg(this)">
         <span class="ha-ic">${icn('pin',20)}</span>
         <span class="ha-tx"><b>Juridiction compétente</b><span class="hint">À partir d’une adresse</span></span>
       </button>
-      <button class="homeact" onclick="openCarte()">
+      <button class="homeact" onclick="openCarte(this)">
         <span class="ha-ic">${icn('map',20)}</span>
         <span class="ha-tx"><b>Carte de France</b><span class="hint">Parcourir par région</span></span>
       </button>
@@ -2477,11 +2485,11 @@ window.closeTools = () => {
   t.classList.remove('show');
   document.getElementById('toolsback').classList.remove('show');
 };
-window.openAdrDlg = () => {
+window.openAdrDlg = (src) => {
   closeTools();
   const d = document.getElementById('dlgAdr');
   srcInfoClose();
-  d.showModal();
+  ouvrirDepuis(d, src || document.querySelector('.homeact:first-child'));
   loadComp();
   const inp = document.getElementById('adr');
   setTimeout(()=>{ inp.focus(); inp.select(); }, 60);
@@ -3040,15 +3048,42 @@ async function loadCarte(){
   }catch(e){}
   return MAPD;
 }
-window.openCarte = () => {
+/* Ouvre une fenêtre en la faisant grandir depuis l'élément cliqué : on mesure
+   les deux rectangles et on joue l'écart, ce qui donne l'impression que la
+   petite carte se déploie. */
+window.ouvrirDepuis = (dlg, source) => {
+  if(dlg.open) return;
+  dlg.showModal();
+  if(!source || !dlg.animate) return;
+  const s = source.getBoundingClientRect(), d = dlg.getBoundingClientRect();
+  if(!s.width || !d.width) return;
+  const sx = Math.max(.05, s.width / d.width), sy = Math.max(.05, s.height / d.height);
+  const tx = (s.left + s.width/2) - (d.left + d.width/2);
+  const ty = (s.top + s.height/2) - (d.top + d.height/2);
+  dlg.animate([
+    {transform:`translate(${tx}px, ${ty}px) scale(${sx}, ${sy})`, opacity:.4, borderRadius:'16px'},
+    {transform:'none', opacity:1, borderRadius:'22px'}
+  ], {duration:300, easing:'cubic-bezier(.2,.75,.3,1)'});
+};
+
+window.openCarte = (src) => {
   mapState = {level:'fr'};
-  ficheId = null; spState = null;
-  if(location.hash!=='#carte') history.pushState(null,'','#carte');
-  render(); window.scrollTo(0,0);
+  const dlg = document.getElementById('dlgCarte');
+  ouvrirDepuis(dlg, src || document.querySelector('.homeact:nth-child(2)'));
+  loadComp();
+  if(!MAPD){ document.getElementById('carteBody').innerHTML = '<div class="vide">Chargement de la carte…</div>';
+    loadCarte().then(()=>{ if(dlg.open) renderCarte(); });
+    return; }
+  renderCarte();
+};
+window.closeCarte = () => {
+  const d = document.getElementById('dlgCarte');
+  if(d.open) d.close();
+  mapState = null;
 };
 window.carteGo = (level, code) => {
   mapState = level==='fr' ? {level:'fr'} : {level, code};
-  render();
+  renderCarte();
 };
 const typeColor = t => t==='ca' ? 'var(--mail)' : t==='tprx' ? 'var(--ok)'
   : t==='cph' ? '#e59a3c' : t==='commerce' ? '#2fb7a5'
@@ -3192,6 +3227,7 @@ window.grpClose = () => {
 };
 window.grpCloseNow = grpCloseAll;
 window.carteJur = i => {
+  closeCarte();
   const j = MAPD.j[i];
   const f = j.t==='tj' ? findJurByName(j.n, ['tj'])
     : j.t==='ca' ? findJurByName(j.n, ['ca'])
@@ -3211,11 +3247,12 @@ window.carteDep = code => {
 };
 
 function renderCarte(){
-  $('#stats').textContent = '';
+  const CIBLE = document.getElementById('carteBody');
+  if(!CIBLE) return;
   loadComp();                 // nécessaire pour la cour d'appel au survol
   if(!MAPD){
-    $('#view').innerHTML = '<div class="vide">Chargement de la carte…</div>';
-    loadCarte().then(()=>{ if(mapState) render(); });
+    CIBLE.innerHTML = '<div class="vide">Chargement de la carte…</div>';
+    loadCarte().then(()=>{ if(mapState) renderCarte(); });
     return;
   }
   const st = mapState;
@@ -3376,11 +3413,12 @@ function renderCarte(){
       items.push(`<span class="shape">Le filtre « ${esc((CATS[currentCat]||currentCat))} » n'est pas cartographié — choisissez Tout, Tribunaux judiciaires ou Cours d'appel.</span>`);
     legend = '<div class="mlegend">'+items.join('')+'</div>';
   }
-  $('#view').innerHTML = `<div class="mapcard">
+  CIBLE.innerHTML = `<div class="mapcard">
     <div class="maphead">
-      <button id="btnback" onclick="${st.level==='fr'?'goHome()':st.level==='reg'?`carteGo('fr')`:`carteGo('reg','${(MAPD.d.find(d=>d.c===st.code)||{}).r}')`}" title="Retour">${icn('left',15)}</button>
+      ${st.level==='fr' ? '' : `<button id="btnback" onclick="${st.level==='reg'?`carteGo('fr')`:`carteGo('reg','${(MAPD.d.find(d=>d.c===st.code)||{}).r}')`}" title="Retour">${icn('left',15)}</button>`}
+      <span class="tico email">${icn('map',14)}</span>
       <h2>${esc(titre)}</h2>
-      <span class="badge b-tj">Carte</span>
+      <button class="iconbtn" onclick="closeCarte()" title="Fermer">${icn('x',15)}</button>
     </div>
     <div class="mcrumbs">${crumbs}</div>
     <div class="maplayout">
@@ -4598,7 +4636,9 @@ document.getElementById('btnWlAdd').addEventListener('click', ()=>sbWlAdd());
   if(m && DATA.juridictions.some(j=>j.id===m[1])) ficheId = m[1];
   const sp = location.hash.match(/^#sp\/([a-z]+)\/(.+)$/);
   if(!ficheId && sp){ spState = {type:sp[1], nom:decodeURIComponent(sp[2]), loading:true}; spResolve(); }
-  if(location.hash==='#carte') mapState = {level:'fr'};
+  // raccourci de l'application installée : #carte ouvre directement la fenêtre
+  if(location.hash==='#carte'){ history.replaceState(null,'',location.pathname+location.search);
+    setTimeout(()=>openCarte(), 60); }
   renderChips(); render();
   sbInit();
   setTimeout(loadOfficiel, 2000);   // préchargement du dataset officiel
