@@ -866,20 +866,35 @@ body.accueil .hero{display:block}
 /* ---- barre épinglée de la fiche : titre, filtres et recherche ---- */
 .fbar{
   position:sticky; top:var(--htop, 60px); z-index:15;
-  background:color-mix(in srgb, var(--bg) 88%, transparent);
-  -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
-  padding:10px 0 9px; margin-bottom:5px;
-  border-bottom:1px solid transparent;
+  /* fond plein : translucide, le contenu défilait visiblement au travers */
+  background:var(--bg);
+  padding:10px 0 8px;
+}
+/* le titre occupe le centre, flèche et catégorie tenues aux extrémités */
+/* la rangée a quitté .fhead : elle n'héritait plus de sa mise en page */
+.fbar .row1{position:relative; display:flex; align-items:center;
+  justify-content:center; min-height:38px}
+.fbar .row1 #btnback{position:absolute; left:0; top:50%; transform:translateY(-50%)}
+.fbar .row1 .badge{position:absolute; right:0; top:50%; transform:translateY(-50%)}
+.fbar .row1 h2{
+  text-align:center; max-width:calc(100% - 210px);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+@media (max-width:760px){
+  .fbar .row1 .badge{display:none}           /* la place manque : le titre prime */
+  .fbar .row1 h2{max-width:calc(100% - 84px)}
 }
 /* Filtres et recherche : à leur place sous la carte, ils remontent avec le
    contenu puis se figent sous la barre du titre. */
 .fsticky{
   position:sticky; top:calc(var(--htop, 60px) + var(--fbar, 0px)); z-index:14;
   display:flex; align-items:center; gap:14px;
-  background:color-mix(in srgb, var(--bg) 88%, transparent);
-  -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
-  padding:9px 0 10px; margin-bottom:4px;
+  background:var(--bg);
+  padding:2px 0 10px; margin-bottom:4px;
 }
+/* sur une fiche, l'en-tête cesse d'être translucide : les trois bandes
+   forment un bloc opaque sous lequel le contenu disparaît proprement */
+body.fiche header{background:var(--bg); -webkit-backdrop-filter:none; backdrop-filter:none}
 .fsticky .chips{flex:1 1 auto; min-width:0; padding:0}
 .fsticky .svcsearch{flex:0 0 auto; width:min(320px, 42%)}
 @media (max-width:760px){
@@ -2075,7 +2090,7 @@ function renderFiche(j){
     <div class="fbar">
       <div class="row1">
         <button id="btnback" onclick="goHome()" title="Retour">${icn('left',15)}</button>
-        <h2>${esc(j.nom)}</h2>
+        <h2 title="${esc(j.nom)}">${esc(jurLong(j))}</h2>
         <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
       </div>
     </div>
@@ -3013,6 +3028,34 @@ function mapTypesFor(level){
   return [];   // catégorie non cartographiée
 }
 const cityOf = n => jurShort(n).replace(/^(TJ|CPH|T\.Com|TA|CAA|Prox\.)\s+/,'');
+/* Développe « TJ PARIS » en « Tribunal judiciaire de Paris ». Les noms de la
+   base sont hétérogènes : on n'agit que sur un acronyme reconnu en tête, ou sur
+   un nom entièrement en capitales qui ne contient aucun mot de juridiction —
+   sinon on renverrait « Tribunal judiciaire de Tribunal pour enfants ». */
+const ACRO_JUR = {TJ:'Tribunal judiciaire', TGI:'Tribunal judiciaire',
+  CA:"Cour d'appel", CPH:"Conseil de prud'hommes", TCO:'Tribunal de commerce',
+  TC:'Tribunal de commerce', TPRX:'Tribunal de proximité',
+  TA:'Tribunal administratif', CAA:"Cour administrative d'appel"};
+const PREFIXE_CAT = {tj:'Tribunal judiciaire', ca:"Cour d'appel", commerce:'Tribunal de commerce'};
+const MOTS_JUR = /tribunal|cour|conseil|maison|centre|prison|commissariat|pr[ée]fecture|douane|police/i;
+const villeTitre = s => s.toLowerCase()
+  .replace(/(^|[\s'’-])([a-zà-ÿ])/g, (m,a,b) => a + b.toUpperCase())
+  // \B echouait : un mot precede d'une espace EST une frontiere de mot
+  .replace(/(\s)(En|De|Du|Des|La|Le|Les|Sur|Sous|L[èe]s|Et|Aux|Au)(?=\s|$)/g,
+    (m, a, b) => a + b.toLowerCase());
+function jurLong(j){
+  const nom = (j.nom||'').trim();
+  const m = nom.match(/^([A-Z]{2,4})\s+(?:DE\s+|D['’]\s*)?(.+)$/);
+  let base = null, reste = null;
+  if(m && ACRO_JUR[m[1]]){ base = ACRO_JUR[m[1]]; reste = m[2]; }
+  else if(PREFIXE_CAT[j.categorie] && nom === nom.toUpperCase() && !MOTS_JUR.test(nom)){
+    base = PREFIXE_CAT[j.categorie]; reste = nom;
+  }
+  if(!base) return nom;
+  const ville = villeTitre(reste);
+  return base + (/^[aeiouyàâéèêîôû]/i.test(ville) ? " d'" : ' de ') + ville;
+}
+
 const jurShort = n => n.replace(/^Tribunal judiciaire de /,'TJ ')
   .replace(/^Tribunal de proximité (de |d')/,'Prox. ')
   .replace(/^Cour d'Appel (de |d')/i,'CA ')
