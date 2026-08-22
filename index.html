@@ -640,6 +640,18 @@ select.mini{
   display:flex; flex-direction:column; gap:8px;
   max-height:calc(100vh - 330px); overflow-y:auto;
 }
+.mapinfo{display:none}
+.mapinfo.on{
+  display:block; background:var(--card); border:1px solid var(--line);
+  border-radius:var(--r); padding:10px 12px; margin-bottom:11px; box-shadow:var(--shadow-s);
+}
+.mapinfo .mi-t{font-size:10px; font-weight:650; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:3px}
+.mapinfo .mi-n{font-size:14.5px; font-weight:700; letter-spacing:-.015em; line-height:1.25}
+.mapinfo .mi-l{display:flex; justify-content:space-between; gap:10px; margin-top:6px;
+  padding-top:6px; border-top:1px solid var(--line-2); font-size:12px}
+.mapinfo .mi-l span{color:var(--ink-3)}
+.mapinfo .mi-l b{font-weight:650; text-align:right; min-width:0}
 .mside .mlegend{flex-direction:column; align-items:stretch; gap:3px; margin:0}
 .mside .mlegend .it{cursor:default}
 .mside .mjlist{flex-direction:column; margin:0; gap:5px}
@@ -2900,6 +2912,26 @@ function cardOff(i){
    2. table officielle commune -> juridictions (data.gouv.fr, ministère de la Justice)
    3. ouverture de la fiche correspondante quand elle existe dans l'annuaire */
 let COMP = null, COMP_LAST = null, ADR_FEATS = [], adrTimer = null;
+
+/* Préfectures : le chef-lieu d'un département ne se déduit d'aucune donnée
+   embarquée, la liste est donc explicite. */
+const PREFECTURES = Object.fromEntries('01 Bourg-en-Bresse|02 Laon|03 Moulins|04 Digne-les-Bains|05 Gap|06 Nice|07 Privas|08 Charleville-Mézières|09 Foix|10 Troyes|11 Carcassonne|12 Rodez|13 Marseille|14 Caen|15 Aurillac|16 Angoulême|17 La Rochelle|18 Bourges|19 Tulle|2A Ajaccio|2B Bastia|21 Dijon|22 Saint-Brieuc|23 Guéret|24 Périgueux|25 Besançon|26 Valence|27 Évreux|28 Chartres|29 Quimper|30 Nîmes|31 Toulouse|32 Auch|33 Bordeaux|34 Montpellier|35 Rennes|36 Châteauroux|37 Tours|38 Grenoble|39 Lons-le-Saunier|40 Mont-de-Marsan|41 Blois|42 Saint-Étienne|43 Le Puy-en-Velay|44 Nantes|45 Orléans|46 Cahors|47 Agen|48 Mende|49 Angers|50 Saint-Lô|51 Châlons-en-Champagne|52 Chaumont|53 Laval|54 Nancy|55 Bar-le-Duc|56 Vannes|57 Metz|58 Nevers|59 Lille|60 Beauvais|61 Alençon|62 Arras|63 Clermont-Ferrand|64 Pau|65 Tarbes|66 Perpignan|67 Strasbourg|68 Colmar|69 Lyon|70 Vesoul|71 Mâcon|72 Le Mans|73 Chambéry|74 Annecy|75 Paris|76 Rouen|77 Melun|78 Versailles|79 Niort|80 Amiens|81 Albi|82 Montauban|83 Toulon|84 Avignon|85 La Roche-sur-Yon|86 Poitiers|87 Limoges|88 Épinal|89 Auxerre|90 Belfort|91 Évry-Courcouronnes|92 Nanterre|93 Bobigny|94 Créteil|95 Cergy-Pontoise'.split('|').map(s => [s.slice(0,2), s.slice(3)]));
+
+/* Cour d'appel d'un département : déduite de la table des communes, en prenant
+   celle qui revient le plus souvent (quelques départements sont partagés). */
+const CA_DEP = {};
+function caDuDep(code){
+  if(CA_DEP[code] !== undefined) return CA_DEP[code];
+  if(!COMP || !COMP.c) return null;
+  const n = {};
+  for(const insee in COMP.c){
+    if(insee.slice(0,2) !== code) continue;
+    const i = COMP.c[insee][0];
+    if(i !== null && i !== undefined) n[i] = (n[i]||0) + 1;
+  }
+  const best = Object.entries(n).sort((a,b)=>b[1]-a[1])[0];
+  return CA_DEP[code] = best ? (COMP.ca[+best[0]] || null) : null;
+}
 async function loadComp(){
   if(COMP) return COMP;
   try{
@@ -3098,6 +3130,23 @@ function mapZoomReset(){
 }
 
 /* Clic sur le fond de carte : referme la vue éclatée et défait le zoom. */
+/* Renseigne le panneau au survol. Au niveau région on ajoute le numéro du
+   département, sa cour d'appel et sa préfecture. */
+window.mapInfo = d => {
+  const el = document.getElementById('mapinfo');
+  if(!el) return;
+  if(!d){ el.innerHTML = ''; el.classList.remove('on'); return; }
+  let lignes = '';
+  if(d.c){
+    const ca = caDuDep(d.c);
+    lignes = `<div class="mi-l"><span>Département</span><b>${esc(d.c)}</b></div>`
+      + (ca ? `<div class="mi-l"><span>Cour d'appel</span><b>${esc(ca.replace(/^Cour d.[Aa]ppel (de |d')?/,''))}</b></div>` : '')
+      + (PREFECTURES[d.c] ? `<div class="mi-l"><span>Préfecture</span><b>${esc(PREFECTURES[d.c])}</b></div>` : '');
+  }
+  el.innerHTML = `<div class="mi-t">${esc(d.t)}</div><div class="mi-n">${esc(d.n)}</div>${lignes}`;
+  el.classList.add('on');
+};
+
 window.mapFond = e => {
   if(e.target.closest('.mgroup.open')) return;     // clic dans la vue éclatée
   if(document.querySelector('.mapwrap svg .mgroup.open')) grpCloseAll();
@@ -3160,6 +3209,7 @@ window.carteDep = code => {
 
 function renderCarte(){
   $('#stats').textContent = '';
+  loadComp();                 // nécessaire pour la cour d'appel au survol
   if(!MAPD){
     $('#view').innerHTML = '<div class="vide">Chargement de la carte…</div>';
     loadCarte().then(()=>{ if(mapState) render(); });
@@ -3169,13 +3219,15 @@ function renderCarte(){
   let titre='France', crumbs='', feats=[], dots=[], showDotLbl=false, sousListe='';
   if(st.level==='fr'){
     crumbs = `<span class="mcrumb on">France</span>`;
-    feats = MAPD.r.map(r=>({p:r.p, lbl:'', tip:r.n, cls:'mreg', click:`carteGo('reg','${r.c}')`}));
+    feats = MAPD.r.map(r=>({p:r.p, lbl:'', tip:r.n, cls:'mreg',
+      click:`carteGo('reg','${r.c}')`, info:{t:'Région', n:r.n}}));
   } else if(st.level==='reg'){
     const reg = MAPD.r.find(r=>r.c===st.code) || MAPD.r[0];
     titre = reg.n;
     crumbs = `<span class="mcrumb" onclick="carteGo('fr')">France</span><span>›</span><span class="mcrumb on">${esc(reg.n)}</span>`;
     const dd = MAPD.d.filter(d=>d.r===st.code);
-    feats = dd.map(d=>({p:d.p, lbl:d.c, tip:d.n, cls:'mdep', click:`carteDep('${d.c}')`}));
+    feats = dd.map(d=>({p:d.p, lbl:d.c, tip:d.n, cls:'mdep', click:`carteDep('${d.c}')`,
+      info:{t:'Département', n:d.n, c:d.c}}));
     const dset = new Set(dd.map(d=>d.c));
     const tset = new Set(mapTypesFor('reg'));
     dots = MAPD.j.map((j,i)=>({j,i})).filter(x=>dset.has(x.j.d) && tset.has(x.j.t));
@@ -3207,7 +3259,8 @@ function renderCarte(){
   let svg = '';
   for(const f of feats){
     const d = f.p.map((pt,i)=>(i?'L':'M')+fx(pt[0]).toFixed(1)+','+fy(pt[1]).toFixed(1)).join('')+'Z';
-    svg += `<path class="${f.cls}" d="${d}" ${f.click?`onclick="${f.click}"`:''}><title>${esc(f.tip)}</title></path>`;
+    const surv = f.info ? ` onmouseenter="mapInfo(${JSON.stringify(f.info).replace(/"/g,'&quot;')})" onmouseleave="mapInfo(null)"` : '';
+    svg += `<path class="${f.cls}" d="${d}" ${f.click?`onclick="${f.click}"`:''}${surv}><title>${esc(f.tip)}</title></path>`;
   }
   for(const f of feats){
     if(!f.lbl) continue;
@@ -3331,6 +3384,7 @@ function renderCarte(){
       <div class="mapwrap"><svg class="mlvl-${st.level}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"
         data-w="${W}" data-h="${H}" onclick="mapFond(event)"><g class="mzoom">${svg}</g></svg></div>
       <div class="mside">
+        <div id="mapinfo" class="mapinfo"></div>
         ${legend?'<div class="msidetitle">Légende</div>'+legend:''}
         ${sousListe?'<div class="msidetitle">Juridictions</div>'+sousListe:''}
         <p class="hint">${st.level==='fr'?'Cliquez sur une région.':st.level==='reg'?'Cliquez sur un département ou directement sur une juridiction. Les filtres en haut de page s\'appliquent à la carte.':'Cliquez sur une juridiction pour ouvrir sa fiche.'}</p>
