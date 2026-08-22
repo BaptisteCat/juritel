@@ -640,16 +640,21 @@ select.mini{
   display:flex; flex-direction:column; gap:8px;
   max-height:calc(100vh - 330px); overflow-y:auto;
 }
+.mapwrap{position:relative}
 .mapinfo{display:none}
 .mapinfo.on{
-  display:block; background:var(--card); border:1px solid var(--line);
-  border-radius:var(--r); padding:10px 12px; margin-bottom:11px; box-shadow:var(--shadow-s);
+  display:block; position:absolute; top:11px; right:11px; z-index:2;
+  max-width:min(230px, 58%); pointer-events:none;   /* il ne doit rien intercepter */
+  /* un ton sous le dégradé du cadre, dans les deux thèmes */
+  background:color-mix(in srgb, #000 8%, var(--card-2));
+  border:1px solid color-mix(in srgb, #000 6%, var(--line));
+  border-radius:12px; padding:9px 12px; box-shadow:var(--shadow-s);
 }
 .mapinfo .mi-t{font-size:10px; font-weight:650; letter-spacing:.13em; text-transform:uppercase;
   color:var(--ink-3); margin-bottom:3px}
 .mapinfo .mi-n{font-size:14.5px; font-weight:700; letter-spacing:-.015em; line-height:1.25}
-.mapinfo .mi-l{display:flex; justify-content:space-between; gap:10px; margin-top:6px;
-  padding-top:6px; border-top:1px solid var(--line-2); font-size:12px}
+.mapinfo .mi-l{display:flex; justify-content:space-between; gap:10px; margin-top:5px;
+  padding-top:5px; border-top:1px solid color-mix(in srgb, #000 5%, var(--line-2)); font-size:11.5px}
 .mapinfo .mi-l span{color:var(--ink-3)}
 .mapinfo .mi-l b{font-weight:650; text-align:right; min-width:0}
 .mside .mlegend{flex-direction:column; align-items:stretch; gap:3px; margin:0}
@@ -3382,9 +3387,9 @@ function renderCarte(){
     <div class="mcrumbs">${crumbs}</div>
     <div class="maplayout">
       <div class="mapwrap"><svg class="mlvl-${st.level}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"
-        data-w="${W}" data-h="${H}" onclick="mapFond(event)"><g class="mzoom">${svg}</g></svg></div>
+        data-w="${W}" data-h="${H}" onclick="mapFond(event)"><g class="mzoom">${svg}</g></svg>
+        <div id="mapinfo" class="mapinfo"></div></div>
       <div class="mside">
-        <div id="mapinfo" class="mapinfo"></div>
         ${legend?'<div class="msidetitle">Légende</div>'+legend:''}
         ${sousListe?'<div class="msidetitle">Juridictions</div>'+sousListe:''}
         <p class="hint">${st.level==='fr'?'Cliquez sur une région.':st.level==='reg'?'Cliquez sur un département ou directement sur une juridiction. Les filtres en haut de page s\'appliquent à la carte.':'Cliquez sur une juridiction pour ouvrir sa fiche.'}</p>
