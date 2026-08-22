@@ -1210,6 +1210,12 @@ dialog{
 }
 dialog::backdrop{background:rgba(8,9,18,.42);
   -webkit-backdrop-filter:blur(9px) saturate(.9); backdrop-filter:blur(9px) saturate(.9)}
+/* L'infobulle des sources fait grandir la fenêtre ; centrée, celle-ci se
+   recalait et le texte glissait hors du curseur, ouvrant puis refermant la
+   bulle en boucle. Ancrée en haut, sa croissance ne déplace plus rien.
+   (Sous 640 px une règle existante l'ancre déjà en haut pour le clavier.) */
+@media (min-width:641px){ #dlgAdr{margin-top:12vh; margin-bottom:auto} }
+
 /* fenêtre large : la carte a besoin de place */
 dialog.dlgwide{max-width:min(1120px, 96vw); width:96vw}
 /* la carte porte déjà son propre cadre : le conteneur de la fenêtre ne doit pas
