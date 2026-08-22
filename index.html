@@ -1570,6 +1570,7 @@ let mapState = null;         // carte interactive : null | {level:'fr'|'reg'|'de
 let spState = null;          // fiche officielle service-public : null | {type, nom, loading, data}
 let modifMode = false;       // false = lecture seule (défaut)
 let browseAll = false;       // l'accueil n'affiche les fiches qu'à la demande
+let svcQ = '';               // recherche de service en cours dans la fiche ouverte
 // accueil « nu » : ni recherche, ni catégorie, ni parcours explicite
 const accueilNu = () => !$('#q').value.trim() && !currentCat && !browseAll;
 // sbProp est resolu tres tot (ouverture de la porte) ; tant qu il vaut null on
@@ -1769,12 +1770,12 @@ function goHome(){
   const q = $('#q');
   if(q && q.value){ q.value = ''; document.body.classList.remove('qactive'); }
   shownCards = 60;
-  ficheId = null; editMode = false; mapState = null; spState = null; browseAll = false; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
+  ficheId = null; editMode = false; mapState = null; spState = null; browseAll = false; svcQ = ''; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
 window.goHome = goHome;
 window.openFiche = id => {
   const da = document.getElementById('dlgAdr');
   if(da && da.open) da.close();
-  if(id!==ficheId){ ficheDom = ''; editMode = false; }
+  if(id!==ficheId){ ficheDom = ''; editMode = false; svcQ = ''; }
   mapState = null; spState = null;
   ficheId = id;
   history.pushState(null,'','#f/'+id);
@@ -2060,7 +2061,7 @@ function renderFiche(j){
         ${fchips}
         <div class="svcsearch">
           <span class="lens">${icn('search',15)}</span>
-          <input id="qsvc" type="text" placeholder="Rechercher un service"
+          <input id="qsvc" type="text" placeholder="Rechercher un service" value="${esc(svcQ)}"
             autocomplete="off" autocapitalize="off" spellcheck="false" oninput="filtreSvc(this.value)">
           <button id="clearsvc" title="Effacer" onclick="filtreSvc('', true)">${icn('x',12)}</button>
         </div>
@@ -2089,6 +2090,9 @@ function renderFiche(j){
       <nav class="toc">${toc}</nav>
       <div>${blocks}</div>
     </div>`;
+  // le rendu reconstruit tout : sans cela, déplier un service ferait réapparaître
+  // les autres et perdrait la recherche en cours
+  if(svcQ) filtreSvc(svcQ);
   spFillBlock(j);
 }
 
@@ -2098,7 +2102,8 @@ function renderFiche(j){
 window.filtreSvc = (v, vider) => {
   const champ = document.getElementById('qsvc');
   if(vider && champ){ champ.value = ''; v = ''; champ.focus(); }
-  const t = norm((v||'').trim()).split(/\s+/).filter(Boolean);
+  svcQ = (v || '').trim();
+  const t = norm(svcQ).split(/\s+/).filter(Boolean);
   const cx = document.getElementById('clearsvc');
   if(cx) cx.style.display = t.length ? 'grid' : 'none';
   let visibles = 0;
