@@ -3290,6 +3290,15 @@ $('#q').addEventListener('input', ()=>{
   const majActive = () => document.body.classList.toggle('qactive', !!q.value.trim());
   q.addEventListener('input', majActive);
   majActive();
+
+  // Toucher « Filtrer » ou une catégorie donnait le focus au bouton : le champ
+  // le perdait, le clavier se refermait et la barre redescendait en bas de
+  // l'écran. Neutraliser le mousedown empêche ce transfert de focus sans
+  // empêcher le clic lui-même.
+  const ligne = document.querySelector('.filterline');
+  if(ligne) ligne.addEventListener('mousedown', e => {
+    if(e.target.closest('button')) e.preventDefault();
+  });
 })();
 $('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownCards=60; render(); $('#q').focus(); });
 document.addEventListener('keydown', e=>{
