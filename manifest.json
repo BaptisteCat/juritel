@@ -16,7 +16,7 @@
   ],
   "shortcuts": [
     {
-      "name": "Carte de France",
+      "name": "Carte des juridictions",
       "short_name": "Carte",
       "url": "./#carte",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]

@@ -705,7 +705,7 @@ select.mini{
 .spfoot a:hover{color:var(--accent)}
 
 
-/* carte de France interactive */
+/* carte des juridictions interactive */
 .mapcard{
   background:var(--card); border:1px solid var(--line); border-radius:var(--r);
   box-shadow:var(--shadow-s); padding:14px 16px; margin:0 auto;
@@ -1645,7 +1645,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   </div>
   <div class="toolitem" onclick="closeTools();openCarte()">
     <span class="tico email" data-ic="map" data-s="13"></span>
-    <div class="ti"><b>Carte de France</b><small>Trouver une juridiction par navigation géographique</small></div>
+    <div class="ti"><b>Carte des juridictions</b><small>Trouver une juridiction par navigation géographique</small></div>
     <span class="caret" data-ic="right" data-s="12"></span>
   </div>
   <div class="toolitem" onclick="closeTools();openAdd()">
@@ -2223,7 +2223,7 @@ function renderList(){
       </button>
       <button class="homeact" onclick="openCarte(this)">
         <span class="ha-ic">${icn('map',20)}</span>
-        <span class="ha-tx"><b>Carte de France</b><span class="hint">Parcourir par région</span></span>
+        <span class="ha-tx"><b>Carte des juridictions</b><span class="hint">Parcourir par région</span></span>
       </button>
       <button class="homeact" onclick="parcourir()">
         <span class="ha-ic">${icn('scale',20)}</span>
@@ -2568,9 +2568,13 @@ function majSentinelle(){
 window.addEventListener('scroll', majSentinelle, {passive:true});
 
 function majHauteurEntete(){
-  // « Rechercher un service » ne tient pas dans un champ de 46 % sur téléphone
-  const q = document.getElementById('qsvc');
-  if(q) q.placeholder = window.innerWidth < 760 ? 'Service…' : 'Rechercher un service';
+  // Les libellés longs ne tiennent pas dans les champs étroits du téléphone
+  const etroit = window.innerWidth < 760;
+  const qs = document.getElementById('qsvc');
+  if(qs) qs.placeholder = etroit ? 'Service…' : 'Rechercher un service';
+  const qg = document.getElementById('q');
+  if(qg) qg.placeholder = etroit ? 'Rechercher dans l’annuaire'
+    : 'Rechercher dans l’annuaire : juridiction, ville, numéro, adresse…';
   const r = document.documentElement.style;
   // L'échelle d'interface applique un zoom à :root. getBoundingClientRect rend
   // des pixels ÉCRAN, alors que les décalages CSS sont eux-mêmes multipliés par
@@ -3479,7 +3483,7 @@ window.pickAdr = async i => {
 };
 
 
-/* ============================ carte de France interactive ============================ */
+/* ============================ carte des juridictions interactive ============================ */
 let MAPD = null;
 async function loadCarte(){
   if(MAPD) return MAPD;
@@ -3698,7 +3702,7 @@ function renderCarte(){
     return;
   }
   const st = mapState;
-  let titre='France', crumbs='', feats=[], dots=[], showDotLbl=false, sousListe='';
+  let titre='Carte des juridictions', crumbs='', feats=[], dots=[], showDotLbl=false, sousListe='';
   if(st.level==='fr'){
     crumbs = `<span class="mcrumb on">France</span>`;
     feats = MAPD.r.map(r=>({p:r.p, lbl:'', tip:r.n, cls:'mreg',
