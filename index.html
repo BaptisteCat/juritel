@@ -796,6 +796,18 @@ body.accueil .hero{display:block}
   /* backdrop-filter ne floute que ce qui est peint EN DESSOUS : remonter le
      contenu au-dessus du voile suffit a le garder net */
   body.qfocus main{position:relative; z-index:32}
+  /* pendant la recherche, le bouton Outils s'efface : rien ne doit détourner
+     l'attention ni rester cliquable derrière le voile */
+  body.qfocus #fabtools{opacity:0; pointer-events:none; transform:translateY(6px)}
+
+  /* Résultats : une carte se limite au nom de la juridiction. Les raccourcis de
+     service ne s'affichent que lorsque la recherche a désigné un service précis
+     (rendu par suggInline, qui n'utilise pas .schips au premier niveau). */
+  .sugg{padding:12px 14px; margin-bottom:9px; border-radius:13px}
+  .sugg > .schips:not(.match){display:none}
+  .sugg > .schips.match{margin-top:9px}
+  .sugg .snom{font-size:14.5px}
+  .sugg .sadr{display:none}
 }
 
 /* ==================== accueil épuré ====================
@@ -1647,13 +1659,37 @@ function suggJur({j, hits}){
 }
 function suggInline({j, hits}){
   const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  // Sur mobile la suggestion reste une petite carte : on annonce simplement les
+  // services trouvés sous forme de boutons ; les coordonnées s'ouvrent au clic.
+  const compact = window.innerWidth < 760;
+  const maxSvc = 5, maxEnt = Infinity;
   let inner = '';
-  for(const h of hits.slice(0,5)){
+  if(compact){
+    const vus = hits.slice(0,6).map(x =>
+      `<button class="schip" onclick="event.stopPropagation();openFicheSvc('${j.id}','${x.s.id}')">`
+      + `${esc(x.s.nom)}<span class="n">${x.cts.length}</span></button>`).join('');
+    const reste = hits.length > 6
+      ? `<button class="schip" onclick="event.stopPropagation();openFiche('${j.id}')">+${hits.length-6} autres…</button>` : '';
+    return `<div class="sugg" onclick="openFiche('${j.id}')">
+      <div class="stop">
+        <div class="snom">${esc(j.nom)}</div>
+        <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+        <span class="ncontacts">${nc}</span>
+      </div>
+      <div class="schips match">${vus}${reste}</div>
+    </div>`;
+  }
+  for(const h of hits.slice(0,maxSvc)){
     const bureaux = structureService(h.cts);
-    let rows = '';
+    let rows = '', n = 0;
     for(const b of bureaux){
+      if(n >= maxEnt) break;
       let er = '';
-      for(const e of b.entries.values()) er += renderEntry(j, h.s, e);
+      for(const e of b.entries.values()){
+        if(n >= maxEnt) break;
+        er += renderEntry(j, h.s, e); n++;
+      }
+      if(!er) continue;
       rows += b.nom ? `<div class="bureau"><h4>${esc(b.nom)}</h4>${er}</div>` : er;
     }
     inner += `<div class="isvc">
@@ -1662,8 +1698,8 @@ function suggInline({j, hits}){
         <span class="goto">fiche complète →</span>
       </div>${rows}</div>`;
   }
-  if(hits.length>5)
-    inner += `<button class="schip" style="margin-top:8px" onclick="openFiche('${j.id}')">+${hits.length-5} autres services…</button>`;
+  if(hits.length>maxSvc)
+    inner += `<button class="schip" style="margin-top:8px" onclick="openFiche('${j.id}')">+${hits.length-maxSvc} autres services…</button>`;
   return `<div class="sugg" style="cursor:default">
     <div class="stop" style="cursor:pointer" onclick="openFiche('${j.id}')">
       <div class="snom">${esc(j.nom)}${j.adresse?`<div class="sadr">${icn('pin',11)} ${esc(j.adresse)}</div>`:''}</div>
