@@ -1266,6 +1266,8 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 /* « Sources officielles » : pastille i, le détail se déplie en bulle sous le bouton */
 .srcbloc{margin-top:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
 .srclbl{font-size:12px; color:var(--ink-3); letter-spacing:-.005em}
+/* déclencheur : juste assez large pour le texte et la pastille */
+.srctrig{display:inline-flex; align-items:center; gap:6px; cursor:pointer}
 /* la bulle occupe toute la largeur sous la ligne */
 .srcbloc .srcinfo-bulle{flex-basis:100%}
 /* en-tête de fenêtre avec croix à droite */
@@ -1309,13 +1311,13 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   background:var(--card-2); color:var(--ink-2); border:1px solid var(--line);
   box-shadow:var(--shadow-s); font-size:12px; line-height:1.55;
 }
-.srcinfo.on + .srcinfo-bulle, .srcinfo:focus-visible + .srcinfo-bulle{
-  grid-template-rows:1fr; opacity:1; margin-top:9px;
-}
+.srcbloc.ouvert .srcinfo-bulle{grid-template-rows:1fr; opacity:1; margin-top:9px}
 .srcinfo.on::after, .srcinfo:focus-visible::after{opacity:1}
 @media (hover:hover){
-  .srcbloc:hover .srcinfo-bulle{grid-template-rows:1fr; opacity:1; margin-top:9px}
-  .srcbloc:hover .srcinfo::after{opacity:1}
+  /* le survol portait sur .srcbloc, conteneur pleine largeur : toute la ligne
+     réagissait, même loin à droite du texte */
+  .srctrig:hover ~ .srcinfo-bulle{grid-template-rows:1fr; opacity:1; margin-top:9px}
+  .srctrig:hover .srcinfo::after{opacity:1}
 }
 
 #toast{
@@ -1480,7 +1482,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     onkeydown="if(event.key==='Enter'){event.preventDefault();adrEnter(this.value);}">
   <div class="adrsugg" id="adrsugg"></div>
   <div class="srcbloc">
-    <span class="srclbl">Sources officielles</span><button type="button" class="srcinfo" aria-label="Détail des sources" aria-expanded="false" aria-controls="srcBulle" onclick="srcInfoTgl(event)"><span class="ri" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="3.3" r="1.05"/><rect x="5.05" y="5.2" width="1.9" height="4.6" rx=".95"/></svg></span></button>
+    <span class="srctrig"><span class="srclbl">Sources officielles</span><button type="button" class="srcinfo" aria-label="Détail des sources" aria-expanded="false" aria-controls="srcBulle" onclick="srcInfoTgl(event)"><span class="ri" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="3.3" r="1.05"/><rect x="5.05" y="5.2" width="1.9" height="4.6" rx=".95"/></svg></span></button></span>
     <div class="srcinfo-bulle" id="srcBulle"><div><p>Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</p></div></div>
   </div>
 </div></dialog>
@@ -2516,6 +2518,7 @@ window.openAdrDlg = (src) => {
 function srcInfoClose(){
   document.querySelectorAll('.srcinfo.on').forEach(b=>{
     b.classList.remove('on'); b.setAttribute('aria-expanded', 'false');
+    b.closest('.srcbloc')?.classList.remove('ouvert');
   });
 }
 window.srcInfoTgl = e => {
@@ -2524,6 +2527,7 @@ window.srcInfoTgl = e => {
   srcInfoClose();
   if(!on) return;
   b.classList.add('on'); b.setAttribute('aria-expanded', 'true');
+  b.closest('.srcbloc')?.classList.add('ouvert');
   setTimeout(()=>document.addEventListener('click', srcInfoClose, {once:true}), 0);
 };
 window.tglTool = id => {
@@ -3224,9 +3228,10 @@ window.grpOpen = (k, zoomer = true) => {
     const z = window.innerWidth < 760 ? 2.6 : 1.9;
     mapZoom(+c.getAttribute('cx'), +c.getAttribute('cy'), z);
     // Le zoom agrandit tout, y compris les points et les noms de la vue éclatée,
-    // qui se chevauchaient. On les ramène à leur taille d'origine : ils restent
-    // écartés par le zoom, donc bien plus faciles à distinguer.
-    svg.style.setProperty('--unzoom', (1/z).toFixed(3));
+    // qui se chevauchaient. On compense : sur mobile retour exact à la taille
+    // d'origine, sur ordinateur un tiers de plus, la place ne manquant pas.
+    const grossir = window.innerWidth < 760 ? 1 : 1.35;
+    svg.style.setProperty('--unzoom', (grossir/z).toFixed(3));
   }
 };
 function grpCloseAll(){
@@ -3355,7 +3360,11 @@ function renderCarte(){
     const col = typeColor(j.t);
     const x = px.toFixed(1), y = py.toFixed(1);
     const tip = `<title>${esc(j.n)}</title>`;
-    const on = `onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)"`;
+    // Les anneaux des cours d'appel couvrent une large zone et débordent sur les
+    // départements voisins : avant la vue département, ils ne sont qu'un repère.
+    const inerte = (j.t === 'ca' || j.t === 'caa') && st.level !== 'dep';
+    const on = inerte ? 'style="pointer-events:none"'
+      : `onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)"`;
     let s;
     if(j.t==='ca'||j.t==='caa')
       s = `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${((showDotLbl?12:10)*K).toFixed(1)}" fill="none" stroke="${col}" stroke-width="${(3.8*K).toFixed(1)}" ${on}>${tip}</circle>`;
@@ -3364,7 +3373,7 @@ function renderCarte(){
       s = `<rect class="mdot" id="mj-${i}" x="${(px-c).toFixed(1)}" y="${(py-c).toFixed(1)}" width="${(c*2).toFixed(1)}" height="${(c*2).toFixed(1)}" rx="${(3.5*K).toFixed(1)}" fill="${col}" stroke="var(--card)" stroke-width="${(1.4*K).toFixed(1)}" ${on}>${tip}</rect>`;
     } else
       s = `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${((showDotLbl?9:7)*K).toFixed(1)}" fill="${col}" stroke="var(--card)" stroke-width="${(1.8*K).toFixed(1)}" ${on}>${tip}</circle>`;
-    if(TOUCH) s = `<circle class="mhit" cx="${x}" cy="${y}" r="${TOUCH}" ${on}/>` + s;
+    if(TOUCH && !inerte) s = `<circle class="mhit" cx="${x}" cy="${y}" r="${TOUCH}" ${on}/>` + s;
     if(withLbl)
       s += `<text class="mdotlbl" id="ml-${i}" x="${x}" y="${lblY.toFixed(1)}" font-size="${(14*K).toFixed(0)}">${esc(jurShort(j.n))}</text>`;
     return s;
