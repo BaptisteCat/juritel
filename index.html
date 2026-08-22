@@ -1266,9 +1266,22 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
   #searchzone > *{pointer-events:none}
   #searchzone .searchwrap, #searchzone .filtbtn{pointer-events:auto}
   body.filtres #searchzone .chips{pointer-events:auto}
-  body.qfocus #searchzone{top:50%; transform:translateY(calc(var(--szbar, 50px) / -2))}
-  /* le contenu commence sous le bloc entier, ligne de filtres comprise */
-  main{padding-top:calc(var(--szh, 88px) + 24px)}
+  /* Au clic, la barre descend jusqu'au RAS du clavier et retrouve exactement
+     sa place d'avant : le bloc se cale sur le bas de la fenêtre, laquelle est
+     déjà réduite par le clavier (interactive-widget=resizes-content).
+     L'ordre s'inverse alors — filtres au-dessus de la barre, suggestions
+     encore au-dessus — comme dans l'usage à une main. */
+  body.qfocus #searchzone{
+    top:calc(100% - var(--mbot) - var(--szh, 88px));
+    transform:none;
+    flex-direction:column-reverse;
+  }
+  /* le contenu commence sous le bloc entier, ligne de filtres comprise ;
+     la barre partie en bas, cette réserve n'a plus lieu d'être et la place
+     revient aux suggestions */
+  main{padding-top:calc(var(--szh, 88px) + 24px);
+       transition:padding-top .34s cubic-bezier(.2,.6,.3,1)}
+  body.qfocus main{padding-top:16px}
   body.fiche main{padding-top:16px}      /* la barre s'efface sur une fiche */
   .searchwrap{
     background:color-mix(in srgb, var(--bg) 55%, transparent);
@@ -1292,7 +1305,9 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
   /* Bouton de filtre et catégories sur UNE SEULE ligne, juste au-dessous de la
      barre. Les catégories se déploient horizontalement depuis le bouton, comme
      si elles en sortaient : c'est la largeur qui s'anime, pas la hauteur. */
-  .filterline{display:flex; align-items:center; gap:8px; margin:9px 0 0; padding-left:4px}
+  /* marge des deux côtés : la ligne passe au-dessus de la barre une fois le
+     bloc descendu, l'écart doit tenir dans les deux sens */
+  .filterline{display:flex; align-items:center; gap:8px; margin:9px 0; padding-left:4px}
   .filtrow{justify-content:flex-start; margin:0; padding:0; flex:0 0 auto}
   #chips{
     flex:1 1 auto; min-width:0; max-width:0; opacity:0; padding:0;
@@ -1322,8 +1337,10 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
   #toast{bottom:calc(140px + var(--mbot))}
   body, body.mapmode{padding-bottom:calc(120px + var(--mbot))}
 
+  /* le bouton flottant occupe 44 px à 12 px du bas : le dernier outil doit
+     s'arrêter au-dessus, sans quoi il passe dessous */
   #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start;
-         padding-bottom:calc(30px + var(--mbot))}
+         padding-bottom:calc(74px + var(--mbot))}
   /* Plus de panneau blanc : le tiroir n'est qu'un conteneur transparent et les
      outils se posent directement sur le fond flouté. Il couvre tout l'écran,
      donc il laisse passer les touchers — sinon un appui à côté d'un outil ne
