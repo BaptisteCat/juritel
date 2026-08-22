@@ -400,10 +400,10 @@ select.mini{
 
 .flayout{display:grid; grid-template-columns:236px 1fr; gap:14px; align-items:start}
 .toc{
-  position:sticky; top:calc(var(--htop, 60px) + var(--fbar, 0px) + 12px);
+  position:sticky; top:calc(var(--htop, 60px) + var(--fbar, 0px) + var(--fsticky, 0px) + 12px);
   background:var(--card); border:1px solid var(--line);
   border-radius:var(--r); box-shadow:var(--shadow-s); padding:8px;
-  max-height:calc(100vh - var(--htop, 60px) - var(--fbar, 0px) - 32px); overflow-y:auto;
+  max-height:calc(100vh - var(--htop, 60px) - var(--fbar, 0px) - var(--fsticky, 0px) - 32px); overflow-y:auto;
 }
 .toc a{
   display:flex; align-items:center; gap:8px; padding:8px 11px; border-radius:10px;
@@ -857,21 +857,28 @@ body.accueil .hero{display:block}
   padding:10px 0 9px; margin-bottom:5px;
   border-bottom:1px solid transparent;
 }
-.fbar2{display:flex; align-items:center; gap:14px; margin-top:9px}
-.fbar2 .chips{flex:1 1 auto; min-width:0; padding:0}
-.fbar2 .svcsearch{flex:0 0 auto; width:min(320px, 42%)}
+/* Filtres et recherche : à leur place sous la carte, ils remontent avec le
+   contenu puis se figent sous la barre du titre. */
+.fsticky{
+  position:sticky; top:calc(var(--htop, 60px) + var(--fbar, 0px)); z-index:14;
+  display:flex; align-items:center; gap:14px;
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+  padding:9px 0 10px; margin-bottom:4px;
+}
+.fsticky .chips{flex:1 1 auto; min-width:0; padding:0}
+.fsticky .svcsearch{flex:0 0 auto; width:min(320px, 42%)}
 @media (max-width:760px){
-  /* la barre reste affichée en permanence : chaque pixel compte sur un téléphone,
-     filtres et recherche partagent donc une même ligne */
   .fbar{padding:7px 0 7px}
   .fbar .row1{gap:9px}
   .fbar .row1 h2{font-size:16px}
-  .fbar2{gap:8px; margin-top:7px}
-  .fbar2 .svcsearch{width:46%}
-  .fbar #qsvc{padding:8px 32px; font-size:12.5px}
-  .fbar .lens{left:11px}
-  .fbar #clearsvc{right:7px; width:21px; height:21px}
-  .fbar .chip{padding:4px 11px; font-size:11.5px}
+  /* chaque pixel compte : filtres et recherche partagent une ligne */
+  .fsticky{gap:8px; padding:8px 0 9px}
+  .fsticky .svcsearch{width:46%}
+  .fsticky #qsvc{padding:8px 32px; font-size:12.5px}
+  .fsticky .lens{left:11px}
+  .fsticky #clearsvc{right:7px; width:21px; height:21px}
+  .fsticky .chip{padding:4px 11px; font-size:11.5px}
 }
 
 /* ---- recherche de service à l'intérieur d'une fiche ---- */
@@ -2057,15 +2064,6 @@ function renderFiche(j){
         <h2>${esc(j.nom)}</h2>
         <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
       </div>
-      <div class="fbar2">
-        ${fchips}
-        <div class="svcsearch">
-          <span class="lens">${icn('search',15)}</span>
-          <input id="qsvc" type="text" placeholder="Rechercher un service" value="${esc(svcQ)}"
-            autocomplete="off" autocapitalize="off" spellcheck="false" oninput="filtreSvc(this.value)">
-          <button id="clearsvc" title="Effacer" onclick="filtreSvc('', true)">${icn('x',12)}</button>
-        </div>
-      </div>
     </div>
     <div class="fhead">
       <div class="fgrid">
@@ -2085,6 +2083,15 @@ function renderFiche(j){
         ${!estProp() ? '' : `<button class="mini ${editMode?'editon':''}" onclick="toggleEdit()">${editMode?icn('check',13)+' Terminer la réorganisation':icn('pen',13)+' Réorganiser'}</button>`}
         ${estProp() ? `<button class="mini" onclick="delJur('${j.id}')">${icn('trash',13)} Supprimer la juridiction</button>` : ''}
       </div>` : ''}
+    </div>
+    <div class="fsticky">
+      ${fchips}
+      <div class="svcsearch">
+        <span class="lens">${icn('search',15)}</span>
+        <input id="qsvc" type="text" placeholder="Rechercher un service" value="${esc(svcQ)}"
+          autocomplete="off" autocapitalize="off" spellcheck="false" oninput="filtreSvc(this.value)">
+        <button id="clearsvc" title="Effacer" onclick="filtreSvc('', true)">${icn('x',12)}</button>
+      </div>
     </div>
     <div class="flayout">
       <nav class="toc">${toc}</nav>
@@ -2142,6 +2149,8 @@ function majHauteurEntete(){
   // la barre de fiche tient sur une ou deux lignes selon la largeur : on mesure
   const b = document.querySelector('.fbar');
   r.setProperty('--fbar', b ? Math.round(b.getBoundingClientRect().height) + 'px' : '0px');
+  const s = document.querySelector('.fsticky');
+  r.setProperty('--fsticky', s ? Math.round(s.getBoundingClientRect().height) + 'px' : '0px');
 }
 window.addEventListener('resize', majHauteurEntete);
 
