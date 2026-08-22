@@ -965,13 +965,21 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
   /* Bouton de filtre et catégories sur UNE SEULE ligne, juste au-dessus de la
      barre. Les catégories se déploient horizontalement depuis le bouton, comme
      si elles en sortaient : c'est la largeur qui s'anime, pas la hauteur. */
-  .filterline{display:flex; align-items:center; gap:8px; margin:0 0 3px; padding-left:4px}
+  .filterline{display:flex; align-items:center; gap:8px; margin:0 0 9px; padding-left:4px}
   .filtrow{justify-content:flex-start; margin:0; padding:0; flex:0 0 auto}
   .chips{
     flex:1 1 auto; min-width:0; max-width:0; opacity:0; padding:0;
     transition:max-width .3s cubic-bezier(.2,.6,.3,1), opacity .22s ease;
   }
   body.filtres .chips{max-width:100%; opacity:1}
+  /* Filtres ouverts : le bouton se réduit de droite à gauche jusqu'à ne garder
+     que l'entonnoir, ce qui libère la largeur pour les catégories. */
+  .filtbtn > span{
+    overflow:hidden; white-space:nowrap; max-width:150px; opacity:1;
+    transition:max-width .28s cubic-bezier(.2,.6,.3,1), opacity .18s ease, margin-left .28s;
+  }
+  body.filtres .filtbtn > span{max-width:0; opacity:0; margin-left:-6px}
+  body.filtres .filtbtn{padding-left:11px; padding-right:11px}
   /* même dégradé que les boutons du thème et le logo */
   .filtbtn, .filtbtn:hover, .filtbtn.actif{
     background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
@@ -1962,7 +1970,8 @@ function renderChips(){
   let html = `<button class="chip ${!currentCat?'on':''}" onclick="setCat('')">Tout</button>`;
   for(const [k,v] of Object.entries(CATS)){
     if(!counts[k]) continue;
-    html += `<button class="chip ${currentCat===k?'on':''}" onclick="setCat('${k}')">${v} · ${counts[k]}</button>`;
+    // le compteur alourdissait les puces : conservé en infobulle seulement
+    html += `<button class="chip ${currentCat===k?'on':''}" title="${counts[k]} juridiction${counts[k]>1?'s':''}" onclick="setCat('${k}')">${v}</button>`;
   }
   $('#chips').innerHTML = html;
   majFiltreBtn();
