@@ -1160,14 +1160,20 @@ body.accueil header{
      disparaître le titre d'un coup et remonter les résultats. */
   body.qfocus:not(.fiche) .hero, body.qactive:not(.fiche) .hero{display:block}
   body.qfocus:not(.fiche) header, body.qactive:not(.fiche) header{padding-top:clamp(15px, 2.8vh, 32px)}
-  body.qfocus .hero, body.qactive .hero,
-  body.qfocus .homeacts,
-  /* :not(.fiche) — sans ce garde-fou, une fiche ouverte depuis une recherche
-     gardait « qactive » (le champ contient toujours le texte cherché) et les
-     trois boutons y restaient flous, pâles et surtout INERTES. */
-  body.qfocus:not(.fiche) #fab, body.qactive:not(.fiche) #fab,
-  body.qfocus:not(.fiche) #fabmod, body.qactive:not(.fiche) #fabmod,
-  body.qfocus:not(.fiche) #fabtools, body.qactive:not(.fiche) #fabtools{
+  /* Le flou ne dure QUE tant que le champ a le focus. Adossé à « qactive » —
+     le champ contient du texte — il survivait au clic ailleurs : la page
+     restait voilée et, pire, pointer-events:none rendait le titre « Juritel »
+     inerte, alors que c'est lui qui ramène à l'accueil. On ne pouvait plus
+     sortir de la recherche.
+     « qactive » garde en revanche le titre AFFICHÉ (règles ci-dessus) : sans
+     lui, quitter le champ le ferait disparaître d'un coup.
+     :not(.fiche) — une fiche ouverte depuis une recherche garde « qfocus »
+     le temps d'un clic ; ses boutons ne doivent jamais s'éteindre. */
+  body.qfocus:not(.fiche) .hero,
+  body.qfocus:not(.fiche) .homeacts,
+  body.qfocus:not(.fiche) #fab,
+  body.qfocus:not(.fiche) #fabmod,
+  body.qfocus:not(.fiche) #fabtools{
     filter:blur(5px); opacity:.45; pointer-events:none;
   }
   .hero, .homeacts, #fab, #fabmod, #fabtools{transition:filter .25s ease, opacity .25s ease}
@@ -1316,7 +1322,27 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
     width:100%; padding-left:18px; padding-right:18px;
     pointer-events:none;
   }
-  #tools .toolitem{pointer-events:auto; box-shadow:var(--shadow-m)}
+  /* Posés sur un fond flouté et non plus sur un panneau plein, les outils
+     n'ont plus de bord franc pour se détacher : une ombre longue et douce
+     leur rend ce relief, doublée d'un liseré à peine marqué.
+     Sur fond sombre le flou éclaircit — l'ombre y est donc plus dense. */
+  #tools .toolitem{
+    pointer-events:auto;
+    background:var(--card);
+    border-color:color-mix(in srgb, var(--ink-3) 22%, transparent);
+    box-shadow:0 2px 6px rgba(13,15,30,.10), 0 12px 28px rgba(13,15,30,.16),
+               0 24px 56px rgba(13,15,30,.12);
+  }
+  :root[data-theme="dark"] #tools .toolitem{
+    box-shadow:0 2px 8px rgba(0,0,0,.55), 0 14px 34px rgba(0,0,0,.5),
+               0 28px 64px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]) #tools .toolitem{
+      box-shadow:0 2px 8px rgba(0,0,0,.55), 0 14px 34px rgba(0,0,0,.5),
+                 0 28px 64px rgba(0,0,0,.4);
+    }
+  }
   #tools .thead{display:none}       /* le bouton Outils porte la fermeture */
   /* un flou franc plutôt qu'un voile sombre, comme la mise au point de la recherche */
   #toolsback{
@@ -4343,6 +4369,10 @@ document.addEventListener('keydown', e=>{
     closeTools(); return;
   }
   if(e.key==='Escape' && ficheId && !document.querySelector('dialog[open]')) goHome();
+  // seconde porte de sortie : le titre cliquable en est une, encore faut-il
+  // penser à cliquer dessus
+  if(e.key==='Escape' && !ficheId && !document.querySelector('dialog[open]')
+     && $('#q').value){ $('#q').blur(); goHome(); }
 });
 
 /* ============================================================
