@@ -455,34 +455,20 @@ select.mini{
 }
 .toc a:hover{background:var(--card-2); color:var(--ink); transform:translateX(2px)}
 .toc a .cnt{margin-left:auto; font-size:10.5px; color:var(--ink-3); font-weight:600}
-/* Ascenseur réduit à l'essentiel : un simple trait de 3 px, sans rail, qui ne
-   se montre qu'au survol du sommaire. Au repos il n'y a rien à voir — et le
-   fond du sommaire garde ses quatre coins, que le rail opaque du navigateur
-   carrait en débordant l'arrondi.
-   Déclaré ICI, avant la version mobile qui masque l'ascenseur horizontal. */
-/* Ne PAS déclarer scrollbar-width ici : Chromium ignore tout le stylage
-   ::-webkit-scrollbar dès que la propriété standard est posée, et impose sa
-   propre gouttière de 10 px. On la réserve donc à Firefox, qui n'a pas les
-   pseudo-éléments — le trait y sera un peu plus large, sans autre conséquence. */
-@supports (-moz-appearance:none){
-  .toc{scrollbar-width:thin; scrollbar-color:transparent transparent}
-  .toc:hover, .toc:focus-within{scrollbar-color:color-mix(in srgb, var(--ink-3) 38%, transparent) transparent}
-}
-.toc::-webkit-scrollbar{width:6px; height:6px}
+/* Ascenseur identique à celui des fenêtres et du panneau d'outils : rail
+   transparent, pouce arrondi et flottant. Le rail opaque du navigateur, lui,
+   débordait l'arrondi et carrait les deux coins droits du sommaire.
+   Déclaré ICI, avant la version mobile qui masque l'ascenseur horizontal :
+   dans le groupe commun, déclaré plus bas, il l'aurait ressuscité. */
+.toc{scrollbar-width:thin; scrollbar-color:color-mix(in srgb, var(--ink-3) 45%, transparent) transparent}
+.toc::-webkit-scrollbar{width:10px; height:10px}
 .toc::-webkit-scrollbar-track{background:transparent}
-/* la bordure transparente amincit le trait sans réduire la zone de saisie.
-   Propriété longue et non le raccourci « background » : celui-ci, dès qu'il
-   contient une variable, ne survit pas tel quel et emporte background-clip. */
 .toc::-webkit-scrollbar-thumb{
-  background-color:transparent; background-clip:content-box;
-  border:1.5px solid transparent; border-radius:999px;
-  transition:background-color .18s ease;
-}
-.toc:hover::-webkit-scrollbar-thumb, .toc:focus-within::-webkit-scrollbar-thumb{
-  background-color:color-mix(in srgb, var(--ink-3) 38%, transparent);
+  background-color:color-mix(in srgb, var(--ink-3) 42%, transparent);
+  border:3px solid transparent; background-clip:content-box; border-radius:999px;
 }
 .toc::-webkit-scrollbar-thumb:hover{
-  background-color:color-mix(in srgb, var(--ink-2) 62%, transparent);
+  background-color:color-mix(in srgb, var(--ink-2) 60%, transparent);
 }
 @media (max-width:820px){
   .flayout{display:block}
@@ -575,6 +561,10 @@ select.mini{
 }
 .score.good{color:var(--ok); background:var(--ok-bg)}
 .score.bad{color:var(--ko); background:var(--ko-bg)}
+/* consensus : le fond se remplit. var(--bg) pour le texte tient dans les deux
+   thèmes — clair sur le vert sombre du jour, sombre sur le vert clair de nuit. */
+.score.good.fort{color:var(--bg); background:var(--ok)}
+.score.bad.fort{color:var(--bg); background:var(--ko)}
 .chan .acts{display:flex; align-items:center; gap:1px; margin-left:2px; flex-shrink:0}
 .abtn{
   width:27px; height:27px; border-radius:8px; border:1px solid transparent;
@@ -1891,9 +1881,17 @@ const J90 = 90*24*3600*1000;
 const cOk     = c => (c.ok||0) + (c._vok||0);
 const cKo     = c => (c.ko||0) + (c._vko||0);
 const cLastOk = c => Math.max(c.lastOk||0, c._vlastOk||0) || null;
+// Nombre de MEMBRES distincts s'étant prononcés : la clé (email, contact) de la
+// table des votes n'en autorise qu'un par personne, ces compteurs sont donc des
+// personnes, pas des appels. C'est le signal le plus difficile à fausser.
+const vOk = c => c._vok||0, vKo = c => c._vko||0;
+/* Rendement décroissant : passé quelques voix concordantes, une de plus
+   n'apprend plus grand-chose. Jamais borné pour autant, afin qu'un numéro
+   plébiscité par le groupe reste devant un numéro simplement récent. */
+const consensus = c => Math.log2(1 + vOk(c))*26 - Math.log2(1 + vKo(c))*20;
 function score(c){
   const lo = cLastOk(c);
-  let s = cOk(c)*3 - cKo(c)*2;
+  let s = cOk(c)*3 - cKo(c)*2 + consensus(c);
   if(lo && NOW()-lo < J90) s += 100;
   else if(lo) s += 40;
   return s;
@@ -2485,8 +2483,16 @@ function renderChan(c){
   let badge = '';
   const nOk = cOk(c), nKo = cKo(c), lOk = cLastOk(c);
   const mien = c._vmien ? ' · votre vote' : '';
-  if(nOk>0) badge = `<span class="score good" title="${nOk} appel(s) réussi(s)${mien}">${icn('check',10)} ${nOk}${lOk?' · '+fmtDate(lOk):''}</span>`;
-  else if(nKo>0) badge = `<span class="score bad" title="${nKo} échec(s)${mien}">${icn('x',10)} ${nKo}</span>`;
+  // plusieurs membres l'ont vu répondre : le numéro passe en plein, c'est
+  // l'information la plus sûre que l'annuaire puisse donner
+  const gens = n => n + ' membre' + (n>1?'s':'');
+  const fort = vOk(c) >= 2, faible = vKo(c) >= 2;
+  if(nOk>0) badge = `<span class="score good${fort?' fort':''}" title="${
+      fort ? gens(vOk(c))+' ont obtenu une réponse' : nOk+' appel(s) réussi(s)'}${mien}">${
+      icn('check',10)} ${nOk}${lOk?' · '+fmtDate(lOk):''}</span>`;
+  else if(nKo>0) badge = `<span class="score bad${faible?' fort':''}" title="${
+      faible ? gens(vKo(c))+" n'ont pas obtenu de réponse" : nKo+' échec(s)'}${mien}">${
+      icn('x',10)} ${nKo}</span>`;
   const drag = editMode ? ` draggable="true" ondragstart="dragC(event,'${c.id}')" title="Glissez vers un autre bureau ou service"` : '';
   return `<div class="chan ${isDead(c)?'dead':''}" id="ct-${c.id}"${drag}>
     <span class="tico ${c.type}">${tico}</span>
