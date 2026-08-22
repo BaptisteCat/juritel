@@ -196,8 +196,14 @@ header{
   outline:none; box-shadow:var(--shadow-s); transition:all .2s;
 }
 #q::placeholder{color:var(--ink-3); font-weight:400}
-/* croix native du navigateur (input type=search) : on garde uniquement #clearq */
-#q::-webkit-search-cancel-button,#q::-webkit-search-decoration{-webkit-appearance:none; appearance:none}
+/* Croix native du navigateur (input type=search) : on ne garde que #clearq.
+   appearance:none ne suffit pas partout — on masque explicitement, et on couvre
+   la variante Edge (::-ms-clear) ainsi que les décorations de recherche. */
+#q::-webkit-search-cancel-button, #q::-webkit-search-decoration,
+#q::-webkit-search-results-button, #q::-webkit-search-results-decoration{
+  -webkit-appearance:none; appearance:none; display:none; width:0; height:0;
+}
+#q::-ms-clear, #q::-ms-reveal{display:none; width:0; height:0}
 #q:focus{border-color:var(--accent);
   box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 13%, transparent), var(--shadow-m)}
 #clearq{
@@ -833,7 +839,7 @@ body.accueil header{
   .searchwrap .lens{left:24px}
   #clearq{right:14px}
 }
-body.accueil .searchwrap{margin-top:24px}
+@media (min-width:761px){ body.accueil .searchwrap{margin-top:24px} }
 
 /* Ordinateur : pendant la saisie, le bloc de marque et les boutons flottants
    restent en place mais s'estompent, au lieu de disparaître d'un coup.
@@ -875,10 +881,13 @@ body.accueil #stats{display:none}
   background:color-mix(in srgb, var(--accent) 9%, transparent)}
 .filtbtn .car{transition:transform .2s}
 body.filtres .filtbtn .car{transform:rotate(180deg)}
-.chips{max-height:0; opacity:0; overflow:hidden; padding-top:0; padding-bottom:0;
-  transition:max-height .25s cubic-bezier(.2,.6,.3,1), opacity .2s, padding .25s}
-body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom:2px}
-@media (min-width:761px){ .chips{width:100%; max-width:780px; margin-left:auto; margin-right:auto; justify-content:safe center} }
+@media (min-width:761px){
+  /* ordinateur : la rangée se déplie sous le bouton */
+  .chips{max-height:0; opacity:0; overflow:hidden; padding-top:0; padding-bottom:0;
+    transition:max-height .25s cubic-bezier(.2,.6,.3,1), opacity .2s, padding .25s;
+    width:100%; max-width:780px; margin-left:auto; margin-right:auto; justify-content:safe center}
+  body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom:2px}
+}
 
 /* les trois portes d'entrée */
 .homeacts{
@@ -949,9 +958,16 @@ body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom
                0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
                0 6px 18px rgba(0,0,0,.5);
   }
-  /* bouton de filtre et catégories : au-dessus de la barre, à portée */
-  /* à gauche : le bouton flottant occupe déjà le coin droit */
-  .filtrow{justify-content:flex-start; margin:0 0 3px; padding-left:4px}
+  /* Bouton de filtre et catégories sur UNE SEULE ligne, juste au-dessus de la
+     barre. Les catégories se déploient horizontalement depuis le bouton, comme
+     si elles en sortaient : c'est la largeur qui s'anime, pas la hauteur. */
+  .filterline{display:flex; align-items:center; gap:8px; margin:0 0 3px; padding-left:4px}
+  .filtrow{justify-content:flex-start; margin:0; padding:0; flex:0 0 auto}
+  .chips{
+    flex:1 1 auto; min-width:0; max-width:0; opacity:0; padding:0;
+    transition:max-width .3s cubic-bezier(.2,.6,.3,1), opacity .22s ease;
+  }
+  body.filtres .chips{max-width:100%; opacity:1}
   /* même dégradé que les boutons du thème et le logo */
   .filtbtn, .filtbtn:hover, .filtbtn.actif{
     background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
@@ -960,8 +976,6 @@ body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom
   }
   .filtbtn.actif{box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent),
                             0 6px 18px var(--glow)}
-  .chips{padding:0 4px 8px}
-  body.filtres .chips{padding-top:0; padding-bottom:8px}
 
   /* ---- un seul bouton flottant : le tiroir rassemble toutes les actions ---- */
   #fab, #fabmod{display:none !important}
@@ -1077,8 +1091,10 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
         autocomplete="off" autocapitalize="off" spellcheck="false">
       <button id="clearq" title="Effacer" data-ic="x" data-s="13"></button>
     </div>
-    <div class="filtrow"><button class="filtbtn" id="btnfiltres" onclick="toggleFiltres()"></button></div>
-    <div class="chips" id="chips"></div>
+    <div class="filterline">
+      <div class="filtrow"><button class="filtbtn" id="btnfiltres" onclick="toggleFiltres()"></button></div>
+      <div class="chips" id="chips"></div>
+    </div>
   </div>
 </div></header>
 
