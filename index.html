@@ -2141,6 +2141,7 @@ function render(){
   // reprend sa place en petit dans l'en-tête
   document.body.classList.toggle('fiche', !!ficheId || !!spState);
   setTimeout(() => { majHauteurEntete(); majSentinelle(); }, 0);   // render() a plusieurs sorties : on couvre toutes les branches
+  if(window.majVoile) majVoile();   // filet : l'état du flou se recale à chaque rendu
   $('#clearq').style.display = $('#q').value ? 'grid':'none';
   updateToolsDock();
   if(ficheId){
@@ -4341,10 +4342,28 @@ $('#q').addEventListener('input', ()=>{
   const q = $('#q');
   // On suit l'état explicitement : pendant l'événement « blur »,
   // document.activeElement pointe encore sur le champ et inverserait le voile.
-  let vise = false;
-  const majVoile = () => document.body.classList.toggle('qfocus', vise);
-  q.addEventListener('focus', () => { vise = true;  majVoile(); });
-  q.addEventListener('blur',  () => { vise = false; majVoile(); });
+  /* L'état était suivi dans une variable, entretenue par « focus » et « blur ».
+     Il suffisait qu'un « blur » manque à l'appel — et il en manque : masquer un
+     champ qui a le focus (ce que fait l'ouverture d'une fiche) ou quitter la
+     fenêtre ne le déclenchent pas toujours — pour que le flou reste posé, sans
+     plus rien pour le lever. Le titre « Juritel » et les boutons restaient
+     estompés sur l'accueil.
+     Il se déduit désormais de la réalité, jamais d'une mémoire : le champ
+     a-t-il le focus, ici et maintenant ? */
+  window.majVoile = () => {
+    const q2 = document.getElementById('q');
+    document.body.classList.toggle('qfocus',
+      !!q2 && document.activeElement === q2 && !document.body.classList.contains('fiche'));
+  };
+  // focusin/focusout remontent, eux, et couvrent tout le document.
+  // focusout précède l'arrivée du focus ailleurs : on laisse passer un tour.
+  document.addEventListener('focusin', majVoile);
+  document.addEventListener('focusout', () => setTimeout(majVoile, 0));
+  // quitter l'onglet ne produit pas de « blur » sur le champ ; y revenir ne
+  // produit pas non plus de « focusin », d'où le recalage dans les deux sens
+  window.addEventListener('blur', () => document.body.classList.remove('qfocus'));
+  window.addEventListener('focus', majVoile);
+  majVoile();
   const majActive = () => document.body.classList.toggle('qactive', !!q.value.trim());
   q.addEventListener('input', majActive);
   majActive();
@@ -4362,11 +4381,12 @@ $('#q').addEventListener('input', ()=>{
   // le focus au toucher d'une zone non focusable ; on le fait explicitement
   // pour que le comportement ne dépende pas de cette subtilité.
   const voile = document.getElementById('searchveil');
-  if(voile) voile.addEventListener('click', () => {
-    q.blur(); vise = false; majVoile();   // l'état ne dépend pas du seul évènement blur
-  });
+  if(voile) voile.addEventListener('click', () => { q.blur(); majVoile(); });
 })();
-$('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownCards=60; render(); $('#q').focus(); });
+$('#clearq').addEventListener('click', ()=>{
+  $('#q').value=''; shownCards=60; render(); $('#q').focus();
+  majVoile();   // on ne dépend pas de l'évènement pour un focus qu'on provoque
+});
 
 // Entrée valide le premier résultat. On repart des données de la recherche
 // plutôt que du DOM : l'ordre affiché varie selon le mode de rendu.
