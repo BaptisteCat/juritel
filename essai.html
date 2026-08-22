@@ -195,6 +195,8 @@ header{
   outline:none; box-shadow:var(--shadow-s); transition:all .2s;
 }
 #q::placeholder{color:var(--ink-3); font-weight:400}
+/* croix native du navigateur (input type=search) : on garde uniquement #clearq */
+#q::-webkit-search-cancel-button,#q::-webkit-search-decoration{-webkit-appearance:none; appearance:none}
 #q:focus{border-color:var(--accent);
   box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 13%, transparent), var(--shadow-m)}
 #clearq{
