@@ -800,7 +800,11 @@ body.accueil .hero{display:block}
   transition:opacity .22s ease;
 }
 @media (max-width:760px){
-  body.qfocus #searchveil{opacity:1}
+  /* Le voile capte les touchers tant qu'il est visible : sinon les cartes
+     floutées en dessous restent cliquables et un appui un peu haut, à côté de
+     « Filtrer », déclenche un outil. Effet utile au passage : appuyer à côté
+     referme la recherche. Les résultats, remontés au-dessus, restent cliquables. */
+  body.qfocus #searchveil{opacity:1; pointer-events:auto}
   /* backdrop-filter ne floute que ce qui est peint EN DESSOUS : remonter le
      contenu au-dessus du voile suffit a le garder net. Uniquement quand une
      recherche est en cours : sinon les raccourcis d'accueil resteraient nets. */
@@ -3298,6 +3302,14 @@ $('#q').addEventListener('input', ()=>{
   const ligne = document.querySelector('.filterline');
   if(ligne) ligne.addEventListener('mousedown', e => {
     if(e.target.closest('button')) e.preventDefault();
+  });
+
+  // Appui sur le voile = fermeture de la recherche. Le navigateur retire déjà
+  // le focus au toucher d'une zone non focusable ; on le fait explicitement
+  // pour que le comportement ne dépende pas de cette subtilité.
+  const voile = document.getElementById('searchveil');
+  if(voile) voile.addEventListener('click', () => {
+    q.blur(); vise = false; majVoile();   // l'état ne dépend pas du seul évènement blur
   });
 })();
 $('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownCards=60; render(); $('#q').focus(); });
