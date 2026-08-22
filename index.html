@@ -153,7 +153,9 @@ header{
   font-size:16.5px; font-weight:750; letter-spacing:-.02em; flex:1; min-width:0; cursor:pointer;
 }
 .titrebar h1 small{display:block; font-size:11.5px; font-weight:500; color:var(--ink-3);
-  letter-spacing:-.005em; margin-top:1px}
+  letter-spacing:-.005em; margin-top:1px;
+  /* une seule ligne : sur mobile la place est comptée entre logo et boutons */
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 #syncstate{
   display:flex; align-items:center; gap:7px; font-size:12px; font-weight:550; color:var(--ink-3);
   padding:6px 12px; border-radius:20px; background:var(--card); border:1px solid var(--line);
@@ -841,6 +843,16 @@ body.accueil .hero{display:block}
   .sugg .sadr{display:none}
 }
 
+/* ---- fiche ouverte : la recherche s'efface, la fiche occupe l'écran ---- */
+body.fiche #searchzone{display:none}
+body.accueil .titrebar h1 small{display:none}   /* le grand titre porte déjà le sous-titre */
+@media (max-width:760px){
+  /* plus de bloc de recherche en bas : on récupère la hauteur réservée */
+  body.fiche{padding-bottom:calc(30px + var(--mbot))}
+  body.fiche #fabtools{bottom:calc(12px + var(--mbot))}
+  body.fiche #toast{bottom:calc(80px + var(--mbot))}
+}
+
 /* ---- fiche : en-tête et annuaire officiel réunis en une seule carte ---- */
 .fgrid{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:20px; margin-top:15px}
 .fcol{display:flex; flex-direction:column; gap:15px; min-width:0}
@@ -903,8 +915,8 @@ body.accueil header{
 @media (min-width:761px){
   /* qactive = le champ contient une recherche ; sans lui, sortir du champ ferait
      disparaître le titre d'un coup et remonter les résultats. */
-  body.qfocus .hero, body.qactive .hero{display:block}
-  body.qfocus header, body.qactive header{padding-top:clamp(15px, 2.8vh, 32px)}
+  body.qfocus:not(.fiche) .hero, body.qactive:not(.fiche) .hero{display:block}
+  body.qfocus:not(.fiche) header, body.qactive:not(.fiche) header{padding-top:clamp(15px, 2.8vh, 32px)}
   body.qfocus .hero, body.qactive .hero,
   body.qfocus .homeacts,
   body.qfocus #fab, body.qactive #fab,
@@ -1137,7 +1149,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 <header><div class="hwrap">
   <div class="titrebar">
     <img class="logo" onclick="goHome()" src="logo-balance-tel.svg" alt="Juritel">
-    <h1 onclick="goHome()">Juritel<small id="count"></small></h1>
+    <h1 onclick="goHome()" title="Retour à l’accueil">Juritel<small id="count">L’annuaire des greffes et juridictions</small></h1>
     <div id="syncstate" title="Synchronisation"><span class="dot"></span><span id="synctxt">local</span></div>
     <button class="iconbtn" id="btntheme" title="Thème"></button>
     <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
@@ -1631,7 +1643,13 @@ function search(){
 }
 
 /* ============================ navigation ============================ */
-function goHome(){ ficheId = null; editMode = false; mapState = null; spState = null; browseAll = false; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
+function goHome(){
+  // « accueil » au sens plein : on efface aussi la recherche en cours, sinon on
+  // retomberait sur la liste de résultats et non sur la page d'accueil
+  const q = $('#q');
+  if(q && q.value){ q.value = ''; document.body.classList.remove('qactive'); }
+  shownCards = 60;
+  ficheId = null; editMode = false; mapState = null; spState = null; browseAll = false; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
 window.goHome = goHome;
 window.openFiche = id => {
   const da = document.getElementById('dlgAdr');
@@ -1657,7 +1675,10 @@ window.addEventListener('popstate', ()=>{
 /* ============================ rendu ============================ */
 function render(){
   setTimeout(chipsFadeAll, 0);
-  document.body.classList.toggle('accueil', !ficheId && !spState && !mapState && accueilNu());   // render() a plusieurs sorties : on couvre toutes les branches
+  document.body.classList.toggle('accueil', !ficheId && !spState && !mapState && accueilNu());
+  // fiche ouverte : elle occupe l'écran, la recherche s'efface, la marque
+  // reprend sa place en petit dans l'en-tête
+  document.body.classList.toggle('fiche', !!ficheId || !!spState);   // render() a plusieurs sorties : on couvre toutes les branches
   $('#clearq').style.display = $('#q').value ? 'grid':'none';
   document.body.classList.toggle('mapmode', !!mapState && !ficheId);
   updateToolsDock();
@@ -3450,6 +3471,20 @@ $('#q').addEventListener('input', ()=>{
   });
 })();
 $('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownCards=60; render(); $('#q').focus(); });
+
+// Entrée valide le premier résultat. On repart des données de la recherche
+// plutôt que du DOM : l'ordre affiché varie selon le mode de rendu.
+$('#q').addEventListener('keydown', e => {
+  if(e.key !== 'Enter') return;
+  const q = $('#q');
+  if(!q.value.trim()) return;
+  const {results, offm} = search();
+  e.preventDefault();
+  if(results.length){ q.blur(); openFiche(results[0].j.id); return; }
+  // sinon, première juridiction officielle absente de l'annuaire
+  const i = (offm||[]).find(k => !offJurMatch(OFF.j[k]));
+  if(i !== undefined){ q.blur(); openFicheOff(i); }
+});
 document.addEventListener('keydown', e=>{
   if(e.key==='/' && document.activeElement!==$('#q') && !document.querySelector('dialog[open]')){
     e.preventDefault(); $('#q').focus(); $('#q').select();
