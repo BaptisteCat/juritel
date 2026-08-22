@@ -690,7 +690,8 @@ select.mini{
 .mgroup .mexp{display:none}
 .mgroup.open .mexp{display:initial}
 .mgroup.open .mclu{display:none}
-.mclu{cursor:pointer}
+.mclu{cursor:zoom-in}
+.mgroup.open .mcatch{cursor:zoom-out}
 .mzoom{transform-origin:0 0; transition:transform .38s cubic-bezier(.22,.61,.36,1)}
 .mcatch{fill:transparent; pointer-events:all}
 svg.gdim > .mdot, svg.gdim > .mdotlbl, svg.gdim .mgroup:not(.open){opacity:.15; transition:opacity .18s}
@@ -3046,7 +3047,7 @@ window.mapFond = e => {
   if(document.querySelector('.mapwrap svg .mgroup.open')) grpCloseAll();
 };
 
-window.grpOpen = k => {
+window.grpOpen = (k, zoomer = true) => {
   clearTimeout(grpGrace);
   const svg = document.querySelector('.mapwrap svg');
   if(!svg) return;
@@ -3055,8 +3056,10 @@ window.grpOpen = k => {
   if(!g) return;
   g.classList.add('open');
   svg.classList.add('gdim');
-  const c = g.querySelector('.mclu circle');
-  // au survol comme au toucher : plus fort sur mobile, où viser est plus délicat
+  // Le zoom ne suit qu'un clic sur la pastille. Au survol depuis la liste, on
+  // se contente d'ouvrir : déplacer la carte sous le curseur le ferait sortir
+  // de la pastille et refermerait aussitôt la vue.
+  const c = zoomer && g.querySelector('.mclu circle');
   if(c) mapZoom(+c.getAttribute('cx'), +c.getAttribute('cy'), window.innerWidth < 760 ? 2.6 : 1.9);
 };
 function grpCloseAll(){
@@ -3209,7 +3212,7 @@ function renderCarte(){
         const above = Math.sin(a2) < -0.3 || Math.cos(a2) < -0.5;
         expd += dotSvg(it.d.j, it.d.i, X, Y, true, above ? Y-16 : Y+27);
       });
-      svg += `<g class="mgroup" id="mg-${k}" onmouseenter="grpOpen(${k})" onmouseleave="grpClose()">`
+      svg += `<g class="mgroup" id="mg-${k}">`
         + `<g class="mclu" onclick="grpOpen(${k})">`
         + `<circle cx="${cx}" cy="${cy}" r="11.5" fill="var(--card)" stroke="var(--accent)" stroke-width="2.6"><title>${esc(ville)} — ${g.items.length} juridictions</title></circle>`
         + `<text x="${cx}" y="${(g.cy+4).toFixed(1)}" font-size="11" font-weight="700" fill="var(--accent)" text-anchor="middle" style="pointer-events:none">${g.items.length}</text>`
@@ -3260,7 +3263,7 @@ window.hlJur = i => {
     const d = document.getElementById('mj-'+i), l = document.getElementById('ml-'+i);
     if(d){
       const g = d.closest('.mgroup');
-      if(g && !g.classList.contains('open')) grpOpen(+g.id.slice(3));
+      if(g && !g.classList.contains('open')) grpOpen(+g.id.slice(3), false);
       d.classList.add('hl');
     }
     if(l) l.classList.add('hl');
