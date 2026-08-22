@@ -879,10 +879,10 @@ body.accueil .hero{display:block}
 
 /* ---- barre épinglée de la fiche : titre, filtres et recherche ---- */
 .fbar{
-  position:sticky; top:var(--htop, 60px); z-index:15;
+  position:sticky; top:calc(var(--htop, 60px) - 1px); z-index:15;
   /* fond plein : translucide, le contenu défilait visiblement au travers */
   background:var(--bg);
-  padding:10px 0 8px;
+  padding:11px 0 8px;   /* +1 px : compense le recouvrement de l'en-tête */
 }
 /* le titre occupe le centre, flèche et catégorie tenues aux extrémités */
 /* la rangée a quitté .fhead : elle n'héritait plus de sa mise en page */
@@ -901,10 +901,11 @@ body.accueil .hero{display:block}
 /* Filtres et recherche : à leur place sous la carte, ils remontent avec le
    contenu puis se figent sous la barre du titre. */
 .fsticky{
-  position:sticky; top:calc(var(--htop, 60px) + var(--fbar, 0px)); z-index:14;
+  position:sticky; top:calc(var(--htop, 60px) + var(--fbar, 0px) - 2px); z-index:14;
   display:flex; align-items:center; gap:14px;
   background:var(--bg);
-  padding:2px 0 14px;   /* pas de marge : le fond doit couvrir jusqu'en bas */
+  margin-top:-1px;      /* recouvre la barre du titre */
+  padding:3px 0 14px;   /* pas de marge : le fond doit couvrir jusqu'en bas */
 }
 /* sur une fiche, l'en-tête cesse d'être translucide : les trois bandes
    forment un bloc opaque sous lequel le contenu disparaît proprement */
@@ -912,10 +913,10 @@ body.fiche header{background:var(--bg); -webkit-backdrop-filter:none; backdrop-f
 /* Une fois collées en haut, les deux barres se resserrent : le nom remonte
    sous l'en-tête et les filtres viennent juste dessous. Les positions au repos
    ne changent pas, ces règles ne valent que dans l'état figé. */
-body.figee .fbar{padding:4px 0 2px}
+body.figee .fbar{padding:5px 0 2px}
 body.figee .fbar .row1{min-height:30px}
 body.figee .fbar .row1 h2{font-size:15.5px}
-body.figee .fsticky{padding:0 0 7px}
+body.figee .fsticky{padding:1px 0 7px}
 body.figee .fsticky .filtbtn{padding:4px 11px}
 body.figee .fsticky #qsvc{padding:8px 34px}
 
@@ -2248,13 +2249,17 @@ function majHauteurEntete(){
   const q = document.getElementById('qsvc');
   if(q) q.placeholder = window.innerWidth < 760 ? 'Service…' : 'Rechercher un service';
   const r = document.documentElement.style;
+  // L'échelle d'interface applique un zoom à :root. getBoundingClientRect rend
+  // des pixels ÉCRAN, alors que les décalages CSS sont eux-mêmes multipliés par
+  // ce zoom : sans division, les barres se calaient jusqu'à 44 px trop bas et
+  // laissaient voir le contenu défiler dans l'écart.
+  const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+  const haut = el => el ? Math.floor(el.getBoundingClientRect().height / z) + 'px' : '0px';
   const e = document.querySelector('header');
-  if(e) r.setProperty('--htop', Math.round(e.getBoundingClientRect().height) + 'px');
+  if(e) r.setProperty('--htop', haut(e));
   // la barre de fiche tient sur une ou deux lignes selon la largeur : on mesure
-  const b = document.querySelector('.fbar');
-  r.setProperty('--fbar', b ? Math.round(b.getBoundingClientRect().height) + 'px' : '0px');
-  const s = document.querySelector('.fsticky');
-  r.setProperty('--fsticky', s ? Math.round(s.getBoundingClientRect().height) + 'px' : '0px');
+  r.setProperty('--fbar', haut(document.querySelector('.fbar')));
+  r.setProperty('--fsticky', haut(document.querySelector('.fsticky')));
 }
 window.addEventListener('resize', majHauteurEntete);
 
