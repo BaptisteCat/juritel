@@ -691,6 +691,7 @@ select.mini{
 .mgroup.open .mexp{display:initial}
 .mgroup.open .mclu{display:none}
 .mclu{cursor:pointer}
+.mzoom{transform-origin:0 0; transition:transform .38s cubic-bezier(.22,.61,.36,1)}
 .mcatch{fill:transparent; pointer-events:all}
 svg.gdim > .mdot, svg.gdim > .mdotlbl, svg.gdim .mgroup:not(.open){opacity:.15; transition:opacity .18s}
 .mapwrap svg.hovering .mclu{opacity:.15}
@@ -3005,24 +3006,31 @@ window.addEventListener('pointerover', e => { tactile = e.pointerType !== 'mouse
   {passive:true, capture:true});
 window.addEventListener('touchstart', () => { tactile = true; }, {passive:true, capture:true});
 
-/* Zoom de la vue éclatée sur mobile : on resserre le viewBox autour de la ville
-   pour que les points soient assez gros et espacés pour être touchés. */
+/* Zoom de la vue éclatée. On transforme un groupe englobant plutôt que le
+   viewBox : ce dernier n'est pas animable en CSS, une transformation l'est,
+   d'où une transition fluide à l'aller comme au retour. */
 function mapZoom(cx, cy, z){
   const svg = document.querySelector('.mapwrap svg');
-  if(!svg) return;
-  if(!svg.dataset.vb0) svg.dataset.vb0 = svg.getAttribute('viewBox') || '';
-  const base = (svg.dataset.vb0 || '').split(/[\s,]+/).map(Number);
-  if(base.length !== 4 || base.some(isNaN)) return;
-  const [x0, y0, w0, h0] = base;
-  const w = w0 / z, ht = h0 / z;
-  const x = Math.max(x0, Math.min(cx - w/2,  x0 + w0 - w));
-  const y = Math.max(y0, Math.min(cy - ht/2, y0 + h0 - ht));
-  svg.setAttribute('viewBox', `${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${ht.toFixed(1)}`);
+  const g = svg && svg.querySelector('.mzoom');
+  if(!g) return;
+  const w0 = +svg.dataset.w, h0 = +svg.dataset.h;
+  if(!w0 || !h0) return;
+  // (cx,cy) se retrouve au centre ; on borne pour ne jamais découvrir de vide
+  const borne = (v, taille) => Math.max((1-z)*taille, Math.min(v, 0));
+  const tx = borne(w0/2 - z*cx, w0);
+  const ty = borne(h0/2 - z*cy, h0);
+  g.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${z})`;
 }
 function mapZoomReset(){
-  const svg = document.querySelector('.mapwrap svg');
-  if(svg && svg.dataset.vb0) svg.setAttribute('viewBox', svg.dataset.vb0);
+  const g = document.querySelector('.mapwrap svg .mzoom');
+  if(g) g.style.transform = '';
 }
+
+/* Clic sur le fond de carte : referme la vue éclatée et défait le zoom. */
+window.mapFond = e => {
+  if(e.target.closest('.mgroup.open')) return;     // clic dans la vue éclatée
+  if(document.querySelector('.mapwrap svg .mgroup.open')) grpCloseAll();
+};
 
 window.grpOpen = k => {
   clearTimeout(grpGrace);
@@ -3033,10 +3041,9 @@ window.grpOpen = k => {
   if(!g) return;
   g.classList.add('open');
   svg.classList.add('gdim');
-  if(window.innerWidth < 760){
-    const c = g.querySelector('.mclu circle');
-    if(c) mapZoom(+c.getAttribute('cx'), +c.getAttribute('cy'), 2.6);
-  }
+  const c = g.querySelector('.mclu circle');
+  // au survol comme au toucher : plus fort sur mobile, où viser est plus délicat
+  if(c) mapZoom(+c.getAttribute('cx'), +c.getAttribute('cy'), window.innerWidth < 760 ? 2.6 : 1.9);
 };
 function grpCloseAll(){
   const svg = document.querySelector('.mapwrap svg');
@@ -3220,7 +3227,8 @@ function renderCarte(){
     </div>
     <div class="mcrumbs">${crumbs}</div>
     <div class="maplayout">
-      <div class="mapwrap"><svg class="mlvl-${st.level}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${svg}</svg></div>
+      <div class="mapwrap"><svg class="mlvl-${st.level}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"
+        data-w="${W}" data-h="${H}" onclick="mapFond(event)"><g class="mzoom">${svg}</g></svg></div>
       <div class="mside">
         ${legend?'<div class="msidetitle">Légende</div>'+legend:''}
         ${sousListe?'<div class="msidetitle">Juridictions</div>'+sousListe:''}
