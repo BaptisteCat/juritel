@@ -1175,9 +1175,9 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 .srcinfo .ri{
   display:inline-flex; align-items:center; justify-content:center;
   width:15px; height:15px; flex-shrink:0; border-radius:50%;
-  border:1.2px solid currentColor; font-size:9.5px; font-weight:700;
-  font-style:italic; line-height:1; transition:all .18s;
+  border:1.2px solid currentColor; transition:all .18s;
 }
+.srcinfo .ri svg{display:block; fill:currentColor}
 .srcinfo:hover, .srcinfo.on, .srcinfo:focus-visible{color:var(--ink-2); outline:none}
 .srcinfo:hover .ri, .srcinfo.on .ri, .srcinfo:focus-visible .ri{
   background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
@@ -1359,7 +1359,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     onkeydown="if(event.key==='Enter'){event.preventDefault();adrEnter(this.value);}">
   <div class="adrsugg" id="adrsugg"></div>
   <p class="hint" style="margin-top:12px">
-    <button type="button" class="srcinfo" aria-expanded="false" onclick="srcInfoTgl(event)">Sources officielles<span class="ri" aria-hidden="true">i</span><span class="srcinfo-bulle" role="tooltip">Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</span></button>
+    <button type="button" class="srcinfo" aria-expanded="false" onclick="srcInfoTgl(event)">Sources officielles<span class="ri" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="3.3" r="1.05"/><rect x="5.05" y="5.2" width="1.9" height="4.6" rx=".95"/></svg></span><span class="srcinfo-bulle" role="tooltip">Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</span></button>
   </p>
   <div class="dlgbtns"><button class="btn" onclick="document.getElementById('dlgAdr').close()">Fermer</button></div>
 </div></dialog>
@@ -2036,10 +2036,10 @@ function renderFiche(j){
       <nav class="toc">${toc}</nav>
       <div>
         <div class="svcsearch">
-          <span class="lens" data-ic="search" data-s="15"></span>
+          <span class="lens">${icn('search',15)}</span>
           <input id="qsvc" type="text" placeholder="Rechercher un service"
             autocomplete="off" autocapitalize="off" spellcheck="false" oninput="filtreSvc(this.value)">
-          <button id="clearsvc" title="Effacer" onclick="filtreSvc('', true)" data-ic="x" data-s="12"></button>
+          <button id="clearsvc" title="Effacer" onclick="filtreSvc('', true)">${icn('x',12)}</button>
         </div>
         ${blocks}
       </div>
@@ -2060,7 +2060,9 @@ window.filtreSvc = (v, vider) => {
   for(const sec of document.querySelectorAll('#view .svcblock')){
     const sid = sec.id.replace(/^svc-/, '');
     const nom = norm(sec.querySelector('h3')?.textContent || '');
-    const ok = !t.length || t.every(x => nom.includes(x));
+    // tokMatch applique le dictionnaire d'acronymes : « bo » trouve
+    // « bureau d'ordre », « ji » « juge d'instruction »…
+    const ok = !t.length || t.every(x => tokMatch(nom, x));
     sec.style.display = ok ? '' : 'none';
     const lien = document.querySelector(`#view .toc a[data-sid="${sid}"]`);
     if(lien) lien.style.display = ok ? '' : 'none';
