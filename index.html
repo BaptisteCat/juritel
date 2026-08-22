@@ -301,6 +301,22 @@ body.mapmode{padding-bottom:10px}
 .favbtn.on{opacity:1; color:var(--accent)}
 .favbtn.on svg{fill:currentColor}
 .favbar{margin:0 0 18px}
+/* Volet latéral : l'accès rapide vit à GAUCHE des portes d'entrée, pas
+   au-dessus — deux blocs indépendants côte à côte.
+   La page d'accueil s'élargit d'autant, sinon la colonne du centre se
+   resserrerait et les trois cartes passeraient sur deux rangs. Les deux
+   colonnes latérales sont de largeur égale : le centre reste centré, et il
+   le reste aussi quand aucun favori n'est posé.
+   Au-dessous de 1280 px la place manque : le volet repasse au-dessus. */
+@media (min-width:1280px){
+  body.accueil main{max-width:calc(var(--maxw) + 300px)}
+  .homewrap{
+    display:grid; grid-template-columns:250px minmax(0,1fr) 250px;
+    gap:24px; align-items:start;
+  }
+  .homewrap .favbar{margin:26px 0 0}    /* aligné sur le haut des cartes */
+  .homewrap .homeacts{grid-column:2}
+}
 .favlbl{
   display:flex; align-items:center; gap:6px; margin-bottom:9px;
   font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
@@ -879,6 +895,9 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 /* Sur une fiche, les boutons passent devant tout : main est remontée à 32 le
    temps d'une recherche, ils doivent rester au-dessus en toute circonstance. */
 body.fiche #fab, body.fiche #fabmod, body.fiche #fabtools{z-index:33}
+/* ouvert, le tiroir (39) et son voile (38) passeraient devant le bouton : il
+   doit rester atteignable, c'est lui qui referme */
+#fabtools.ouvert{z-index:40}
 /* La carte d'outils ancrée à droite propose déjà « Ajouter un contact » et
    « Mode modification » : les boutons flottants feraient double emploi.
    Celui des outils est masqué par updateToolsDock, qui déplace le panneau. */
@@ -1288,7 +1307,22 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
 
   #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start;
          padding-bottom:calc(30px + var(--mbot))}
-  #tools .thead{margin-bottom:0; margin-top:14px}
+  /* Plus de panneau blanc : le tiroir n'est qu'un conteneur transparent et les
+     outils se posent directement sur le fond flouté. Il couvre tout l'écran,
+     donc il laisse passer les touchers — sinon un appui à côté d'un outil ne
+     tomberait plus sur le voile et ne refermerait plus rien. */
+  #tools{
+    background:none; border-left:none; box-shadow:none;
+    width:100%; padding-left:18px; padding-right:18px;
+    pointer-events:none;
+  }
+  #tools .toolitem{pointer-events:auto; box-shadow:var(--shadow-m)}
+  #tools .thead{display:none}       /* le bouton Outils porte la fermeture */
+  /* un flou franc plutôt qu'un voile sombre, comme la mise au point de la recherche */
+  #toolsback{
+    background:color-mix(in srgb, var(--bg) 42%, transparent);
+    -webkit-backdrop-filter:blur(12px) saturate(.92); backdrop-filter:blur(12px) saturate(.92);
+  }
 
   /* ---- accueil : le titre respire, les raccourcis restent visibles ---- */
   body.accueil header{padding-top:18px}
@@ -1838,17 +1872,37 @@ window.togFav = async (ev, id) => {
   if(!sb || !sbUser) return;
   const email = (sbUser.email||'').toLowerCase();
   try{
-    if(ajout) await sb.from('favoris').upsert({email, juridiction:id});
-    else await sb.from('favoris').delete().eq('email', email).eq('juridiction', id);
-  }catch(e){ toast('Favori non enregistré : ' + e.message); }
+    // supabase-js RENVOIE l'erreur, il ne la lève pas : sans cette lecture,
+    // un échec d'écriture passait totalement inaperçu et le favori paraissait
+    // synchronisé alors qu'il ne vivait que dans ce navigateur.
+    const {error} = ajout
+      ? await sb.from('favoris').upsert({email, juridiction:id})
+      : await sb.from('favoris').delete().eq('email', email).eq('juridiction', id);
+    if(error) toast(sbTableAbsente(error)
+      ? 'Favori gardé sur cet appareil : table « favoris » absente du serveur'
+      : 'Favori non synchronisé : ' + error.message);
+  }catch(e){ toast('Favori non synchronisé : ' + e.message); }
 };
+// PGRST205 : la table n'existe pas encore. Le message mérite d'être distingué
+// d'une panne — il indique une migration à passer, pas un incident.
+const sbTableAbsente = e => e && (e.code === 'PGRST205' || e.code === 'PGRST202');
 async function favCharger(){
   if(!sbAdmis || !sbUser) return;
+  const email = (sbUser.email||'').toLowerCase();
   try{
     // la règle RLS ne rend que les lignes du compte : quelques centaines d'octets
     const {data, error} = await sb.from('favoris').select('juridiction');
-    if(error || !data) return;
-    FAV = new Set(data.map(r=>r.juridiction));
+    if(error || !data) return;          // table absente : le local fait foi
+    const serveur = new Set(data.map(r=>r.juridiction));
+    // Favoris posés hors ligne — ou avant l'existence de la table — : ils
+    // remontent d'abord. Sans cela, cette lecture les effacerait sans un mot.
+    const aPousser = [...FAV].filter(id => !serveur.has(id));
+    if(aPousser.length){
+      const {error: e2} = await sb.from('favoris')
+        .upsert(aPousser.map(id => ({email, juridiction:id})));
+      if(!e2) for(const id of aPousser) serveur.add(id);
+    }
+    FAV = serveur;
     favSave(); render();
   }catch(e){}
 }
@@ -2076,7 +2130,7 @@ function renderList(){
     // Accueil : on ne deverse plus toutes les fiches. Trois portes d'entree,
     // la recherche restant l'element central (mise en forme par body.accueil).
     const nj = DATA.juridictions.length;
-    V.innerHTML = favBar() + `<div class="homeacts">
+    V.innerHTML = `<div class="homewrap">${favBar()}<div class="homeacts">
       <button class="homeact" onclick="openAdrDlg(this)">
         <span class="ha-ic">${icn('pin',20)}</span>
         <span class="ha-tx"><b>Juridiction compétente</b><span class="hint">À partir d’une adresse</span></span>
@@ -2089,7 +2143,7 @@ function renderList(){
         <span class="ha-ic">${icn('scale',20)}</span>
         <span class="ha-tx"><b>Parcourir l’annuaire</b><span class="hint">${nj} juridiction${nj>1?'s':''}</span></span>
       </button>
-    </div>`;
+    </div></div>`;
     return;
   }
   if(!results.length){
@@ -2618,10 +2672,15 @@ window.rate = async (id, ok) => {
   toast(nouveau === 0 ? 'Vote retiré' : nouveau === 1 ? 'Noté : ce numéro répond' : 'Échec noté');
   if(!sbUser) return;
   try{
-    if(nouveau === 0) await sb.from('votes').delete().eq('contact', id);
-    else await sb.from('votes').upsert({contact: id, valeur: nouveau, maj: new Date().toISOString()},
-                                       {onConflict: 'email,contact'});
-  }catch(e){ toast('Vote non enregistré : ' + e.message); }
+    // même piège que pour les favoris : l'erreur est renvoyée, pas levée
+    const {error} = nouveau === 0
+      ? await sb.from('votes').delete().eq('contact', id)
+      : await sb.from('votes').upsert({contact: id, valeur: nouveau, maj: new Date().toISOString()},
+                                      {onConflict: 'email,contact'});
+    if(error) toast(sbTableAbsente(error)
+      ? 'Vote gardé sur cet appareil : table « votes » absente du serveur'
+      : 'Vote non synchronisé : ' + error.message);
+  }catch(e){ toast('Vote non synchronisé : ' + e.message); }
 };
 
 /* ---- votes communautaires : chargement et application sur les contacts ---- */
@@ -2746,17 +2805,29 @@ window.addEventListener('resize', ()=>{
 });
 
 /* panneau latéral d'outils */
+/* Le bouton flottant porte lui-même la fermeture : le tiroir n'ayant plus de
+   panneau, il n'a plus d'en-tête où loger une croix. */
+window.majFabOutils = () => {
+  const ft = document.getElementById('fabtools'); if(!ft) return;
+  const t = document.getElementById('tools');
+  const ouvert = t.classList.contains('show') && !t.classList.contains('docked');
+  ft.innerHTML = icn(ouvert ? 'x' : 'tool', 16) + `<b>${ouvert ? 'Fermer' : 'Outils'}</b>`;
+  ft.title = ouvert ? 'Fermer les outils' : 'Outils';
+  ft.classList.toggle('ouvert', ouvert);
+};
 window.openTools = () => {
   if(document.getElementById('tools').classList.contains('docked')) return;
   majEntreeModif();
   document.getElementById('tools').classList.add('show');
   document.getElementById('toolsback').classList.add('show');
+  majFabOutils();
 };
 window.closeTools = () => {
   const t = document.getElementById('tools');
   if(t.classList.contains('docked')) return;
   t.classList.remove('show');
   document.getElementById('toolsback').classList.remove('show');
+  majFabOutils();
 };
 window.openAdrDlg = (src) => {
   closeTools();
@@ -4972,8 +5043,11 @@ document.getElementById('btnWlAdd').addEventListener('click', ()=>sbWlAdd());
   fm.innerHTML = icn('pen',16);
   fm.addEventListener('click', toggleModif);
   const ft = document.getElementById('fabtools');
-  ft.innerHTML = icn('tool',16) + '<b>Outils</b>';
-  ft.addEventListener('click', ()=>openTools());
+  majFabOutils();
+  ft.addEventListener('click', ()=>{
+    const t = document.getElementById('tools');
+    (t.classList.contains('show') ? closeTools : openTools)();
+  });
   applyTheme();
   await load();
   const m = location.hash.match(/^#f\/(.+)$/);
