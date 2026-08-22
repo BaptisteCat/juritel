@@ -873,7 +873,14 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 #fabmod, #fabtools{
   position:fixed; right:22px; z-index:30; width:52px; height:44px;
   border-radius:22px; border:1px solid var(--line);
-  background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--card)), var(--card));
+  /* Le second arrêt valait le blanc de la carte : sur le fond crème, ces
+     boutons se distinguaient à peine. Les deux arrêts sont teintés, et plus
+     franchement. La proportion d'accent joue dans le bon sens des deux côtés :
+     en clair elle assombrit, en sombre elle éclaircit — dans les deux cas le
+     bouton se détache davantage du fond. */
+  background:linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 42%, var(--card)),
+    color-mix(in srgb, var(--accent) 24%, var(--card)));
   color:var(--ink-2); cursor:pointer; display:grid; place-items:center;
   box-shadow:var(--shadow-m); transition:all .22s cubic-bezier(.2,.6,.3,1);
 }
