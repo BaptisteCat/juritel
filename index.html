@@ -17,7 +17,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750;800&family=Bodoni+Moda:opsz,wght@6..96,700&display=swap" rel="stylesheet">
 
 <style>
 /* ==================== système de design v2 ==================== */
@@ -192,12 +192,18 @@ header{
 #q{
   width:100%; padding:14px 46px; font-size:15.5px; font-weight:450; color:var(--ink);
   font-family:inherit; letter-spacing:-.011em;
-  border:1.5px solid var(--line); border-radius:15px; background:var(--card);
+  border:1.5px solid var(--line); border-radius:999px; background:var(--card);
   outline:none; box-shadow:var(--shadow-s); transition:all .2s;
 }
 #q::placeholder{color:var(--ink-3); font-weight:400}
-/* croix native du navigateur (input type=search) : on garde uniquement #clearq */
-#q::-webkit-search-cancel-button,#q::-webkit-search-decoration{-webkit-appearance:none; appearance:none}
+/* Croix native du navigateur (input type=search) : on ne garde que #clearq.
+   appearance:none ne suffit pas partout — on masque explicitement, et on couvre
+   la variante Edge (::-ms-clear) ainsi que les décorations de recherche. */
+#q::-webkit-search-cancel-button, #q::-webkit-search-decoration,
+#q::-webkit-search-results-button, #q::-webkit-search-results-decoration{
+  -webkit-appearance:none; appearance:none; display:none; width:0; height:0;
+}
+#q::-ms-clear, #q::-ms-reveal{display:none; width:0; height:0}
 #q:focus{border-color:var(--accent);
   box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 13%, transparent), var(--shadow-m)}
 #clearq{
@@ -208,7 +214,7 @@ header{
 }
 #clearq:hover{background:var(--line); color:var(--ink); transform:translateY(-50%) scale(1.08)}
 
-.chips{display:flex; gap:7px; overflow-x:auto; padding:12px 2px 2px; scrollbar-width:none;
+.chips{display:flex; gap:7px; overflow-x:auto; padding:12px 4px 2px; scrollbar-width:none;
   overscroll-behavior-x:contain}
 .chips::-webkit-scrollbar{display:none}
 /* degrade de bord : signale qu il reste des filtres hors champ */
@@ -515,6 +521,8 @@ select.mini{
   border:1px solid var(--line); border-radius:14px; background:var(--card-2);
   cursor:pointer; user-select:none; transition:all .16s; margin-bottom:8px;
 }
+.toolitem.actif{border-color:color-mix(in srgb, var(--ok) 45%, var(--line));
+  background:var(--ok-bg)}
 .toolitem:hover{border-color:color-mix(in srgb, var(--accent) 35%, var(--line));
   box-shadow:var(--shadow-s); transform:translateY(-1px)}
 .toolitem .tico{width:32px; height:32px; border-radius:10px}
@@ -741,6 +749,11 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 }
 #fabmod{bottom:86px}
 #fabtools{bottom:140px}
+#fabtools b{display:none; font-size:13px; font-weight:650; letter-spacing:-.01em}
+@media (max-width:760px){
+  #fabtools{width:auto; padding:0 16px; gap:8px; display:flex; align-items:center}
+  #fabtools b{display:inline}
+}
 #fabmod:hover, #fabtools:hover{transform:translateY(-2px); color:var(--ink)}
 #fabmod.on{
   background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
@@ -750,24 +763,194 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 @media (max-width:560px){ #fabmod{right:22px} }
 
 
+.hero{text-align:center; cursor:pointer; user-select:none; display:none}
+body.accueil .hero{display:block}
+.hero-nom{
+  /* Bodoni Moda : didone à fort contraste — l'opposition pleins/déliés porte
+     le caractère. Repli sur les didones système, puis un serif générique. */
+  font-family:'Bodoni Moda',Didot,'Bodoni MT','Times New Roman',serif;
+  font-weight:700; font-size:clamp(35px, 4.7vw, 52px); letter-spacing:-.012em; line-height:1.05;
+  /* même dégradé que le logo et le bouton principal du thème */
+  background:linear-gradient(135deg, var(--grad-a), var(--grad-b));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+/* le caractère vient du contraste de masse entre les deux moitiés du nom */
+/* filet dégradé sous le nom, qui prolonge la marque */
+.hero-nom::after{
+  content:''; display:block; width:138px; height:1.5px; margin:12px auto 0; border-radius:1px;
+  /* même encre que le nom : bascule aussi en clair sur fond sombre */
+  background:linear-gradient(90deg, var(--grad-a), var(--grad-b));
+  opacity:.5;
+}
+.hero-sous{
+  margin-top:10px; font-size:10.5px; font-weight:650; color:var(--ink-3);
+  text-transform:uppercase; letter-spacing:.18em;
+}
+
+.searchzone{display:flex; flex-direction:column}
+
+/* Voile de mise au point (mobile) : au clic dans la recherche, l'application
+   s'estompe et reste floue pendant toute la saisie. Les resultats sont remontes
+   au-dessus du voile — donc nets — tandis que l'en-tete, l'accueil et les
+   boutons flottants restent en arriere-plan flou. */
+#searchveil{
+  position:fixed; inset:0; z-index:31; opacity:0; pointer-events:none;
+  background:color-mix(in srgb, var(--bg) 38%, transparent);
+  -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
+  transition:opacity .22s ease;
+}
+@media (max-width:760px){
+  body.qfocus #searchveil{opacity:1}
+  /* backdrop-filter ne floute que ce qui est peint EN DESSOUS : remonter le
+     contenu au-dessus du voile suffit a le garder net. Uniquement quand une
+     recherche est en cours : sinon les raccourcis d'accueil resteraient nets. */
+  body.qfocus.qactive main{position:relative; z-index:32}
+  /* pendant la recherche, le bouton Outils s'efface : rien ne doit détourner
+     l'attention ni rester cliquable derrière le voile */
+  body.qfocus #fabtools{opacity:0; pointer-events:none; transform:translateY(6px)}
+
+  /* Résultats : une carte se limite au nom de la juridiction. Les raccourcis de
+     service ne s'affichent que lorsque la recherche a désigné un service précis
+     (rendu par suggInline, qui n'utilise pas .schips au premier niveau). */
+  .sugg{padding:12px 14px; margin-bottom:9px; border-radius:13px}
+  .sugg > .schips:not(.match){display:none}
+  .sugg > .schips.match{margin-top:9px}
+  .sugg .snom{font-size:14.5px}
+  .sugg .sadr{display:none}
+}
+
+/* ==================== accueil épuré ====================
+   Sur l'accueil « nu » (aucune recherche, aucune catégorie), la barre de
+   recherche devient l'élément central : l'en-tête cesse d'être collant, se
+   déploie en hauteur, et la barre est resserrée et mise en avant.          */
+body.accueil header{
+  position:static; background:transparent; border-bottom-color:transparent;
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+  padding-top:clamp(15px, 2.8vh, 32px); padding-bottom:8px;
+}
+/* Taille identique en toutes circonstances : la barre ne doit pas sauter
+   au premier caractere saisi. Seul l'espacement vertical de l'en-tete change. */
+@media (min-width:761px){
+  .searchwrap{width:100%; max-width:780px; margin-left:auto; margin-right:auto}
+  #q{
+    padding:17px 58px; font-size:16.5px; border-radius:999px; border-width:2px;
+    box-shadow:0 18px 40px -26px color-mix(in srgb, var(--grad-a) 55%, transparent), var(--shadow-s);
+  }
+  .searchwrap .lens{left:24px}
+  #clearq{right:14px}
+}
+@media (min-width:761px){ body.accueil .searchwrap{margin-top:24px} }
+
+/* Ordinateur : pendant la saisie, le bloc de marque et les boutons flottants
+   restent en place mais s'estompent, au lieu de disparaître d'un coup.
+   Un voile plein écran ne conviendrait pas ici : la barre de recherche vit dans
+   l'en-tête, qui forme son propre contexte d'empilement — elle serait floutée
+   avec le titre. D'où un flou appliqué directement aux éléments visés. */
+@media (min-width:761px){
+  /* qactive = le champ contient une recherche ; sans lui, sortir du champ ferait
+     disparaître le titre d'un coup et remonter les résultats. */
+  body.qfocus .hero, body.qactive .hero{display:block}
+  body.qfocus header, body.qactive header{padding-top:clamp(15px, 2.8vh, 32px)}
+  body.qfocus .hero, body.qactive .hero,
+  body.qfocus .homeacts,
+  body.qfocus #fab, body.qactive #fab,
+  body.qfocus #fabmod, body.qactive #fabmod,
+  body.qfocus #fabtools, body.qactive #fabtools{
+    filter:blur(5px); opacity:.45; pointer-events:none;
+  }
+  .hero, .homeacts, #fab, #fabmod, #fabtools{transition:filter .25s ease, opacity .25s ease}
+}
+/* échelle réduite du bloc de marque sur ordinateur ; le mobile garde la sienne */
+@media (min-width:761px){
+  .hero-nom{font-size:clamp(33px, 3.1vw, 41px)}
+  .hero-nom::after{width:118px; margin-top:10px}
+  .hero-sous{margin-top:9px; font-size:9.5px; letter-spacing:.19em}
+}
+body.accueil #stats{display:none}
+
+/* --- filtres repliés derrière un bouton discret --- */
+.filtrow{display:flex; justify-content:center; margin-top:12px}
+.filtbtn{
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+  border:1px solid transparent; background:none; color:var(--ink-3);
+  font-family:inherit; font-size:12.5px; font-weight:600; letter-spacing:-.005em;
+  padding:6px 12px; border-radius:20px; transition:all .16s;
+}
+.filtbtn:hover{color:var(--ink); background:var(--line-2)}
+.filtbtn.actif{color:var(--accent); border-color:color-mix(in srgb, var(--accent) 30%, transparent);
+  background:color-mix(in srgb, var(--accent) 9%, transparent)}
+.filtbtn .car{transition:transform .2s}
+body.filtres .filtbtn .car{transform:rotate(180deg)}
+@media (min-width:761px){
+  /* ordinateur : la rangée se déplie sous le bouton */
+  .chips{max-height:0; opacity:0; overflow:hidden; padding-top:0; padding-bottom:0;
+    transition:max-height .25s cubic-bezier(.2,.6,.3,1), opacity .2s, padding .25s;
+    width:100%; max-width:780px; margin-left:auto; margin-right:auto; justify-content:safe center}
+  body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom:2px}
+}
+
+/* les trois portes d'entrée */
+.homeacts{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));
+  gap:12px; max-width:620px; margin:26px auto 0;
+}
+.homeact{
+  display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+  padding:16px 16px 15px; text-align:left; cursor:pointer;
+  border:1px solid var(--line); border-radius:16px; background:var(--card);
+  color:var(--ink); font-family:inherit; box-shadow:var(--shadow-s);
+  transition:all .2s cubic-bezier(.2,.6,.3,1);
+}
+.homeact:hover{
+  transform:translateY(-3px); box-shadow:var(--shadow-m);
+  border-color:color-mix(in srgb, var(--accent) 38%, var(--line));
+}
+.homeact .ha-ic{
+  width:36px; height:36px; border-radius:11px; display:grid; place-items:center;
+  margin-bottom:7px; color:var(--cta-ink);
+  background:linear-gradient(135deg, var(--grad-a), var(--grad-b));
+}
+.homeact .ha-tx{display:flex; flex-direction:column; gap:2px; min-width:0}
+.homeact b{font-size:14px; font-weight:650; letter-spacing:-.012em}
+.homeact .hint{font-size:12px}
+
+/* mobile : la recherche se place au centre de l'écran sur l'accueil */
+@media (max-width:760px){
+  .homeact{flex-direction:row; align-items:center; gap:12px; padding:12px 14px}
+  .homeact .ha-ic{margin-bottom:0; width:34px; height:34px; flex-shrink:0}
+  .homeacts{gap:9px}
+}
+
 /* mobile : usage à une main — recherche en bas, outils empilés depuis le bas */
 @media (max-width:760px){
-  :root{--mbot:max(22px, env(safe-area-inset-bottom, 0px))}
+  :root{--mbot:max(34px, calc(env(safe-area-inset-bottom, 0px) + 12px))}
+
+  /* ---- bloc de recherche ancré en bas : position stable, jamais déplacée ----
+     Les catégories se déplient VERS LE HAUT (colonne inversée) pour ne pas
+     pousser la barre sous le pouce. */
+  #searchzone{
+    position:fixed; left:10px; right:10px; bottom:var(--mbot); z-index:35;
+    flex-direction:column-reverse;
+    /* le conteneur et ses rangées débordent en hauteur au-dessus de la barre :
+       leurs zones transparentes captaient les clics destinés au bouton flottant.
+       Seules les commandes réelles reçoivent les clics. */
+    pointer-events:none;
+  }
+  #searchzone > *{pointer-events:none}
+  #searchzone .searchwrap, #searchzone .filtbtn{pointer-events:auto}
+  body.filtres #searchzone .chips{pointer-events:auto}
   .searchwrap{
-    position:fixed; left:10px; right:10px; z-index:35;
-    bottom:var(--mbot);
     background:color-mix(in srgb, var(--bg) 55%, transparent);
     -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
-    border-radius:17px;
+    border-radius:999px;
     box-shadow:0 14px 34px -8px color-mix(in srgb, var(--grad-a) 55%, transparent),
                0 4px 14px color-mix(in srgb, var(--grad-a) 26%, transparent);
   }
-  /* en sombre, --grad-a est blanc : halo adouci */
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]) .searchwrap{
       box-shadow:0 0 0 1px color-mix(in srgb, var(--grad-a) 18%, transparent),
-               0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
-               0 6px 18px rgba(0,0,0,.5);
+                 0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
+                 0 6px 18px rgba(0,0,0,.5);
     }
   }
   :root[data-theme="dark"] .searchwrap{
@@ -775,29 +958,39 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
                0 10px 34px -4px color-mix(in srgb, var(--grad-a) 28%, transparent),
                0 6px 18px rgba(0,0,0,.5);
   }
-  body{padding-bottom:calc(148px + var(--mbot))}
-  body.mapmode{padding-bottom:calc(148px + var(--mbot))}
-  #fab{bottom:calc(66px + var(--mbot))}
-  #fabmod{bottom:calc(130px + var(--mbot))}
-  #fabtools{bottom:calc(184px + var(--mbot))}
-  body #toast{bottom:calc(176px + var(--mbot))}   /* #toast est redéclaré plus bas : spécificité accrue */
-  .searchwrap:focus-within #q{
-    background-image:linear-gradient(100deg,
-      transparent 22%,
-      color-mix(in srgb, var(--bar-a) 15%, transparent) 40%,
-      color-mix(in srgb, var(--accent) 20%, transparent) 50%,
-      color-mix(in srgb, var(--bar-b) 15%, transparent) 60%,
-      transparent 78%);
-    background-size:260% 100%; background-repeat:no-repeat;
-    background-position:-130% 0;
-    animation:qsweep 2.8s ease-in-out 1;
+  /* Bouton de filtre et catégories sur UNE SEULE ligne, juste au-dessus de la
+     barre. Les catégories se déploient horizontalement depuis le bouton, comme
+     si elles en sortaient : c'est la largeur qui s'anime, pas la hauteur. */
+  .filterline{display:flex; align-items:center; gap:8px; margin:0 0 3px; padding-left:4px}
+  .filtrow{justify-content:flex-start; margin:0; padding:0; flex:0 0 auto}
+  .chips{
+    flex:1 1 auto; min-width:0; max-width:0; opacity:0; padding:0;
+    transition:max-width .3s cubic-bezier(.2,.6,.3,1), opacity .22s ease;
   }
-  @keyframes qsweep{
-    0%{background-position:130% 0}
-    100%{background-position:-130% 0}
+  body.filtres .chips{max-width:100%; opacity:1}
+  /* même dégradé que les boutons du thème et le logo */
+  .filtbtn, .filtbtn:hover, .filtbtn.actif{
+    background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
+    color:var(--cta-ink); border-color:transparent;
+    box-shadow:0 6px 18px var(--glow), var(--shadow-s);
   }
-  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start; padding-bottom:calc(124px + var(--mbot))}
+  .filtbtn.actif{box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent),
+                            0 6px 18px var(--glow)}
+
+  /* ---- un seul bouton flottant : le tiroir rassemble toutes les actions ---- */
+  #fab, #fabmod{display:none !important}
+  #fabtools{bottom:calc(72px + var(--mbot))}
+  #toast{bottom:calc(140px + var(--mbot))}
+  body, body.mapmode{padding-bottom:calc(120px + var(--mbot))}
+
+  #tools{display:flex; flex-direction:column-reverse; justify-content:flex-start;
+         padding-bottom:calc(30px + var(--mbot))}
   #tools .thead{margin-bottom:0; margin-top:14px}
+
+  /* ---- accueil : le titre respire, les raccourcis restent visibles ---- */
+  body.accueil header{padding-top:18px}
+  .hero-sous{font-size:12.5px}
+  body.accueil .homeacts{margin-top:22px}
 }
 
 /* ==================== dialogues ==================== */
@@ -887,13 +1080,22 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <button class="iconbtn" id="btntheme" title="Thème"></button>
     <button class="iconbtn" id="btnsettings" title="Réglages" data-ic="gear" data-s="17"></button>
   </div>
-  <div class="searchwrap">
-    <span class="lens" data-ic="search" data-s="16"></span>
-    <input id="q" type="search" placeholder="Ville, juridiction, service, numéro, mail…"
-      autocomplete="off" autocapitalize="off" spellcheck="false">
-    <button id="clearq" title="Effacer" data-ic="x" data-s="13"></button>
+  <div class="hero" id="hero" onclick="goHome()">
+    <div class="hero-nom">Juritel</div>
+    <div class="hero-sous">L’annuaire des greffes et juridictions</div>
   </div>
-  <div class="chips" id="chips"></div>
+  <div class="searchzone" id="searchzone">
+    <div class="searchwrap">
+      <span class="lens" data-ic="search" data-s="16"></span>
+      <input id="q" type="search" placeholder="Rechercher dans l’annuaire : juridiction, ville, numéro, adresse…"
+        autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button id="clearq" title="Effacer" data-ic="x" data-s="13"></button>
+    </div>
+    <div class="filterline">
+      <div class="filtrow"><button class="filtbtn" id="btnfiltres" onclick="toggleFiltres()"></button></div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </div>
 </div></header>
 
 <main>
@@ -945,11 +1147,22 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <div class="ti"><b>Carte de France</b><small>Trouver une juridiction par navigation géographique</small></div>
     <span class="caret" data-ic="right" data-s="12"></span>
   </div>
+  <div class="toolitem" onclick="closeTools();openAdd()">
+    <span class="tico tel" data-ic="plus" data-s="13"></span>
+    <div class="ti"><b id="tiAjout">Ajouter un contact</b><small id="tiAjoutS">Nouvelle fiche ou nouveau numéro</small></div>
+    <span class="caret" data-ic="right" data-s="12"></span>
+  </div>
+  <div class="toolitem" id="tiModif" onclick="closeTools();toggleModif()">
+    <span class="tico email" data-ic="pen" data-s="13"></span>
+    <div class="ti"><b id="tiModifB">Mode modification</b><small id="tiModifS">Afficher les commandes d’édition</small></div>
+    <span class="caret" data-ic="right" data-s="12"></span>
+  </div>
 </aside>
 
-<button id="fabtools" title="Outils"></button>
+<button id="fabtools" title="Outils"><b>Outils</b></button>
 <button id="fabmod" title="Mode modification"></button>
 <button id="fab" title="Ajouter un contact"><span data-ic="plus" data-s="17"></span><b>Ajouter</b></button>
+<div id="searchveil"></div>
 <div id="toast"></div>
 
 <dialog id="dlgAdd"><form class="dlg" method="dialog" id="formAdd">
@@ -1083,6 +1296,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 /* ============================ icônes vectorielles ============================ */
 const ICONS = {
   search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  filter:'<path d="M3 5h18l-7 8.2V20l-4-2.2v-4.6z"/>',
   gear:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>',
   mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/>',
@@ -1161,6 +1375,9 @@ let editMode = false;        // mode réorganisation de la fiche
 let mapState = null;         // carte interactive : null | {level:'fr'|'reg'|'dep', code}
 let spState = null;          // fiche officielle service-public : null | {type, nom, loading, data}
 let modifMode = false;       // false = lecture seule (défaut)
+let browseAll = false;       // l'accueil n'affiche les fiches qu'à la demande
+// accueil « nu » : ni recherche, ni catégorie, ni parcours explicite
+const accueilNu = () => !$('#q').value.trim() && !currentCat && !browseAll;
 // sbProp est resolu tres tot (ouverture de la porte) ; tant qu il vaut null on
 // masque les commandes reservees, ce qui est le defaut prudent.
 const estProp = () => sbProp === true;
@@ -1327,7 +1544,10 @@ function search(){
       const cts = s.contacts.filter(c =>
         rest2.every(t => tokMatch(c._txt, t) ||
           (c._dig && digits(t).length>=4 && c._dig.includes(digits(t)))));
-      if(cts.length) hits.push({s, cts});
+      // svcHit : nombre de mots absorbés par le nom du service lui-même.
+      // À 0, le service n'a été retenu que parce qu'un de ses contacts
+      // correspondait — il ne désigne pas le service recherché.
+      if(cts.length) hits.push({s, cts, svcHit: rest.length - rest2.length});
     }
     if(hits.length) results.push({j, hits, nameHit});
   }
@@ -1349,7 +1569,7 @@ function search(){
 }
 
 /* ============================ navigation ============================ */
-function goHome(){ ficheId = null; editMode = false; mapState = null; spState = null; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
+function goHome(){ ficheId = null; editMode = false; mapState = null; spState = null; browseAll = false; if(location.hash) history.pushState(null,'',location.pathname+location.search); render(); window.scrollTo(0,0); }
 window.goHome = goHome;
 window.openFiche = id => {
   const da = document.getElementById('dlgAdr');
@@ -1374,7 +1594,8 @@ window.addEventListener('popstate', ()=>{
 
 /* ============================ rendu ============================ */
 function render(){
-  setTimeout(chipsFadeAll, 0);   // render() a plusieurs sorties : on couvre toutes les branches
+  setTimeout(chipsFadeAll, 0);
+  document.body.classList.toggle('accueil', !ficheId && !spState && !mapState && accueilNu());   // render() a plusieurs sorties : on couvre toutes les branches
   $('#clearq').style.display = $('#q').value ? 'grid':'none';
   document.body.classList.toggle('mapmode', !!mapState && !ficheId);
   updateToolsDock();
@@ -1397,8 +1618,28 @@ function renderList(){
        <div class="grid">${offIdx.map(cardOff).join('')}</div>`
     : '';
   const V = $('#view');
-  $('#stats').textContent = tokens.length||currentCat ?
+  $('#stats').textContent = tokens.length||currentCat||browseAll ?
     `${results.length} juridiction${results.length>1?'s':''} — cliquez sur une fiche pour l'ouvrir` : '';
+  if(!tokens.length && !currentCat && !browseAll){
+    // Accueil : on ne deverse plus toutes les fiches. Trois portes d'entree,
+    // la recherche restant l'element central (mise en forme par body.accueil).
+    const nj = DATA.juridictions.length;
+    V.innerHTML = `<div class="homeacts">
+      <button class="homeact" onclick="openAdrDlg()">
+        <span class="ha-ic">${icn('pin',20)}</span>
+        <span class="ha-tx"><b>Juridiction compétente</b><span class="hint">À partir d’une adresse</span></span>
+      </button>
+      <button class="homeact" onclick="openCarte()">
+        <span class="ha-ic">${icn('map',20)}</span>
+        <span class="ha-tx"><b>Carte de France</b><span class="hint">Parcourir par région</span></span>
+      </button>
+      <button class="homeact" onclick="parcourir()">
+        <span class="ha-ic">${icn('scale',20)}</span>
+        <span class="ha-tx"><b>Parcourir l’annuaire</b><span class="hint">${nj} juridiction${nj>1?'s':''}</span></span>
+      </button>
+    </div>`;
+    return;
+  }
   if(!results.length){
     V.innerHTML = offHtml || `<div class="vide"><div class="big">${icn('search',34)}</div>Aucun résultat.<br><br>
       <button class="btn primary" onclick="openAdd()">＋ Ajouter ce contact</button></div>`;
@@ -1467,13 +1708,48 @@ function suggJur({j, hits}){
 }
 function suggInline({j, hits}){
   const nc = j.services.reduce((m,s)=>m+s.contacts.length,0);
+  // Sur mobile la suggestion reste une petite carte : on annonce simplement les
+  // services trouvés sous forme de boutons ; les coordonnées s'ouvrent au clic.
+  const compact = window.innerWidth < 760;
+  const maxSvc = 5, maxEnt = Infinity;
   let inner = '';
-  for(const h of hits.slice(0,5)){
+  if(compact){
+    const designes = hits.filter(x => x.svcHit > 0);
+    if(!designes.length){
+      // aucun service précis identifié : on s'en tient au nom de la juridiction
+      return `<div class="sugg" onclick="openFiche('${j.id}')">
+        <div class="stop">
+          <div class="snom">${esc(j.nom)}</div>
+          <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+          <span class="ncontacts">${nc}</span>
+        </div>
+      </div>`;
+    }
+    const vus = designes.slice(0,6).map(x =>
+      `<button class="schip" onclick="event.stopPropagation();openFicheSvc('${j.id}','${x.s.id}')">`
+      + `${esc(x.s.nom)}<span class="n">${x.cts.length}</span></button>`).join('');
+    const reste = designes.length > 6
+      ? `<button class="schip" onclick="event.stopPropagation();openFiche('${j.id}')">+${designes.length-6} autres…</button>` : '';
+    return `<div class="sugg" onclick="openFiche('${j.id}')">
+      <div class="stop">
+        <div class="snom">${esc(j.nom)}</div>
+        <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+        <span class="ncontacts">${nc}</span>
+      </div>
+      <div class="schips match">${vus}${reste}</div>
+    </div>`;
+  }
+  for(const h of hits.slice(0,maxSvc)){
     const bureaux = structureService(h.cts);
-    let rows = '';
+    let rows = '', n = 0;
     for(const b of bureaux){
+      if(n >= maxEnt) break;
       let er = '';
-      for(const e of b.entries.values()) er += renderEntry(j, h.s, e);
+      for(const e of b.entries.values()){
+        if(n >= maxEnt) break;
+        er += renderEntry(j, h.s, e); n++;
+      }
+      if(!er) continue;
       rows += b.nom ? `<div class="bureau"><h4>${esc(b.nom)}</h4>${er}</div>` : er;
     }
     inner += `<div class="isvc">
@@ -1482,8 +1758,8 @@ function suggInline({j, hits}){
         <span class="goto">fiche complète →</span>
       </div>${rows}</div>`;
   }
-  if(hits.length>5)
-    inner += `<button class="schip" style="margin-top:8px" onclick="openFiche('${j.id}')">+${hits.length-5} autres services…</button>`;
+  if(hits.length>maxSvc)
+    inner += `<button class="schip" style="margin-top:8px" onclick="openFiche('${j.id}')">+${hits.length-maxSvc} autres services…</button>`;
   return `<div class="sugg" style="cursor:default">
     <div class="stop" style="cursor:pointer" onclick="openFiche('${j.id}')">
       <div class="snom">${esc(j.nom)}${j.adresse?`<div class="sadr">${icn('pin',11)} ${esc(j.adresse)}</div>`:''}</div>
@@ -1685,6 +1961,7 @@ function renderChips(){
     html += `<button class="chip ${currentCat===k?'on':''}" onclick="setCat('${k}')">${v} · ${counts[k]}</button>`;
   }
   $('#chips').innerHTML = html;
+  majFiltreBtn();
   setTimeout(chipsFadeAll, 0);
 }
 
@@ -1713,6 +1990,25 @@ window.addEventListener('resize', () => chipsFadeAll());
 
 /* ============================ interactions ============================ */
 window.setCat = c => { currentCat=c; shownCards=60; ficheId=null; spState=null; renderChips(); render(); };
+window.parcourir = () => { browseAll = true; shownCards = 60; render(); };
+
+/* Filtres : la rangee de categories reste repliee tant qu on ne la demande pas.
+   Le bouton affiche la categorie active, ce qui evite de perdre le filtre de vue. */
+let filtresOuverts = false;
+function majFiltreBtn(){
+  const b = document.getElementById('btnfiltres');
+  if(!b) return;
+  const actif = !!currentCat;
+  b.innerHTML = icn('filter',13)
+    + `<span>${actif ? esc(CATS[currentCat]||currentCat) : 'Filtrer'}</span>`
+    + `<span class="car">${icn('down',12)}</span>`;
+  b.classList.toggle('actif', actif);
+  b.title = actif ? 'Filtre actif — cliquez pour changer' : 'Filtrer par catégorie';
+}
+window.toggleFiltres = () => {
+  filtresOuverts = !filtresOuverts;
+  document.body.classList.toggle('filtres', filtresOuverts);
+};
 window.tgl = (id, cur) => { openState[id] = !cur; render(); };
 window.copyVal = v => { navigator.clipboard?.writeText(v).then(()=>toast('Copié : '+v)); };
 
@@ -1807,19 +2103,19 @@ function updateToolsDock(){
   const tools = document.getElementById('tools');
   const dock = document.getElementById('toolsdock');
   if(!tools || !dock) return;
-  // mobile : la barre de recherche sort de l en-tête (le backdrop-filter du
-  // header ferait référence pour position:fixed) et se fixe en bas de l écran
-  const sw = document.querySelector('.searchwrap');
-  if(sw){
+  // mobile : recherche, bouton de filtre et catégories forment un bloc unique
+  // ancré en bas de l'écran. Il sort de l'en-tête car le backdrop-filter de
+  // celui-ci servirait de référence à position:fixed.
+  const sz = document.getElementById('searchzone');
+  if(sz){
     const mobile = window.innerWidth < 760;
-    if(mobile && sw.parentElement !== document.body){
-      document.body.appendChild(sw);
-    } else if(!mobile && sw.parentElement === document.body){
-      const hw = document.querySelector('.hwrap');
-      hw.insertBefore(sw, hw.querySelector('.chips'));
+    if(mobile && sz.parentElement !== document.body){
+      document.body.appendChild(sz);
+    } else if(!mobile && sz.parentElement === document.body){
+      document.querySelector('.hwrap').appendChild(sz);
     }
   }
-  const wantDock = window.innerWidth >= 1080 && !ficheId && !mapState;
+  const wantDock = window.innerWidth >= 1080 && !ficheId && !mapState && !accueilNu();
   document.body.classList.toggle('toolsdocked', wantDock);
   tools.classList.toggle('docked', wantDock);
   const ft = document.getElementById('fabtools');
@@ -1842,6 +2138,7 @@ window.addEventListener('resize', ()=>{
 /* panneau latéral d'outils */
 window.openTools = () => {
   if(document.getElementById('tools').classList.contains('docked')) return;
+  majEntreeModif();
   document.getElementById('tools').classList.add('show');
   document.getElementById('toolsback').classList.add('show');
 };
@@ -2555,10 +2852,20 @@ window.carteCa = c => {
 };
 
 /* ============================ mode lecture seule / modification ============================ */
+function majEntreeModif(){
+  const b = document.getElementById('tiModifB'), s = document.getElementById('tiModifS');
+  if(!b) return;
+  b.textContent = modifMode ? 'Quitter le mode modification' : 'Mode modification';
+  s.textContent = modifMode ? 'Revenir à la lecture seule' : 'Afficher les commandes d’édition';
+  document.getElementById('tiModif').classList.toggle('actif', modifMode);
+  const a = document.getElementById('tiAjout');
+  if(a) a.textContent = estProp() ? 'Ajouter un contact' : 'Proposer un contact';
+}
 window.toggleModif = () => {
   modifMode = !modifMode;
   if(!modifMode) editMode = false;
   document.getElementById('fabmod').classList.toggle('on', modifMode);
+  majEntreeModif();
   toast(modifMode ? (estProp() ? 'Mode modification activé' : 'Mode proposition activé')
                   : 'Mode lecture seule');
   render();
@@ -2972,6 +3279,18 @@ $('#q').addEventListener('input', ()=>{
     render();
   }, 90);
 });
+(() => {
+  const q = $('#q');
+  // On suit l'état explicitement : pendant l'événement « blur »,
+  // document.activeElement pointe encore sur le champ et inverserait le voile.
+  let vise = false;
+  const majVoile = () => document.body.classList.toggle('qfocus', vise);
+  q.addEventListener('focus', () => { vise = true;  majVoile(); });
+  q.addEventListener('blur',  () => { vise = false; majVoile(); });
+  const majActive = () => document.body.classList.toggle('qactive', !!q.value.trim());
+  q.addEventListener('input', majActive);
+  majActive();
+})();
 $('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownCards=60; render(); $('#q').focus(); });
 document.addEventListener('keydown', e=>{
   if(e.key==='/' && document.activeElement!==$('#q') && !document.querySelector('dialog[open]')){
@@ -3664,7 +3983,7 @@ document.getElementById('btnWlAdd').addEventListener('click', ()=>sbWlAdd());
   fm.innerHTML = icn('pen',16);
   fm.addEventListener('click', toggleModif);
   const ft = document.getElementById('fabtools');
-  ft.innerHTML = icn('tool',16);
+  ft.innerHTML = icn('tool',16) + '<b>Outils</b>';
   ft.addEventListener('click', ()=>openTools());
   applyTheme();
   await load();
