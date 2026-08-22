@@ -844,7 +844,7 @@ body.accueil .hero{display:block}
 }
 
 /* ---- recherche de service à l'intérieur d'une fiche ---- */
-.svcsearch{position:relative; margin:14px 0 4px}
+.svcsearch{position:relative; margin:0 0 11px; max-width:330px}
 .svcsearch .lens{
   position:absolute; left:14px; top:50%; transform:translateY(-50%);
   color:var(--ink-3); pointer-events:none; display:grid; place-items:center;
@@ -985,11 +985,13 @@ body.accueil #stats{display:none}
 .filtbtn .car{transition:transform .2s}
 body.filtres .filtbtn .car{transform:rotate(180deg)}
 @media (min-width:761px){
-  /* ordinateur : la rangée se déplie sous le bouton */
-  .chips{max-height:0; opacity:0; overflow:hidden; padding-top:0; padding-bottom:0;
+  /* Ordinateur : la rangée se déplie sous le bouton. Ciblée par #chips et non
+     .chips : les fiches ont leur propre rangée de filtres par domaine, qui ne
+     doit jamais être repliée. */
+  #chips{max-height:0; opacity:0; overflow:hidden; padding-top:0; padding-bottom:0;
     transition:max-height .25s cubic-bezier(.2,.6,.3,1), opacity .2s, padding .25s;
     width:100%; max-width:780px; margin-left:auto; margin-right:auto; justify-content:safe center}
-  body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom:2px}
+  body.filtres #chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom:2px}
 }
 
 /* les trois portes d'entrée */
@@ -1066,11 +1068,11 @@ body.filtres .filtbtn .car{transform:rotate(180deg)}
      si elles en sortaient : c'est la largeur qui s'anime, pas la hauteur. */
   .filterline{display:flex; align-items:center; gap:8px; margin:0 0 9px; padding-left:4px}
   .filtrow{justify-content:flex-start; margin:0; padding:0; flex:0 0 auto}
-  .chips{
+  #chips{
     flex:1 1 auto; min-width:0; max-width:0; opacity:0; padding:0;
     transition:max-width .3s cubic-bezier(.2,.6,.3,1), opacity .22s ease;
   }
-  body.filtres .chips{max-width:100%; opacity:1}
+  body.filtres #chips{max-width:100%; opacity:1}
   /* Filtres ouverts : le bouton se réduit de droite à gauche jusqu'à ne garder
      que l'entonnoir, ce qui libère la largeur pour les catégories. */
   .filtbtn > span{
@@ -1991,15 +1993,17 @@ function renderFiche(j){
       </div>` : ''}
     </div>
     ${fchips}
-    <div class="svcsearch">
-      <span class="lens" data-ic="search" data-s="15"></span>
-      <input id="qsvc" type="text" placeholder="Rechercher un service"
-        autocomplete="off" autocapitalize="off" spellcheck="false" oninput="filtreSvc(this.value)">
-      <button id="clearsvc" title="Effacer" onclick="filtreSvc('', true)" data-ic="x" data-s="12"></button>
-    </div>
     <div class="flayout">
       <nav class="toc">${toc}</nav>
-      <div>${blocks}</div>
+      <div>
+        <div class="svcsearch">
+          <span class="lens" data-ic="search" data-s="15"></span>
+          <input id="qsvc" type="text" placeholder="Rechercher un service"
+            autocomplete="off" autocapitalize="off" spellcheck="false" oninput="filtreSvc(this.value)">
+          <button id="clearsvc" title="Effacer" onclick="filtreSvc('', true)" data-ic="x" data-s="12"></button>
+        </div>
+        ${blocks}
+      </div>
     </div>`;
   spFillBlock(j);
 }
