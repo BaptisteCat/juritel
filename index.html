@@ -904,11 +904,21 @@ body.accueil .hero{display:block}
   position:sticky; top:calc(var(--htop, 60px) + var(--fbar, 0px)); z-index:14;
   display:flex; align-items:center; gap:14px;
   background:var(--bg);
-  padding:2px 0 10px; margin-bottom:4px;
+  padding:2px 0 14px;   /* pas de marge : le fond doit couvrir jusqu'en bas */
 }
 /* sur une fiche, l'en-tête cesse d'être translucide : les trois bandes
    forment un bloc opaque sous lequel le contenu disparaît proprement */
 body.fiche header{background:var(--bg); -webkit-backdrop-filter:none; backdrop-filter:none}
+/* Une fois collées en haut, les deux barres se resserrent : le nom remonte
+   sous l'en-tête et les filtres viennent juste dessous. Les positions au repos
+   ne changent pas, ces règles ne valent que dans l'état figé. */
+body.figee .fbar{padding:4px 0 2px}
+body.figee .fbar .row1{min-height:30px}
+body.figee .fbar .row1 h2{font-size:15.5px}
+body.figee .fsticky{padding:0 0 7px}
+body.figee .fsticky .filtbtn{padding:4px 11px}
+body.figee .fsticky #qsvc{padding:8px 34px}
+
 .fsticky .chips{flex:1 1 auto; min-width:0; padding:0}
 .fsticky .svcsearch{flex:0 0 auto; width:min(320px, 42%)}
 @media (max-width:760px){
@@ -1885,7 +1895,7 @@ function render(){
   // fiche ouverte : elle occupe l'écran, la recherche s'efface, la marque
   // reprend sa place en petit dans l'en-tête
   document.body.classList.toggle('fiche', !!ficheId || !!spState);
-  setTimeout(majHauteurEntete, 0);   // render() a plusieurs sorties : on couvre toutes les branches
+  setTimeout(() => { majHauteurEntete(); majSentinelle(); }, 0);   // render() a plusieurs sorties : on couvre toutes les branches
   $('#clearq').style.display = $('#q').value ? 'grid':'none';
   updateToolsDock();
   if(ficheId){
@@ -2134,6 +2144,7 @@ function renderFiche(j){
   }
   $('#view').innerHTML = `
     ${band}
+    <div id="fsentinelle" style="height:1px"></div>
     <div class="fbar">
       <div class="row1">
         <button id="btnback" onclick="goHome()" title="Retour">${icn('left',15)}</button>
@@ -2215,6 +2226,23 @@ window.filtreSvc = (v, vider) => {
 
 /* Les éléments collés se calent sous l'en-tête, dont la hauteur varie selon la
    page (accueil déployé, fiche compacte). On la mesure plutôt que de la coder. */
+/* Sentinelle : un repère placé juste avant la barre du titre. Dès qu'il passe
+   sous l'en-tête, les barres sont collées et se resserrent. On mesure la
+   sentinelle et non les barres : située au-dessus d'elles, sa position ne
+   dépend pas de leur hauteur, ce qui évite une oscillation autour du seuil. */
+let etatFige = false;
+function majSentinelle(){
+  const s = document.getElementById('fsentinelle');
+  if(!s){ if(etatFige){ etatFige = false; document.body.classList.remove('figee'); } return; }
+  const htop = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--htop')) || 0;
+  const v = s.getBoundingClientRect().top <= htop;
+  if(v === etatFige) return;
+  etatFige = v;
+  document.body.classList.toggle('figee', v);
+  majHauteurEntete();
+}
+window.addEventListener('scroll', majSentinelle, {passive:true});
+
 function majHauteurEntete(){
   // « Rechercher un service » ne tient pas dans un champ de 46 % sur téléphone
   const q = document.getElementById('qsvc');
