@@ -845,12 +845,13 @@ body.accueil .searchwrap{margin-top:24px}
   body.qfocus .hero, body.qactive .hero{display:block}
   body.qfocus header, body.qactive header{padding-top:clamp(15px, 2.8vh, 32px)}
   body.qfocus .hero, body.qactive .hero,
+  body.qfocus .homeacts,
   body.qfocus #fab, body.qactive #fab,
   body.qfocus #fabmod, body.qactive #fabmod,
   body.qfocus #fabtools, body.qactive #fabtools{
     filter:blur(5px); opacity:.45; pointer-events:none;
   }
-  .hero, #fab, #fabmod, #fabtools{transition:filter .25s ease, opacity .25s ease}
+  .hero, .homeacts, #fab, #fabmod, #fabtools{transition:filter .25s ease, opacity .25s ease}
 }
 /* échelle réduite du bloc de marque sur ordinateur ; le mobile garde la sienne */
 @media (min-width:761px){
