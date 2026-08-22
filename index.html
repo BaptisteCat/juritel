@@ -678,6 +678,10 @@ select.mini{
 .mdep.nohover:hover{fill:color-mix(in srgb, var(--accent) 7%, var(--card))}
 .mlbl{fill:var(--ink-2); font-family:inherit; font-weight:650; pointer-events:none;
   text-anchor:middle; letter-spacing:-.01em}
+/* le nom reste cliquable dans une grappe : c'est une cible bien plus large
+   que la pastille elle-même */
+.mclu .mdotlbl{pointer-events:all}
+.mhit{fill:transparent; stroke:none; pointer-events:all; cursor:pointer}
 .mdotlbl{fill:var(--ink); font-family:inherit; font-weight:600; pointer-events:none;
   text-anchor:middle; paint-order:stroke; stroke:var(--card); stroke-width:3px;
   stroke-linejoin:round}
@@ -3162,6 +3166,18 @@ function renderCarte(){
     lblPlaced.push({x:px, y:ly});
     return ly;
   };
+  // Sur téléphone, un point de 7 px de rayon est bien en deçà d'une cible
+  // confortable : on agrandit le dessin ET on ajoute une zone de toucher
+  // transparente plus large que le point lui-même.
+  const petit = window.innerWidth < 760;
+  // Le plan est réduit pour tenir dans l'écran : une unité SVG y vaut moins d'un
+  // pixel. On dimensionne donc à partir du rapport réel, sinon une zone de
+  // toucher « large » en unités SVG ne fait que quelques pixels sous le doigt.
+  const larg = Math.max(260, Math.min(window.innerWidth, 1100) - 36);
+  const ech = W / larg;                       // unités SVG par pixel d'écran
+  const K = petit ? Math.min(3, ech * 1.15) : 1;
+  const TOUCH = petit ? Math.round(20 * ech) : 0;   // ≈ 40 px de diamètre au doigt
+
   const dotSvg = (j, i, px, py, withLbl, lblY) => {
     const col = typeColor(j.t);
     const x = px.toFixed(1), y = py.toFixed(1);
@@ -3169,13 +3185,15 @@ function renderCarte(){
     const on = `onclick="carteJur(${i})" onmouseenter="hlChip(${i})" onmouseleave="hlChip(null)"`;
     let s;
     if(j.t==='ca'||j.t==='caa')
-      s = `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?12:10}" fill="none" stroke="${col}" stroke-width="3.8" ${on}>${tip}</circle>`;
-    else if(j.t==='tprx')
-      s = `<rect class="mdot" id="mj-${i}" x="${(px-5.5).toFixed(1)}" y="${(py-5.5).toFixed(1)}" width="11" height="11" rx="3.5" fill="${col}" stroke="var(--card)" stroke-width="1.4" ${on}>${tip}</rect>`;
-    else
-      s = `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${showDotLbl?9:7}" fill="${col}" stroke="var(--card)" stroke-width="1.8" ${on}>${tip}</circle>`;
+      s = `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${((showDotLbl?12:10)*K).toFixed(1)}" fill="none" stroke="${col}" stroke-width="${(3.8*K).toFixed(1)}" ${on}>${tip}</circle>`;
+    else if(j.t==='tprx'){
+      const c = 5.5*K;
+      s = `<rect class="mdot" id="mj-${i}" x="${(px-c).toFixed(1)}" y="${(py-c).toFixed(1)}" width="${(c*2).toFixed(1)}" height="${(c*2).toFixed(1)}" rx="${(3.5*K).toFixed(1)}" fill="${col}" stroke="var(--card)" stroke-width="${(1.4*K).toFixed(1)}" ${on}>${tip}</rect>`;
+    } else
+      s = `<circle class="mdot" id="mj-${i}" cx="${x}" cy="${y}" r="${((showDotLbl?9:7)*K).toFixed(1)}" fill="${col}" stroke="var(--card)" stroke-width="${(1.8*K).toFixed(1)}" ${on}>${tip}</circle>`;
+    if(TOUCH) s = `<circle class="mhit" cx="${x}" cy="${y}" r="${TOUCH}" ${on}/>` + s;
     if(withLbl)
-      s += `<text class="mdotlbl" id="ml-${i}" x="${x}" y="${lblY.toFixed(1)}" font-size="14">${esc(jurShort(j.n))}</text>`;
+      s += `<text class="mdotlbl" id="ml-${i}" x="${x}" y="${lblY.toFixed(1)}" font-size="${(14*K).toFixed(0)}">${esc(jurShort(j.n))}</text>`;
     return s;
   };
   if(!showDotLbl){
@@ -3214,9 +3232,10 @@ function renderCarte(){
       });
       svg += `<g class="mgroup" id="mg-${k}">`
         + `<g class="mclu" onclick="grpOpen(${k})">`
-        + `<circle cx="${cx}" cy="${cy}" r="11.5" fill="var(--card)" stroke="var(--accent)" stroke-width="2.6"><title>${esc(ville)} — ${g.items.length} juridictions</title></circle>`
-        + `<text x="${cx}" y="${(g.cy+4).toFixed(1)}" font-size="11" font-weight="700" fill="var(--accent)" text-anchor="middle" style="pointer-events:none">${g.items.length}</text>`
-        + `<text class="mdotlbl" x="${cx}" y="${ly.toFixed(1)}" font-size="14">${esc(ville)}</text>`
+        + (TOUCH ? `<circle class="mhit" cx="${cx}" cy="${cy}" r="${TOUCH + 6}"/>` : '')
+        + `<circle cx="${cx}" cy="${cy}" r="${(11.5*K).toFixed(1)}" fill="var(--card)" stroke="var(--accent)" stroke-width="${(2.6*K).toFixed(1)}"><title>${esc(ville)} — ${g.items.length} juridictions</title></circle>`
+        + `<text x="${cx}" y="${(g.cy + 4*K).toFixed(1)}" font-size="${(11*K).toFixed(0)}" font-weight="700" fill="var(--accent)" text-anchor="middle" style="pointer-events:none">${g.items.length}</text>`
+        + `<text class="mdotlbl" x="${cx}" y="${ly.toFixed(1)}" font-size="${(14*K).toFixed(0)}">${esc(ville)}</text>`
         + `</g><g class="mexp">${inner}${expd}</g></g>`;
     });
   }
