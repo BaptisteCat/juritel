@@ -882,7 +882,23 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
     color-mix(in srgb, var(--accent) 19%, var(--card)),
     color-mix(in srgb, var(--accent) 5%, var(--card)));
   color:var(--ink-2); cursor:pointer; display:grid; place-items:center;
-  box-shadow:var(--shadow-m); transition:all .22s cubic-bezier(.2,.6,.3,1);
+  /* Ombre vert foncé plutôt que le gris neutre de --shadow-m : posée sur un
+     fond crème, une ombre grise le grisaille, alors qu'une ombre prise dans la
+     teinte du thème l'assombrit sans le ternir. Deux couches, une courte qui
+     pose le bouton et une longue qui le décolle. */
+  box-shadow:0 2px 5px rgba(9,45,32,.15), 0 9px 22px rgba(9,45,32,.20);
+  transition:all .22s cubic-bezier(.2,.6,.3,1);
+}
+/* Sur fond sombre l'ombre doit être bien plus dense pour exister, et plus
+   noire que verte — le vert y virerait au halo. */
+:root[data-theme="dark"] #fabmod, :root[data-theme="dark"] #fabtools{
+  box-shadow:0 2px 6px rgba(2,14,10,.55), 0 10px 26px rgba(2,14,10,.5);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) #fabmod,
+  :root:not([data-theme="light"]) #fabtools{
+    box-shadow:0 2px 6px rgba(2,14,10,.55), 0 10px 26px rgba(2,14,10,.5);
+  }
 }
 #fabmod{bottom:86px}
 #fabtools{bottom:140px}
@@ -891,7 +907,20 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
   #fabtools{width:auto; padding:0 16px; gap:8px; display:flex; align-items:center}
   #fabtools b{display:inline}
 }
-#fabmod:hover, #fabtools:hover{transform:translateY(-2px); color:var(--ink)}
+/* au survol le bouton s'élève : l'ombre s'allonge avec lui */
+#fabmod:hover, #fabtools:hover{
+  transform:translateY(-2px); color:var(--ink);
+  box-shadow:0 3px 7px rgba(9,45,32,.18), 0 14px 30px rgba(9,45,32,.26);
+}
+:root[data-theme="dark"] #fabmod:hover, :root[data-theme="dark"] #fabtools:hover{
+  box-shadow:0 3px 9px rgba(2,14,10,.6), 0 16px 36px rgba(2,14,10,.55);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) #fabmod:hover,
+  :root:not([data-theme="light"]) #fabtools:hover{
+    box-shadow:0 3px 9px rgba(2,14,10,.6), 0 16px 36px rgba(2,14,10,.55);
+  }
+}
 #fabmod.on{
   background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
   color:var(--cta-ink); border-color:transparent;
