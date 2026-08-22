@@ -769,9 +769,10 @@ body.accueil .hero{display:block}
 /* le caractère vient du contraste de masse entre les deux moitiés du nom */
 /* filet dégradé sous le nom, qui prolonge la marque */
 .hero-nom::after{
-  content:''; display:block; width:52px; height:2.5px; margin:11px auto 0; border-radius:2px;
-  background:linear-gradient(90deg, var(--bar-a), var(--bar-b));
-  opacity:.85;
+  content:''; display:block; width:138px; height:1.5px; margin:12px auto 0; border-radius:1px;
+  /* même encre que le nom : bascule aussi en clair sur fond sombre */
+  background:linear-gradient(90deg, var(--grad-a), var(--grad-b));
+  opacity:.5;
 }
 .hero-sous{
   margin-top:10px; font-size:10.5px; font-weight:650; color:var(--ink-3);
@@ -780,16 +781,22 @@ body.accueil .hero{display:block}
 
 .searchzone{display:flex; flex-direction:column}
 
-/* Voile de mise au point : au clic dans la recherche (tant qu'elle est vide),
-   le reste de l'application s'estompe. Il s'efface des la premiere frappe,
-   sinon il masquerait les resultats qui s'affichent derriere. */
+/* Voile de mise au point (mobile) : au clic dans la recherche, l'application
+   s'estompe et reste floue pendant toute la saisie. Les resultats sont remontes
+   au-dessus du voile — donc nets — tandis que l'en-tete, l'accueil et les
+   boutons flottants restent en arriere-plan flou. */
 #searchveil{
-  position:fixed; inset:0; z-index:34; opacity:0; pointer-events:none;
+  position:fixed; inset:0; z-index:31; opacity:0; pointer-events:none;
   background:color-mix(in srgb, var(--bg) 38%, transparent);
   -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
   transition:opacity .22s ease;
 }
-@media (max-width:760px){ body.qfocus #searchveil{opacity:1} }
+@media (max-width:760px){
+  body.qfocus #searchveil{opacity:1}
+  /* backdrop-filter ne floute que ce qui est peint EN DESSOUS : remonter le
+     contenu au-dessus du voile suffit a le garder net */
+  body.qfocus main{position:relative; z-index:32}
+}
 
 /* ==================== accueil épuré ====================
    Sur l'accueil « nu » (aucune recherche, aucune catégorie), la barre de
@@ -798,7 +805,7 @@ body.accueil .hero{display:block}
 body.accueil header{
   position:static; background:transparent; border-bottom-color:transparent;
   -webkit-backdrop-filter:none; backdrop-filter:none;
-  padding-top:clamp(26px, 5.5vh, 62px); padding-bottom:8px;
+  padding-top:clamp(15px, 2.8vh, 32px); padding-bottom:8px;
 }
 /* Taille identique en toutes circonstances : la barre ne doit pas sauter
    au premier caractere saisi. Seul l'espacement vertical de l'en-tete change. */
@@ -812,6 +819,12 @@ body.accueil header{
   #clearq{right:14px}
 }
 body.accueil .searchwrap{margin-top:24px}
+/* échelle réduite du bloc de marque sur ordinateur ; le mobile garde la sienne */
+@media (min-width:761px){
+  .hero-nom{font-size:clamp(33px, 3.1vw, 41px)}
+  .hero-nom::after{width:118px; margin-top:10px}
+  .hero-sous{margin-top:9px; font-size:9.5px; letter-spacing:.19em}
+}
 body.accueil #stats{display:none}
 
 /* --- filtres repliés derrière un bouton discret --- */
@@ -3175,10 +3188,9 @@ $('#q').addEventListener('input', ()=>{
   // On suit l'état explicitement : pendant l'événement « blur »,
   // document.activeElement pointe encore sur le champ et inverserait le voile.
   let vise = false;
-  const majVoile = () => document.body.classList.toggle('qfocus', vise && !q.value.trim());
+  const majVoile = () => document.body.classList.toggle('qfocus', vise);
   q.addEventListener('focus', () => { vise = true;  majVoile(); });
   q.addEventListener('blur',  () => { vise = false; majVoile(); });
-  q.addEventListener('input', majVoile);
 })();
 $('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownCards=60; render(); $('#q').focus(); });
 document.addEventListener('keydown', e=>{
