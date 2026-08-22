@@ -457,6 +457,10 @@ select.mini{
   display:grid; grid-template-columns:minmax(150px, 2fr) 3fr; gap:4px 18px;
   padding:11px 17px; border-top:1px solid var(--line-2); align-items:start;
 }
+/* Alternance de fond pour suivre les lignes du regard. La teinte dérive de
+   --ink-3 : elle assombrit en thème clair et éclaircit en thème sombre, donc
+   le contraste reste équivalent dans les deux cas. */
+.svcblock .entry:nth-child(even){background:color-mix(in srgb, var(--ink-3) 8%, transparent)}
 .bureau .entry{padding-left:30px}
 .entry:first-child{border-top:none}
 .entry .elabel{font-size:13px; font-weight:550; color:var(--ink); padding-top:6px;
@@ -1184,23 +1188,28 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   border-color:transparent; color:var(--cta-ink);
 }
 .srcinfo-bulle{
-  position:absolute; left:0; bottom:calc(100% + 10px); z-index:5;
+  position:absolute; left:0; top:calc(100% + 10px); z-index:5;
   width:min(330px, calc(100vw - 64px)); padding:11px 13px; border-radius:12px;
   background:var(--card-2); color:var(--ink-2); border:1px solid var(--line);
   box-shadow:var(--shadow-l); font-size:12px; line-height:1.55; text-align:left;
-  opacity:0; visibility:hidden; transform:translateY(4px); pointer-events:none;
+  opacity:0; visibility:hidden; transform:translateY(-4px); pointer-events:none;
   transition:opacity .18s, transform .18s, visibility .18s;
 }
-.srcinfo-bulle::after{
-  content:''; position:absolute; left:14px; top:100%; margin-top:-5px;
+/* la pointe est portée par le bouton, pas par la bulle : elle vise donc la
+   pastille i quelle que soit la largeur de la bulle */
+.srcinfo::after{
+  content:''; position:absolute; right:3px; top:calc(100% + 5px); z-index:6;
   width:9px; height:9px; background:var(--card-2); transform:rotate(45deg);
-  border-right:1px solid var(--line); border-bottom:1px solid var(--line);
+  border-left:1px solid var(--line); border-top:1px solid var(--line);
+  opacity:0; visibility:hidden; transition:opacity .18s, visibility .18s;
 }
 .srcinfo.on .srcinfo-bulle, .srcinfo:focus-visible .srcinfo-bulle{
   opacity:1; visibility:visible; transform:none;
 }
+.srcinfo.on::after, .srcinfo:focus-visible::after{opacity:1; visibility:visible}
 @media (hover:hover){
   .srcinfo:hover .srcinfo-bulle{opacity:1; visibility:visible; transform:none}
+  .srcinfo:hover::after{opacity:1; visibility:visible}
 }
 
 #toast{
@@ -2382,6 +2391,8 @@ window.srcInfoTgl = e => {
   srcInfoClose();
   if(!on) return;
   b.classList.add('on'); b.setAttribute('aria-expanded', 'true');
+  /* la bulle descend : sur petit ecran elle peut depasser le bas de la fenetre */
+  b.querySelector('.srcinfo-bulle').scrollIntoView({block:'nearest', behavior:'smooth'});
   setTimeout(()=>document.addEventListener('click', srcInfoClose, {once:true}), 0);
 };
 window.tglTool = id => {
