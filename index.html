@@ -1264,11 +1264,19 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 .hint{font-size:12px; color:var(--ink-3); line-height:1.55; letter-spacing:-.005em}
 
 /* « Sources officielles » : pastille i, le détail se déplie en bulle sous le bouton */
-.srcbloc{margin-top:12px}
+.srcbloc{margin-top:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.srclbl{font-size:12px; color:var(--ink-3); letter-spacing:-.005em}
+/* la bulle occupe toute la largeur sous la ligne */
+.srcbloc .srcinfo-bulle{flex-basis:100%}
+/* en-tête de fenêtre avec croix à droite */
+.dlghead{display:flex; align-items:center; gap:11px; margin-bottom:16px}
+.dlghead h2{margin-bottom:0; flex:1; min-width:0}
+.dlghead .tico{width:26px; height:26px; border-radius:8px; flex-shrink:0}
+.dlghead .iconbtn{flex-shrink:0; width:32px; height:32px}
 .srcinfo{
-  position:relative; display:inline-flex; align-items:center; gap:6px;
-  font:inherit; font-size:12px; color:var(--ink-3); letter-spacing:-.005em;
-  background:none; border:none; padding:0; cursor:pointer;
+  position:relative; display:inline-flex; align-items:center;
+  font:inherit; color:var(--ink-3);
+  background:none; border:none; padding:0; cursor:pointer; line-height:0;
 }
 .srcinfo .ri{
   display:inline-flex; align-items:center; justify-content:center;
@@ -1461,17 +1469,20 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
 <dialog id="dlgCarte" class="dlgwide"><div class="dlg" id="carteBody"></div></dialog>
 
 <dialog id="dlgAdr"><div class="dlg">
-  <h2>Juridiction compétente</h2>
+  <div class="dlghead">
+    <span class="tico tel" data-ic="pin" data-s="14"></span>
+    <h2>Juridiction compétente</h2>
+    <button class="iconbtn" onclick="document.getElementById('dlgAdr').close()" title="Fermer" data-ic="x" data-s="15"></button>
+  </div>
   <p class="hint" style="margin:-8px 0 12px">Tapez une adresse, un code postal ou une ville : Juritel identifie les juridictions compétentes et ouvre la fiche du tribunal judiciaire.</p>
   <input id="adr" placeholder="Adresse, code postal ou ville…"
     autocomplete="off" spellcheck="false" oninput="adrInput(this.value)"
     onkeydown="if(event.key==='Enter'){event.preventDefault();adrEnter(this.value);}">
   <div class="adrsugg" id="adrsugg"></div>
   <div class="srcbloc">
-    <button type="button" class="srcinfo" aria-expanded="false" aria-controls="srcBulle" onclick="srcInfoTgl(event)">Sources officielles<span class="ri" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="3.3" r="1.05"/><rect x="5.05" y="5.2" width="1.9" height="4.6" rx=".95"/></svg></span></button>
+    <span class="srclbl">Sources officielles</span><button type="button" class="srcinfo" aria-label="Détail des sources" aria-expanded="false" aria-controls="srcBulle" onclick="srcInfoTgl(event)"><span class="ri" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="3.3" r="1.05"/><rect x="5.05" y="5.2" width="1.9" height="4.6" rx=".95"/></svg></span></button>
     <div class="srcinfo-bulle" id="srcBulle"><div><p>Base Adresse Nationale, ministère de la Justice (data.gouv.fr), Code de justice administrative ; tribunaux de commerce d'après le référentiel Infogreffe (2021).</p></div></div>
   </div>
-  <div class="dlgbtns"><button class="btn" onclick="document.getElementById('dlgAdr').close()">Fermer</button></div>
 </div></dialog>
 
 <dialog id="dlgMove"><form class="dlg" method="dialog" id="formMove">
