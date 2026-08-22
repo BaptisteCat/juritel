@@ -642,21 +642,18 @@ select.mini{
 }
 .mapwrap{position:relative}
 .mapinfo{display:none}
+/* simple texte posé sur la carte : ni cadre, ni fond, ni ombre */
 .mapinfo.on{
-  display:block; position:absolute; top:11px; right:11px; z-index:2;
-  max-width:min(230px, 58%); pointer-events:none;   /* il ne doit rien intercepter */
-  /* un ton sous le dégradé du cadre, dans les deux thèmes */
-  background:color-mix(in srgb, #000 8%, var(--card-2));
-  border:1px solid color-mix(in srgb, #000 6%, var(--line));
-  border-radius:12px; padding:9px 12px; box-shadow:var(--shadow-s);
+  display:block; position:absolute; top:10px; right:13px; z-index:2;
+  max-width:min(220px, 60%); pointer-events:none; text-align:right;
+  /* bleu-violet foncé en thème clair, périwinkle clair en sombre */
+  color:color-mix(in srgb, var(--accent) 62%, var(--grad-a));
 }
-.mapinfo .mi-t{font-size:10px; font-weight:650; letter-spacing:.13em; text-transform:uppercase;
-  color:var(--ink-3); margin-bottom:3px}
-.mapinfo .mi-n{font-size:14.5px; font-weight:700; letter-spacing:-.015em; line-height:1.25}
-.mapinfo .mi-l{display:flex; justify-content:space-between; gap:10px; margin-top:5px;
-  padding-top:5px; border-top:1px solid color-mix(in srgb, #000 5%, var(--line-2)); font-size:11.5px}
-.mapinfo .mi-l span{color:var(--ink-3)}
-.mapinfo .mi-l b{font-weight:650; text-align:right; min-width:0}
+.mapinfo .mi-t{display:none}
+.mapinfo .mi-n{font-size:13px; font-weight:700; letter-spacing:-.01em; line-height:1.3}
+.mapinfo .mi-l{font-size:11px; font-weight:550; line-height:1.45; opacity:.72; margin-top:1px}
+.mapinfo .mi-l span{display:none}
+.mapinfo .mi-l b{font-weight:550}
 .mside .mlegend{flex-direction:column; align-items:stretch; gap:3px; margin:0}
 .mside .mlegend .it{cursor:default}
 .mside .mjlist{flex-direction:column; margin:0; gap:5px}
@@ -3144,9 +3141,10 @@ window.mapInfo = d => {
   let lignes = '';
   if(d.c){
     const ca = caDuDep(d.c);
-    lignes = `<div class="mi-l"><span>Département</span><b>${esc(d.c)}</b></div>`
-      + (ca ? `<div class="mi-l"><span>Cour d'appel</span><b>${esc(ca.replace(/^Cour d.[Aa]ppel (de |d')?/,''))}</b></div>` : '')
-      + (PREFECTURES[d.c] ? `<div class="mi-l"><span>Préfecture</span><b>${esc(PREFECTURES[d.c])}</b></div>` : '');
+    const bits = [`n° ${d.c}`];
+    if(ca) bits.push('CA ' + ca.replace(/^Cour d.[Aa]ppel (de |d')?/,''));
+    if(PREFECTURES[d.c]) bits.push('préf. ' + PREFECTURES[d.c]);
+    lignes = `<div class="mi-l">${esc(bits.join(' · '))}</div>`;
   }
   el.innerHTML = `<div class="mi-t">${esc(d.t)}</div><div class="mi-n">${esc(d.n)}</div>${lignes}`;
   el.classList.add('on');
