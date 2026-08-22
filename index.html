@@ -4397,8 +4397,39 @@ $('#q').addEventListener('input', ()=>{
   // Appui sur le voile = fermeture de la recherche. Le navigateur retire déjà
   // le focus au toucher d'une zone non focusable ; on le fait explicitement
   // pour que le comportement ne dépende pas de cette subtilité.
+  /* Sortir de la recherche, c'est revenir à l'accueil PLEIN : champ vidé,
+     suggestions effacées, flou levé. Se contenter de retirer le focus laissait
+     la liste de résultats derrière le voile qu'on venait de refermer. */
+  window.quitterRecherche = () => {
+    q.blur();
+    goHome();          // vide le champ, retire « qactive » et rend l'accueil
+    majVoile();
+  };
   const voile = document.getElementById('searchveil');
-  if(voile) voile.addEventListener('click', () => { q.blur(); majVoile(); });
+  if(voile) voile.addEventListener('click', quitterRecherche);
+
+  /* Balayage vers le bas : le geste naturel pour congédier ce qui est monté
+     avec le clavier. On l'écoute sur le voile ET sur le bloc de recherche, les
+     deux seules zones que le doigt trouve sous lui à ce moment-là. */
+  let y0 = null, x0 = null;
+  const debut = e => { const t = e.changedTouches[0]; y0 = t.clientY; x0 = t.clientX; };
+  const fin = e => {
+    const depart = y0; y0 = null;
+    if(depart === null) return;
+    // uniquement si la recherche est engagée : sinon un balayage sur la barre
+    // au repos renverrait à l'accueil sans raison
+    if(!document.body.classList.contains('qfocus')
+       && !document.body.classList.contains('qactive')) return;
+    const t = e.changedTouches[0];
+    const dy = t.clientY - depart, dx = Math.abs(t.clientX - x0);
+    // franchement vers le bas, et pas le défilement horizontal des catégories
+    if(dy > 55 && dy > dx * 1.6) quitterRecherche();
+  };
+  for(const el of [voile, document.getElementById('searchzone')]){
+    if(!el) continue;
+    el.addEventListener('touchstart', debut, {passive:true});
+    el.addEventListener('touchend', fin, {passive:true});
+  }
 })();
 $('#clearq').addEventListener('click', ()=>{
   $('#q').value=''; shownCards=60; render(); $('#q').focus();
