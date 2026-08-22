@@ -4,7 +4,7 @@
                        publiée est donc prise en compte dès le lancement suivant) ;
    - fichiers du site : cache d'abord, rafraîchi en arrière-plan ;
    - Supabase        : jamais mis en cache (données vivantes et authentification).   */
-const VERSION = 'juritel-v5';
+const VERSION = 'juritel-v6';
 const COQUILLE = [
   './', './index.html', './manifest.json',
   './logo-balance-tel.svg', './icon-192.png', './icon-512.png',
