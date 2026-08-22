@@ -306,26 +306,24 @@ body.mapmode{padding-bottom:10px}
   font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
   color:var(--ink-3);
 }
-.favchips{display:flex; flex-wrap:wrap; gap:8px}
+/* en colonne : une juridiction par ligne, plus facile à balayer de l'œil
+   qu'un ruban où les noms longs se ressemblent tous une fois tronqués */
+.favchips{display:flex; flex-direction:column; gap:7px; max-width:420px}
 .favchip{
-  display:inline-flex; align-items:center; gap:8px; max-width:100%;
-  padding:8px 10px 8px 13px; border:1px solid var(--line); border-radius:999px;
+  display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
+  padding:9px 12px 9px 15px; border:1px solid var(--line); border-radius:12px;
   background:var(--card); box-shadow:var(--shadow-s); cursor:pointer;
   font-size:12.5px; font-weight:600; color:var(--ink-2); letter-spacing:-.01em;
   transition:border-color .15s, color .15s, transform .15s;
 }
-.favchip:hover{border-color:var(--accent); color:var(--ink); transform:translateY(-1px)}
+.favchip:hover{border-color:var(--accent); color:var(--ink); transform:translateX(2px)}
 .favchip .fnom{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .favchip .fx{
   display:grid; place-items:center; width:17px; height:17px; flex-shrink:0;
   border-radius:50%; color:var(--ink-3); opacity:.55; transition:opacity .15s, background .15s;
 }
 .favchip .fx:hover{opacity:1; background:var(--card-2); color:var(--ink)}
-@media (max-width:760px){
-  .favchips{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; padding-bottom:2px}
-  .favchips::-webkit-scrollbar{display:none}
-  .favchip{flex-shrink:0; max-width:62vw}
-}
+@media (max-width:760px){ .favchips{max-width:none} }
 .jcard .top{display:flex; align-items:center; gap:10px}
 .jcard .nom{font-weight:650; font-size:14.5px; letter-spacing:-.015em; flex:1; min-width:0}
 .jcard .adr{
@@ -881,6 +879,10 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
 /* Sur une fiche, les boutons passent devant tout : main est remontée à 32 le
    temps d'une recherche, ils doivent rester au-dessus en toute circonstance. */
 body.fiche #fab, body.fiche #fabmod, body.fiche #fabtools{z-index:33}
+/* La carte d'outils ancrée à droite propose déjà « Ajouter un contact » et
+   « Mode modification » : les boutons flottants feraient double emploi.
+   Celui des outils est masqué par updateToolsDock, qui déplace le panneau. */
+body.toolsdocked #fab, body.toolsdocked #fabmod{display:none}
 /* Ils surplombent le bas de la colonne de droite. Le sommaire et les services
    se resserrent juste ce qu'il faut pour passer à CÔTÉ plutôt que dessous ;
    la barre de titre, elle, garde toute sa largeur et son centrage.
@@ -2162,6 +2164,7 @@ function suggJur({j, hits}){
       <div class="snom">${esc(j.nom)}${j.adresse?`<div class="sadr">${icn('pin',11)} ${esc(j.adresse)}</div>`:''}</div>
       <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
       <span class="ncontacts">${nc}</span>
+      ${favBtn(j.id, 15)}
     </div>
     <div class="schips">${chips}</div>
   </div>`;
@@ -2182,6 +2185,7 @@ function suggInline({j, hits}){
           <div class="snom">${esc(j.nom)}</div>
           <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
           <span class="ncontacts">${nc}</span>
+      ${favBtn(j.id, 15)}
         </div>
       </div>`;
     }
@@ -2195,6 +2199,7 @@ function suggInline({j, hits}){
         <div class="snom">${esc(j.nom)}</div>
         <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
         <span class="ncontacts">${nc}</span>
+      ${favBtn(j.id, 15)}
       </div>
       <div class="schips match">${vus}${reste}</div>
     </div>`;
@@ -2225,6 +2230,7 @@ function suggInline({j, hits}){
       <div class="snom">${esc(j.nom)}${j.adresse?`<div class="sadr">${icn('pin',11)} ${esc(j.adresse)}</div>`:''}</div>
       <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
       <span class="ncontacts">${nc}</span>
+      ${favBtn(j.id, 15)}
     </div>
     ${inner}
   </div>`;
