@@ -794,8 +794,9 @@ body.accueil .hero{display:block}
 @media (max-width:760px){
   body.qfocus #searchveil{opacity:1}
   /* backdrop-filter ne floute que ce qui est peint EN DESSOUS : remonter le
-     contenu au-dessus du voile suffit a le garder net */
-  body.qfocus main{position:relative; z-index:32}
+     contenu au-dessus du voile suffit a le garder net. Uniquement quand une
+     recherche est en cours : sinon les raccourcis d'accueil resteraient nets. */
+  body.qfocus.qactive main{position:relative; z-index:32}
   /* pendant la recherche, le bouton Outils s'efface : rien ne doit détourner
      l'attention ni rester cliquable derrière le voile */
   body.qfocus #fabtools{opacity:0; pointer-events:none; transform:translateY(6px)}
@@ -831,6 +832,25 @@ body.accueil header{
   #clearq{right:14px}
 }
 body.accueil .searchwrap{margin-top:24px}
+
+/* Ordinateur : pendant la saisie, le bloc de marque et les boutons flottants
+   restent en place mais s'estompent, au lieu de disparaître d'un coup.
+   Un voile plein écran ne conviendrait pas ici : la barre de recherche vit dans
+   l'en-tête, qui forme son propre contexte d'empilement — elle serait floutée
+   avec le titre. D'où un flou appliqué directement aux éléments visés. */
+@media (min-width:761px){
+  /* qactive = le champ contient une recherche ; sans lui, sortir du champ ferait
+     disparaître le titre d'un coup et remonter les résultats. */
+  body.qfocus .hero, body.qactive .hero{display:block}
+  body.qfocus header, body.qactive header{padding-top:clamp(15px, 2.8vh, 32px)}
+  body.qfocus .hero, body.qactive .hero,
+  body.qfocus #fab, body.qactive #fab,
+  body.qfocus #fabmod, body.qactive #fabmod,
+  body.qfocus #fabtools, body.qactive #fabtools{
+    filter:blur(5px); opacity:.45; pointer-events:none;
+  }
+  .hero, #fab, #fabmod, #fabtools{transition:filter .25s ease, opacity .25s ease}
+}
 /* échelle réduite du bloc de marque sur ordinateur ; le mobile garde la sienne */
 @media (min-width:761px){
   .hero-nom{font-size:clamp(33px, 3.1vw, 41px)}
@@ -1498,7 +1518,10 @@ function search(){
       const cts = s.contacts.filter(c =>
         rest2.every(t => tokMatch(c._txt, t) ||
           (c._dig && digits(t).length>=4 && c._dig.includes(digits(t)))));
-      if(cts.length) hits.push({s, cts});
+      // svcHit : nombre de mots absorbés par le nom du service lui-même.
+      // À 0, le service n'a été retenu que parce qu'un de ses contacts
+      // correspondait — il ne désigne pas le service recherché.
+      if(cts.length) hits.push({s, cts, svcHit: rest.length - rest2.length});
     }
     if(hits.length) results.push({j, hits, nameHit});
   }
@@ -1665,11 +1688,22 @@ function suggInline({j, hits}){
   const maxSvc = 5, maxEnt = Infinity;
   let inner = '';
   if(compact){
-    const vus = hits.slice(0,6).map(x =>
+    const designes = hits.filter(x => x.svcHit > 0);
+    if(!designes.length){
+      // aucun service précis identifié : on s'en tient au nom de la juridiction
+      return `<div class="sugg" onclick="openFiche('${j.id}')">
+        <div class="stop">
+          <div class="snom">${esc(j.nom)}</div>
+          <span class="badge b-${j.categorie}">${CAT_LABEL[j.categorie]||j.categorie}</span>
+          <span class="ncontacts">${nc}</span>
+        </div>
+      </div>`;
+    }
+    const vus = designes.slice(0,6).map(x =>
       `<button class="schip" onclick="event.stopPropagation();openFicheSvc('${j.id}','${x.s.id}')">`
       + `${esc(x.s.nom)}<span class="n">${x.cts.length}</span></button>`).join('');
-    const reste = hits.length > 6
-      ? `<button class="schip" onclick="event.stopPropagation();openFiche('${j.id}')">+${hits.length-6} autres…</button>` : '';
+    const reste = designes.length > 6
+      ? `<button class="schip" onclick="event.stopPropagation();openFiche('${j.id}')">+${designes.length-6} autres…</button>` : '';
     return `<div class="sugg" onclick="openFiche('${j.id}')">
       <div class="stop">
         <div class="snom">${esc(j.nom)}</div>
@@ -3227,6 +3261,9 @@ $('#q').addEventListener('input', ()=>{
   const majVoile = () => document.body.classList.toggle('qfocus', vise);
   q.addEventListener('focus', () => { vise = true;  majVoile(); });
   q.addEventListener('blur',  () => { vise = false; majVoile(); });
+  const majActive = () => document.body.classList.toggle('qactive', !!q.value.trim());
+  q.addEventListener('input', majActive);
+  majActive();
 })();
 $('#clearq').addEventListener('click', ()=>{ $('#q').value=''; shownCards=60; render(); $('#q').focus(); });
 document.addEventListener('keydown', e=>{
