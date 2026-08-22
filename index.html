@@ -1212,12 +1212,18 @@ dialog::backdrop{background:rgba(8,9,18,.42);
   -webkit-backdrop-filter:blur(9px) saturate(.9); backdrop-filter:blur(9px) saturate(.9)}
 /* fenêtre large : la carte a besoin de place */
 dialog.dlgwide{max-width:min(1120px, 96vw); width:96vw}
-dialog.dlgwide .dlg{padding:16px 18px 18px}
+/* la carte porte déjà son propre cadre : le conteneur de la fenêtre ne doit pas
+   en ajouter un second, il se contente de fournir le défilement */
+dialog.dlgwide .dlg{padding:0}
+dialog.dlgwide .mapcard{
+  max-width:none; margin:0; border:none; border-radius:0;
+  box-shadow:none; background:transparent; padding:16px 18px 18px;
+}
 .maphead .iconbtn{margin-left:auto}
 .maphead .tico{width:26px; height:26px; border-radius:8px; flex-shrink:0}
 @media (max-width:760px){
   dialog.dlgwide{width:calc(100vw - 16px); max-width:none}
-  dialog.dlgwide .dlg{padding:12px 12px 14px}
+  dialog.dlgwide .mapcard{padding:12px 12px 14px}
 }
 .dlg{padding:24px}
 .dlg h2{font-size:17px; font-weight:750; margin-bottom:18px; letter-spacing:-.02em}
