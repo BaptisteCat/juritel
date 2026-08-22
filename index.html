@@ -206,6 +206,24 @@ header{
 #q::-ms-clear, #q::-ms-reveal{display:none; width:0; height:0}
 #q:focus{border-color:var(--accent);
   box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 13%, transparent), var(--shadow-m)}
+/* Balayage de dégradé joué UNE fois à la prise de focus : il traverse le champ
+   de droite à gauche puis se fige hors cadre. Perdu lors de la refonte mobile,
+   rétabli ici hors media query pour valoir sur les deux plateformes. */
+.searchwrap:focus-within #q{
+  background-image:linear-gradient(100deg,
+    transparent 22%,
+    color-mix(in srgb, var(--bar-a) 15%, transparent) 40%,
+    color-mix(in srgb, var(--accent) 20%, transparent) 50%,
+    color-mix(in srgb, var(--bar-b) 15%, transparent) 60%,
+    transparent 78%);
+  background-size:260% 100%; background-repeat:no-repeat;
+  background-position:-130% 0;
+  animation:qsweep 2.8s ease-in-out 1;
+}
+@keyframes qsweep{
+  0%{background-position:130% 0}
+  100%{background-position:-130% 0}
+}
 #clearq{
   position:absolute; right:9px; top:50%; transform:translateY(-50%);
   border:none; background:var(--line-2); color:var(--ink-2); cursor:pointer;
