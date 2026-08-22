@@ -195,6 +195,8 @@ header{
   outline:none; box-shadow:var(--shadow-s); transition:all .2s;
 }
 #q::placeholder{color:var(--ink-3); font-weight:400}
+/* croix native du navigateur (input type=search) : on garde uniquement #clearq */
+#q::-webkit-search-cancel-button,#q::-webkit-search-decoration{-webkit-appearance:none; appearance:none}
 #q:focus{border-color:var(--accent);
   box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 13%, transparent), var(--shadow-m)}
 #clearq{
@@ -947,8 +949,15 @@ body.filtres .chips{max-height:64px; opacity:1; padding-top:12px; padding-bottom
   }
   /* bouton de filtre et catégories : au-dessus de la barre, à portée */
   /* à gauche : le bouton flottant occupe déjà le coin droit */
-  .filtrow{justify-content:flex-start; margin:0 0 6px; padding-left:4px}
-  .filtbtn{background:var(--card); border-color:var(--line); box-shadow:var(--shadow-s)}
+  .filtrow{justify-content:flex-start; margin:0 0 3px; padding-left:4px}
+  /* même dégradé que les boutons du thème et le logo */
+  .filtbtn, .filtbtn:hover, .filtbtn.actif{
+    background:linear-gradient(135deg,var(--grad-a),var(--grad-b));
+    color:var(--cta-ink); border-color:transparent;
+    box-shadow:0 6px 18px var(--glow), var(--shadow-s);
+  }
+  .filtbtn.actif{box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent),
+                            0 6px 18px var(--glow)}
   .chips{padding:0 4px 8px}
   body.filtres .chips{padding-top:0; padding-bottom:8px}
 
