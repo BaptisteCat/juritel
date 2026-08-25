@@ -4,11 +4,15 @@
                        publiée est donc prise en compte dès le lancement suivant) ;
    - fichiers du site : cache d'abord, rafraîchi en arrière-plan ;
    - Supabase        : jamais mis en cache (données vivantes et authentification).   */
-const VERSION = 'juritel-v7';
+const VERSION = 'juritel-v8';
+// Les icônes portent un numéro de version dans leur URL : c'est ce changement
+// d'adresse, et non leur contenu, qui pousse le système à reconstruire l'icône
+// et l'écran de démarrage d'une application déjà installée. Les mêmes URL
+// doivent donc figurer ici, sinon elles ne seraient pas préchargées.
 const COQUILLE = [
   './', './index.html', './manifest.json',
-  './logo-balance-tel.svg', './icon-192.png', './icon-512.png',
-  './icon-maskable-512.png', './apple-touch-icon.png'
+  './logo-balance-tel.svg?v=2', './icon-192.png?v=2', './icon-512.png?v=2',
+  './icon-maskable-512.png?v=2', './apple-touch-icon.png?v=2'
 ];
 // volumineux : mis en cache après l'installation, sans la retarder
 const DONNEES = ['./officiel.json', './competences.json', './carte.json'];
