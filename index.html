@@ -2524,28 +2524,74 @@ function renderFiche(j){
     </div>`;
   // le rendu reconstruit tout : sans cela, déplier un service ferait réapparaître
   // les autres et perdrait la recherche en cours
-  if(svcQ) filtreSvc(svcQ);
+  if(svcQ) filtreSvc(svcQ, false, true);
   spFillBlock(j);
 }
 
 /* Filtre les services affichés dans la fiche. On masque/affiche les éléments
    déjà rendus plutôt que de relancer le rendu : celui-ci remplace tout le HTML
-   de la vue et le champ perdrait le focus à chaque caractère. */
-window.filtreSvc = (v, vider) => {
+   de la vue et le champ perdrait le focus à chaque caractère.
+   La recherche porte d'abord sur le nom du service ; à défaut, elle descend
+   dans son contenu : « 6e chambre civile 2e section » est une entrée de la
+   section « Chambres civiles ». La section est alors dépliée et seules les
+   entrées visées restent visibles.
+   `rappel` : appel depuis render() pour réappliquer la recherche en cours ; on
+   ne redéplie pas une section que l'utilisateur vient de replier. */
+const svcOuverts = new Set();   // sections dépliées par la recherche de service
+window.filtreSvc = (v, vider, rappel) => {
   const champ = document.getElementById('qsvc');
   if(vider && champ){ champ.value = ''; v = ''; champ.focus(); }
   svcQ = (v || '').trim();
   const t = norm(svcQ).split(/\s+/).filter(Boolean);
   const cx = document.getElementById('clearsvc');
   if(cx) cx.style.display = t.length ? 'grid' : 'none';
+  const j = DATA.juridictions.find(x => x.id === ficheId);
+  // tokMatch applique le dictionnaire d'acronymes : « bo » trouve
+  // « bureau d'ordre », « ji » « juge d'instruction »…
+  const tous = txt => t.every(x => tokMatch(txt, x));
+  const lbl = c => norm((c.libelle||'')+' '+(c.groupe||'')+' '+(c.note||''));
+  // état d'ouverture par défaut d'une section, comme au rendu de la fiche
+  const tq = norm((document.getElementById('q')?.value||'').trim()).split(/\s+/).filter(Boolean);
+  const redessine = (sec, s) => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = renderSvcBlock(j, s, svcMatches(j, s, tq));
+    sec.replaceWith(tmp.firstElementChild);
+    return document.getElementById('svc-'+s.id);
+  };
   let visibles = 0;
-  for(const sec of document.querySelectorAll('#view .svcblock')){
+  for(let sec of document.querySelectorAll('#view .svcblock')){
     const sid = sec.id.replace(/^svc-/, '');
-    const nom = norm(sec.querySelector('h3')?.textContent || '');
-    // tokMatch applique le dictionnaire d'acronymes : « bo » trouve
-    // « bureau d'ordre », « ji » « juge d'instruction »…
-    const ok = !t.length || t.every(x => tokMatch(nom, x));
+    const s = j?.services.find(x => x.id === sid);
+    const nom = s ? s._txt : norm(sec.querySelector('h3')?.textContent || '');
+    const parNom = !t.length || tous(nom);
+    const parContenu = !parNom && !!s && s.contacts.some(c => tous(nom+' '+lbl(c)));
+    const ok = parNom || parContenu;
+    if(parContenu && !rappel && !sec.classList.contains('open')){
+      // on déplie sans relancer le rendu complet, qui ferait perdre le focus
+      openState[sid] = true; svcOuverts.add(sid);
+      sec = redessine(sec, s);
+    } else if(!parContenu && svcOuverts.has(sid)){
+      // la recherche ne vise plus cette section : elle retrouve son état d'origine
+      svcOuverts.delete(sid); delete openState[sid];
+      sec = redessine(sec, s);
+    }
     sec.style.display = ok ? '' : 'none';
+    if(parContenu){
+      // seules les entrées visées restent visibles ; un bureau vidé disparaît
+      for(const b of sec.querySelectorAll('.bureau')){
+        let n = 0;
+        for(const e of b.querySelectorAll('.entry')){
+          const okE = tous(nom+' '+(b.dataset.txt||'')+' '+(e.dataset.txt||''));
+          e.style.display = okE ? '' : 'none';
+          if(okE) n++;
+        }
+        b.style.display = n ? '' : 'none';
+      }
+      for(const e of sec.querySelectorAll('.svcinner > .entry'))
+        e.style.display = tous(nom+' '+(e.dataset.txt||'')) ? '' : 'none';
+    } else {
+      for(const e of sec.querySelectorAll('.bureau, .entry')) e.style.display = '';
+    }
     const lien = document.querySelector(`#view .toc a[data-sid="${sid}"]`);
     if(lien) lien.style.display = ok ? '' : 'none';
     if(ok) visibles++;
@@ -2628,7 +2674,7 @@ function renderSvcBlock(j, s, matchOpen){
           <button class="mini" title="Déplacer le bureau vers un autre service" onclick="moveBureau('${j.id}','${s.id}',${bIdx})">${icn('right',13)}</button>
           <button class="mini" title="Dissoudre (les contacts restent, sans bureau)" onclick="dissolveBureau('${j.id}','${s.id}',${bIdx})">${icn('eraser',13)}</button>` : '';
         const bdrop = editMode ? ` ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropTo(event,'${j.id}','${s.id}',${bIdx})"` : '';
-        inner += `<div class="bureau"${bdrop}><h4>${esc(b.nom)} <span class="cnt">${n}</span>${bctl}</h4>${rows}</div>`;
+        inner += `<div class="bureau" data-txt="${esc(norm(b.nom))}"${bdrop}><h4>${esc(b.nom)} <span class="cnt">${n}</span>${bctl}</h4>${rows}</div>`;
       } else inner += rows;
     });
     inner = `<div class="svcinner">${inner}</div>`;
@@ -2669,7 +2715,7 @@ function renderEntry(j, s, e){
       onclick="moveEntry('${j.id}','${s.id}','${ids}')">${icn('right',13)}</button>`;
   }
   const label = e.lib ? `<div class="elabel">${esc(e.lib)}${e.note?`<span class="enote">${esc(e.note)}</span>`:''}</div>` : (e.note?`<div class="elabel"><span class="enote">${esc(e.note)}</span></div>`:'');
-  return `<div class="entry ${label?'':'nolabel'}">${label}<div class="chans">${chans}</div></div>`;
+  return `<div class="entry ${label?'':'nolabel'}" data-txt="${esc(norm((e.lib||'')+' '+(e.note||'')))}">${label}<div class="chans">${chans}</div></div>`;
 }
 
 function renderChan(c){
