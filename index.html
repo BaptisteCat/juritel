@@ -863,6 +863,18 @@ body.toolsdocked .mainrow{grid-template-columns:minmax(0,1fr) 300px}
   outline:none; font-family:inherit;
 }
 .gcard input:focus{border-color:var(--accent)}
+/* champ mot de passe : bouton œil logé à droite, dans le champ */
+.gpw{position:relative; margin-bottom:8px}
+.gpw input{margin-bottom:0; padding-right:44px}
+.gpw input::-ms-reveal, .gpw input::-ms-clear{display:none}   /* Edge ajoute son propre œil */
+#gpassvoir{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  width:32px; height:32px; border:none; border-radius:8px; background:transparent;
+  color:var(--ink-3); cursor:pointer; display:grid; place-items:center; transition:all .15s;
+}
+#gpassvoir:hover{color:var(--ink); background:var(--line-2)}
+#gpassvoir:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+#gpassvoir[aria-pressed="true"]{color:var(--accent)}
 .gcard .btn{width:100%; margin-bottom:8px}
 .gsep{display:flex; align-items:center; gap:10px; color:var(--ink-3); font-size:12px; margin:6px 0 12px}
 .gsep::before,.gsep::after{content:''; flex:1; border-top:1px solid var(--line)}
@@ -1627,8 +1639,13 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
     <p class="hint" style="margin-bottom:14px">Annuaire des juridictions — accès réservé.</p>
     <div id="gforms">
       <input id="gmail" type="email" placeholder="adresse@exemple.fr" autocomplete="username">
-      <input id="gpass" type="password" placeholder="mot de passe" autocomplete="current-password"
-        onkeydown="if(event.key==='Enter')sbLogin()">
+      <div class="gpw">
+        <input id="gpass" type="password" placeholder="mot de passe" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')sbLogin()">
+        <button type="button" id="gpassvoir" data-ic="eye" data-s="17" aria-pressed="false"
+          aria-label="Afficher le mot de passe" title="Afficher le mot de passe"
+          onmousedown="event.preventDefault()" onclick="voirMdp()"></button>
+      </div>
       <button class="btn primary" onclick="sbLogin()">Se connecter</button>
       <button class="btn" onclick="sbSignup()">Créer un compte</button>
       <div class="gsep"><span>ou</span></div>
@@ -1851,8 +1868,25 @@ const ICONS = {
   star:'<path d="M11.05 3.69a1.06 1.06 0 0 1 1.9 0l2.2 4.46 4.92.72a1.06 1.06 0 0 1 .59 1.8l-3.56 3.47.84 4.9a1.06 1.06 0 0 1-1.54 1.12L12 17.85l-4.4 2.31a1.06 1.06 0 0 1-1.54-1.12l.84-4.9-3.56-3.47a1.06 1.06 0 0 1 .59-1.8l4.91-.72z"/>',
   sortant:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/>',
   globe:'<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+  eye:'<path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/>',
+  eyeoff:'<path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.64 0 8.6 2.9 9.94 6.65a1 1 0 0 1 0 .7 10.4 10.4 0 0 1-1.44 2.49"/><path d="M14.08 14.16a3 3 0 0 1-4.24-4.24"/><path d="M17.48 17.5A10.75 10.75 0 0 1 2.06 12.35a1 1 0 0 1 0-.7 10.8 10.8 0 0 1 4.45-5.14"/><path d="m2 2 20 20"/>',
 };
 const icn = (n, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||''}</svg>`;
+
+/* Porte de connexion : afficher / masquer le mot de passe tapé. Le focus
+   reste dans le champ, curseur en fin de saisie, pour continuer à taper. */
+window.voirMdp = () => {
+  const champ = document.getElementById('gpass'), b = document.getElementById('gpassvoir');
+  if(!champ || !b) return;
+  const visible = champ.type === 'password';
+  champ.type = visible ? 'text' : 'password';
+  b.innerHTML = icn(visible ? 'eyeoff' : 'eye', 17);
+  b.setAttribute('aria-pressed', visible);
+  b.setAttribute('aria-label', visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+  b.title = b.getAttribute('aria-label');
+  champ.focus();
+  const n = champ.value.length; try{ champ.setSelectionRange(n, n); }catch(e){}
+};
 
 
 /* migration Annuaire Justice -> Juritel : conserve données, Drive et thème */
