@@ -7,3 +7,6 @@ annuaire_clean.md
 rapport_extraction.md
 *.docx
 .claude/
+
+# nouveau dataset (donnees) : jamais sur GitHub
+dataset/
