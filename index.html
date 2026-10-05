@@ -4407,6 +4407,7 @@ $('#btnsettings').addEventListener('click', ()=>{
   $('#metaInfo').textContent = `${DATA.juridictions.length} juridictions, ${nc.toLocaleString('fr-FR')} contacts. `+
     `Dernière modification : ${new Date(DATA.updatedAt).toLocaleString('fr-FR')}.`;
   sbAccountUI();
+  sbNotifDemandes();   // la pastille suit l etat reel a chaque ouverture des reglages
   sbEstProprietaire().then(prop => {
     document.getElementById('ownerBox').style.display = prop ? '' : 'none';
   });
@@ -5089,7 +5090,10 @@ window.sbAsk = async () => {
     msg.textContent = 'Demande envoyée — le propriétaire la verra à sa prochaine connexion.';
     document.getElementById('gask').style.display = 'none';
   } else {
-    msg.textContent = 'Échec : '+error.message;
+    // Echec typique : regle de securite (RLS) qui refuse l insertion. On le dit en clair pour que
+    // le visiteur puisse le signaler au proprietaire au lieu de croire la demande partie.
+    msg.textContent = "Échec de l'envoi : " + (error.message||'erreur') +
+      (error.code ? ' (code '+error.code+')' : '') + " — prévenez le propriétaire de l'annuaire.";
   }
 };
 async function sbAskState(){
@@ -5200,15 +5204,22 @@ async function sbAccountUI(){
   // serveur (fonction est_proprietaire) au lieu de deduire le role du fait que
   // la lecture a reussi : masquer l interface ne protege rien, c est la regle
   // RLS de la table « acces » qui fait foi cote base.
-  if(!(await sbEstProprietaire())) return;
+  if(!(await sbEstProprietaire())){
+    // Silence ambigu auparavant : on dit clairement que ce compte n arbitre pas les acces.
+    info.textContent += ' — compte standard (la gestion des accès est réservée au propriétaire)';
+    return;
+  }
   const {data, error} = await sb.from('acces').select('email,role').order('email');
-  if(error || !data) return;
+  if(error){ info.textContent += ' — lecture des accès impossible : ' + (error.message||'erreur'); return; }
+  if(!data) return;
   wl.style.display = 'block';
   // demandes en attente
-  let demHtml = '';
+  let demHtml = `<div class="hint" style="margin-bottom:10px">Demandes d'accès : aucune en attente</div>`;
   try{
     const dem = await sb.from('demandes').select('email,created_at').order('created_at');
-    if(dem.data && dem.data.length){
+    if(dem.error){
+      demHtml = `<div class="hint" style="margin-bottom:10px; color:var(--ko)">Demandes d'accès : lecture impossible (${esc(dem.error.message||'erreur')})</div>`;
+    } else if(dem.data && dem.data.length){
       demHtml = `<div style="margin-bottom:10px">`+
         `<span class="hint" style="font-weight:650; color:var(--ko)">Demandes d'accès en attente :</span>`+
         dem.data.map(d=>`<div class="setrow" style="margin:5px 0">
