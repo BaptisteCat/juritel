@@ -330,6 +330,49 @@ body.mapmode{padding-bottom:10px}
   .homewrap .favchip .fnom{max-width:210px}
   .homewrap .favchip:hover{transform:translateY(-1px)}
 }
+/* Bulle d aide maison : meme matiere que les cartes, pointe orientee vers l element */
+#tipbox{
+  position:fixed; z-index:120; max-width:260px; padding:7px 10px; border-radius:11px;
+  background:var(--card-2); border:1px solid var(--line); color:var(--ink-2);
+  font-size:11.5px; font-weight:600; line-height:1.4; letter-spacing:-.005em;
+  box-shadow:var(--shadow-m); pointer-events:none; opacity:0; transform:translateY(3px);
+  transition:opacity .12s, transform .12s;
+}
+#tipbox.on{opacity:1; transform:none}
+#tipbox::after{
+  content:''; position:absolute; left:var(--fx, 50%); margin-left:-5px; width:9px; height:9px;
+  background:var(--card-2); transform:rotate(45deg);
+}
+#tipbox:not(.bas)::after{bottom:-5px; border-right:1px solid var(--line); border-bottom:1px solid var(--line)}
+#tipbox.bas::after{top:-5px; border-left:1px solid var(--line); border-top:1px solid var(--line)}
+/* Pastille « i » des numeros : identique a celle des sources de la fenetre « Juridiction competente » */
+.vinfo{
+  position:relative; display:inline-flex; align-items:center; flex:none;
+  color:var(--ink-3); cursor:help; line-height:0; outline:none;
+}
+.vinfo .ri{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:15px; height:15px; border-radius:50%; border:1.2px solid currentColor; transition:all .18s;
+}
+.vinfo .ri svg{display:block; fill:currentColor}
+.vinfo:hover, .vinfo:focus-visible{color:var(--ink-2)}
+.vinfo:hover .ri, .vinfo:focus-visible .ri{
+  background:linear-gradient(135deg,var(--grad-a),var(--grad-b)); border-color:transparent; color:var(--cta-ink);
+}
+/* Itineraire : bouton detoure, plus visible qu un lien discret */
+.mini.itin{
+  border:1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  color:var(--accent); text-decoration:none; padding:5px 10px;
+}
+.mini.itin:hover{background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--accent); border-color:var(--accent)}
+/* Suggestions de communes quand la saisie en laisse plusieurs */
+.commsugg{display:flex; flex-wrap:wrap; gap:7px}
+.commchip{
+  display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:var(--r-pill, 999px);
+  border:1px solid var(--line); background:var(--card); color:var(--ink-2); cursor:pointer;
+  font:inherit; font-size:12.5px; font-weight:600; transition:all .15s;
+}
+.commchip:hover{border-color:var(--accent); color:var(--ink); transform:translateY(-1px)}
 /* Bloc « commune » au-dessus des resultats : juridictions competentes + services de securite */
 .communebox{margin:0 0 14px}
 .commlead{margin:0 2px 8px; font-size:12.5px; line-height:1.45}
@@ -1884,6 +1927,7 @@ const ICONS = {
   chev:'<path d="m9 18 6-6-6-6"/>',
   up:'<path d="m18 15-6-6-6 6"/>',
   down:'<path d="m6 9 6 6 6-6"/>',
+  navig:'<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
   pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
   scale:'<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
   eraser:'<path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/>',
@@ -2287,7 +2331,7 @@ function render(){
 function btnItineraire(adresse){
   if(!adresse) return '';
   const u = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(adresse);
-  return `<a class="mini" href="${u}" target="_blank" rel="noopener" title="Ouvrir l'itinéraire">${icn('pin',11)} itinéraire</a>`;
+  return `<a class="mini itin" href="${u}" target="_blank" rel="noopener" data-tip="Ouvrir l'itinéraire dans votre application de cartes">${icn('navig',12)} Itinéraire</a>`;
 }
 
 /* ============================ recherche par COMMUNE ============================
@@ -2383,23 +2427,47 @@ function majCommune(q){
   // anti-rebond : on n interroge le geocodeur qu une fois la frappe calmee
   communeTimer = setTimeout(() => communeChercher(r), 320);
 }
+/* Comparaison de noms de communes : casse, accents, traits d union, apostrophes et ponctuation de
+   fin ignorés — « courcelles en bassee » doit retrouver « Courcelles-en-Bassée ». */
+function normCom(s){
+  return norm(s).replace(/[’']/g,' ').replace(/[-–—]/g,' ')
+    .replace(/[.,;:!?…]+$/,'').replace(/\s+/g,' ').trim();
+}
 async function communeChercher(r){
   try{
-    const g = await fetch('https://data.geopf.fr/geocodage/search/?limit=1&type=municipality&q='+encodeURIComponent(r));
+    // autocomplete=1 + plusieurs candidats : la frappe partielle suffit dès qu elle ne laisse qu une commune
+    const g = await fetch('https://data.geopf.fr/geocodage/search/?limit=8&autocomplete=1&type=municipality&q='+encodeURIComponent(r));
     if(!g.ok) return;
     const d = await g.json();
-    const f = (d.features||[])[0];
-    if(!f || COMMUNE_Q !== r) return;
-    const nom = f.properties.city || f.properties.name || '';
-    const insee = f.properties.citycode || '';
-    const cp = f.properties.postcode || '';
-    // on n affiche le bloc que si la saisie vise VRAIMENT cette commune (et pas un mot qui lui ressemble)
-    const nq = norm(r), nn = norm(nom);
-    if(!(nn.startsWith(nq) || nq.startsWith(nn) || /^\d{5}$/.test(r))) return;
+    if(COMMUNE_Q !== r) return;
+    const vus = new Set();
+    const cands = (d.features||[]).map(f=>({
+      nom: f.properties.city || f.properties.name || '',
+      insee: f.properties.citycode || '',
+      cp: f.properties.postcode || '',
+    })).filter(c => c.insee && !vus.has(c.insee) && vus.add(c.insee));
+    if(!cands.length) return;
+    const nq = normCom(r);
+    const exact = cands.filter(c => normCom(c.nom) === nq);
+    const prefixe = cands.filter(c => normCom(c.nom).startsWith(nq));
+    let pick = exact[0] || (prefixe.length === 1 ? prefixe[0] : null);
+    if(!pick && /^\d{5}$/.test(r.trim())) pick = cands[0];
+    if(!pick){
+      // plusieurs communes commencent par ce que vous tapez : on les propose au lieu de ne rien dire
+      const choix = (prefixe.length ? prefixe : cands).slice(0,6);
+      if(choix.length < 2 || nq.length < 3) return;
+      COMMUNE_HTML = `<div class="communebox"><div class="hint commlead">Communes correspondantes :</div>
+        <div class="commsugg">${choix.map(c=>`<button class="commchip" onclick="choisirCommune('${c.insee}','${esc(c.nom).replace(/'/g,"&#39;")}','${c.cp}')">${
+          icn('pin',11)} ${esc(c.nom)}<span class="hint"> ${esc(c.cp)}</span></button>`).join('')}</div></div>`;
+      communePaint();
+      return;
+    }
+    const nom = pick.nom, insee = pick.insee, cp = pick.cp;
+    const nn = normCom(nom);
     const comp = await loadComp();
     const items = competencesPourInsee(comp, insee);
     if(!items.length) return;
-    const surPlace = DATA.juridictions.filter(j => normVille(j.nom) === nn);
+    const surPlace = DATA.juridictions.filter(j => normCom(normVille(j.nom)) === nn);
     const tj = items.find(x=>x.type==='TJ');
     COMP_LAST = {adresse: nom + (cp?' ('+cp+')':''), items, tjId: tj && tj.jurId};
     const phrase = surPlace.length
@@ -2419,6 +2487,63 @@ async function communeChercher(r){
   }catch(e){ /* le bloc commune est un bonus : jamais bloquant */ }
 }
 function communeBox(){ return '<div id="communeBox"></div>'; }
+/* Clic sur une commune proposée : on affiche directement son bloc, sans toucher à la recherche. */
+window.choisirCommune = async (insee, nom, cp) => {
+  const comp = await loadComp();
+  const items = competencesPourInsee(comp, insee);
+  if(!items.length){ toast('Commune absente de la table officielle'); return; }
+  const nn = normCom(nom);
+  const surPlace = DATA.juridictions.filter(j => normCom(normVille(j.nom)) === nn);
+  const tj = items.find(x=>x.type==='TJ');
+  COMP_LAST = {adresse: nom + (cp?' ('+cp+')':''), items, tjId: tj && tj.jurId};
+  COMMUNE_HTML = `<div class="communebox">
+    <div class="hint commlead">${surPlace.length
+      ? `${surPlace.length} juridiction${surPlace.length>1?'s siègent':' siège'} à ${esc(nom)}. Juridictions compétentes pour cette commune :`
+      : `Aucune juridiction ne siège à ${esc(nom)} : voici les juridictions <b>compétentes</b> pour cette commune.`}</div>
+    ${compCard(COMP_LAST, null, true)}
+    <div id="secuBox"></div>
+  </div>`;
+  communePaint();
+  const secu = await secuCommune(insee);
+  const sb2 = document.getElementById('secuBox');
+  if(sb2) sb2.innerHTML = secuHtml(secu);
+};
+
+/* ============================ bulles d aide « maison » ============================
+   L infobulle du systeme arrive avec un delai, sur fond blanc, au ras du pointeur. On dessine la
+   notre : immediate, aux couleurs du theme, posee au-dessus de l element (en coordonnees ecran, donc
+   jamais rognee par un bloc a overflow cache). Tout element portant data-tip en beneficie. */
+let TIPEL = null;
+function tipBox(){
+  if(!TIPEL){ TIPEL = document.createElement('div'); TIPEL.id = 'tipbox'; document.body.appendChild(TIPEL); }
+  return TIPEL;
+}
+function tipShow(el){
+  const t = el.getAttribute('data-tip');
+  if(!t) return;
+  const b = tipBox();
+  b.textContent = t;
+  b.classList.add('on');
+  const r = el.getBoundingClientRect(), m = 8;
+  const w = b.offsetWidth, h = b.offsetHeight;
+  let left = r.left + r.width/2 - w/2;
+  left = Math.max(m, Math.min(left, innerWidth - w - m));
+  let top = r.top - h - 9, bas = false;
+  if(top < m){ top = r.bottom + 9; bas = true; }
+  b.classList.toggle('bas', bas);
+  b.style.left = Math.round(left)+'px';
+  b.style.top = Math.round(top)+'px';
+  b.style.setProperty('--fx', Math.round(r.left + r.width/2 - left)+'px');
+}
+function tipHide(){ if(TIPEL) TIPEL.classList.remove('on'); }
+document.addEventListener('mouseover', e => {
+  const el = e.target.closest && e.target.closest('[data-tip]');
+  if(el) tipShow(el); else tipHide();
+});
+document.addEventListener('mouseleave', tipHide, true);
+document.addEventListener('focusin', e => { const el = e.target.closest && e.target.closest('[data-tip]'); if(el) tipShow(el); });
+document.addEventListener('focusout', tipHide);
+window.addEventListener('scroll', tipHide, true);
 
 /* ---------- vue liste ---------- */
 function renderList(){
@@ -2939,18 +3064,22 @@ function renderChan(c){
   // l'information la plus sûre que l'annuaire puisse donner
   const gens = n => n + ' membre' + (n>1?'s':'');
   const fort = vOk(c) >= 2, faible = vKo(c) >= 2;
-  if(nOk>0) badge = `<span class="score good${fort?' fort':''}" title="${
-      fort ? gens(vOk(c))+' ont obtenu une réponse' : nOk+' appel(s) réussi(s)'}${mien}">${
-      icn('check',10)} ${nOk}${lOk?' · '+fmtDate(lOk):''}</span>`;
-  else if(nKo>0) badge = `<span class="score bad${faible?' fort':''}" title="${
-      faible ? gens(vKo(c))+" n'ont pas obtenu de réponse" : nKo+' échec(s)'}${mien}">${
+  // Badge compact : coche + nombre, comme pour les échecs. La date vit dans la bulle du « i ».
+  if(nOk>0) badge = `<span class="score good${fort?' fort':''}" data-tip="${esc(
+      (fort ? gens(vOk(c))+' ont obtenu une réponse' : nOk+' appel(s) réussi(s)')+mien)}">${
+      icn('check',10)} ${nOk}</span>`;
+  else if(nKo>0) badge = `<span class="score bad${faible?' fort':''}" data-tip="${esc(
+      (faible ? gens(vKo(c))+" n'ont pas obtenu de réponse" : nKo+' échec(s)')+mien)}">${
       icn('x',10)} ${nKo}</span>`;
   // « i » : date de la derniere verification (reponse obtenue, ou dernier essai infructueux)
   const lTry = Math.max(c.lastTry||0, 0);
   const dVer = lOk || lTry;
-  const info = (c.type==='tel' && dVer) ? `<span class="vinfo" tabindex="0" title="Dernière vérification : ${
-      fmtDate(dVer)}${lOk && dVer===lOk ? ' — ce numéro a répondu' : ' — sans réponse ce jour-là'}${
-      nOk||nKo ? ` · ${nOk} réussite${nOk>1?'s':''}, ${nKo} échec${nKo>1?'s':''}` : ''}">i</span>` : '';
+  // Pastille « i » identique à celle des sources (fenêtre « Juridiction compétente ») : contour fin,
+  // dégradé du thème au survol, et bulle dessinée par l'application (pas l'infobulle du système).
+  const info = (c.type==='tel' && dVer) ? `<span class="vinfo" tabindex="0" aria-label="Détail des vérifications" data-tip="${esc(
+      'Dernière vérification : ' + fmtDate(dVer) +
+      (lOk && dVer===lOk ? ' — ce numéro a répondu' : ' — sans réponse ce jour-là') +
+      (nOk||nKo ? ` · ${nOk} réussite${nOk>1?'s':''}, ${nKo} échec${nKo>1?'s':''}` : ''))}"><span class="ri" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="3.3" r="1.05"/><rect x="5.05" y="5.2" width="1.9" height="4.6" rx=".95"/></svg></span></span>` : '';
   const drag = editMode ? ` draggable="true" ondragstart="dragC(event,'${c.id}')" title="Glissez vers un autre bureau ou service"` : '';
   return `<div class="chan ${isDead(c)?'dead':''}" id="ct-${c.id}"${drag}>
     <span class="tico ${c.type}">${tico}</span>
