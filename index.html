@@ -317,6 +317,19 @@ body.mapmode{padding-bottom:10px}
   .homewrap .favbar{margin:26px 0 0}    /* aligné sur le haut des cartes */
   .homewrap .homeacts{grid-column:2}
 }
+/* Fenetre trop etroite pour la colonne laterale (761-1279 px) : l acces rapide passait AU-DESSUS des
+   trois portes d entree, en liste pleine largeur — il prenait alors toute la hauteur utile et releguait
+   les fonctions principales plus bas. Il devient un ruban compact, place SOUS les portes. */
+@media (min-width:761px) and (max-width:1279px){
+  .homewrap{display:flex; flex-direction:column}
+  .homewrap .homeacts{order:1}
+  .homewrap .favbar{order:2; width:100%; max-width:620px; margin:22px auto 0}
+  .homewrap .favlbl{justify-content:center}
+  .homewrap .favchips{flex-direction:row; flex-wrap:wrap; justify-content:center; max-width:none; gap:8px}
+  .homewrap .favchip{width:auto; max-width:100%; padding:7px 10px 7px 13px; font-size:12px}
+  .homewrap .favchip .fnom{max-width:210px}
+  .homewrap .favchip:hover{transform:translateY(-1px)}
+}
 .favlbl{
   display:flex; align-items:center; gap:6px; margin-bottom:9px;
   font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
