@@ -330,6 +330,24 @@ body.mapmode{padding-bottom:10px}
   .homewrap .favchip .fnom{max-width:210px}
   .homewrap .favchip:hover{transform:translateY(-1px)}
 }
+/* Bloc « commune » au-dessus des resultats : juridictions competentes + services de securite */
+.communebox{margin:0 0 14px}
+.commlead{margin:0 2px 8px; font-size:12.5px; line-height:1.45}
+.secubloc{margin-top:10px; border:1px solid var(--line); border-radius:14px; background:var(--card); padding:10px 12px}
+.secuhead{display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--ink-3); margin-bottom:7px}
+.seculigne{display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:5px 0; font-size:12.5px; border-top:1px solid var(--line-2)}
+.seculigne:first-of-type{border-top:0}
+.secutype{flex:none; font-size:10.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--ink-3); background:var(--card-2); border-radius:7px; padding:2px 7px}
+.secunom{flex:1; min-width:120px; font-weight:600; color:var(--ink-2)}
+/* « i » : date de la derniere verification d un numero */
+.vinfo{
+  flex:none; width:15px; height:15px; border-radius:50%; display:grid; place-items:center; cursor:help;
+  border:1px solid var(--line); color:var(--ink-3); background:var(--card-2);
+  font-size:10px; font-weight:800; font-style:italic; line-height:1;
+}
+.vinfo:hover, .vinfo:focus{color:var(--ink); border-color:var(--ink-3); outline:none}
 .favlbl{
   display:flex; align-items:center; gap:6px; margin-bottom:9px;
   font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
@@ -2152,7 +2170,9 @@ function structureService(contacts){
     for(const e of b.entries.values())
       e.chans.sort((a,c)=> (rank[a.type]-rank[c.type]) || (score(c)-score(a)) );
   // tri des interlocuteurs au sein de chaque bureau, selon le reglage
-  const tri = localStorage.getItem(LS_TRI) || 'annuaire';
+  // Par defaut, le numero le MIEUX VALIDE remonte en tete de sa section : c est l interet premier
+  // de la notation ✓/✗. Le tri « annuaire » (ordre d origine) reste disponible dans les reglages.
+  const tri = localStorage.getItem(LS_TRI) || 'note';
   if(tri !== 'annuaire'){
     for(const b of bureaux.values()){
       const liste = [...b.entries.entries()];
@@ -2262,6 +2282,144 @@ function render(){
   renderList();
 }
 
+/* Itineraire : on delegue a l application de cartes du poste (Google Maps par le web, qui bascule
+   sur l app installee sur telephone). L adresse est envoyee telle quelle, elle suffit au geocodage. */
+function btnItineraire(adresse){
+  if(!adresse) return '';
+  const u = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(adresse);
+  return `<a class="mini" href="${u}" target="_blank" rel="noopener" title="Ouvrir l'itinéraire">${icn('pin',11)} itinéraire</a>`;
+}
+
+/* ============================ recherche par COMMUNE ============================
+   Taper « Aubervilliers » ou « 93300 » ne donnait rien : aucune juridiction n y siege. On interroge
+   le geocodeur IGN (type=municipality), puis la table officielle des competences, et on affiche les
+   juridictions competentes — en disant clairement qu aucune ne siege sur place quand c est le cas.
+   On ajoute les services de securite de la commune (commissariat, police municipale, gendarmerie),
+   lus en direct dans l annuaire de l administration : certains dossiers en ont besoin. */
+let COMMUNE_Q = null, COMMUNE_HTML = '', communeTimer = null;
+const SECU_CACHE = new Map();
+const SECU_LBL = {commissariat_police:'Commissariat', police_municipale:'Police municipale', gendarmerie:'Gendarmerie'};
+
+function competencesPourInsee(comp, citycode){
+  const entry = comp && comp.c && comp.c[citycode];
+  if(!entry) return [];
+  const types = [['CA','ca'], ['TJ','tj'], ['Proximité','tprx'], ['CPH','cph'], ['TCO','tco']];
+  const items = [];
+  types.forEach(([label, key], k)=>{
+    const idx = entry[k];
+    if(idx===undefined || idx<0) return;
+    const nom = comp[key][idx];
+    const j = key==='ca' ? findJurByName(nom, ['ca'])
+      : key==='tj' ? findJurByName(nom, ['tj'])
+      : key==='tprx' ? findJurByName(nom, null, 'proximit')
+      : key==='tco' ? findJurByName(nom, null, 'commerc')
+      : findJurByName(nom, null, 'prud');
+    items.push({type:label, key: key==='tco' ? 'commerce' : key, nom, jurId: j? j.id : null});
+  });
+  const depa = citycode.startsWith('97') ? citycode.slice(0,3) : citycode.slice(0,2);
+  const tad = comp.tadep && comp.tadep[depa];
+  if(tad){
+    const nta = comp.ta[tad[0]], ncaa = comp.caa[tad[1]];
+    items.push({type:'TA', key:'ta', nom:nta, jurId:(findJurByName(nta, null, 'administratif')||{}).id || null});
+    items.push({type:'CAA', key:'caa', nom:ncaa, jurId:(findJurByName(ncaa, null, 'administrative')||{}).id || null});
+  }
+  return items;
+}
+
+/* Services de securite d une commune, par code INSEE (API DILA, CORS ouvert). */
+async function secuCommune(insee){
+  if(SECU_CACHE.has(insee)) return SECU_CACHE.get(insee);
+  let out = [];
+  try{
+    const where = `(pivot like "commissariat_police" or pivot like "police_municipale" or pivot like "gendarmerie") and pivot like "${insee}"`;
+    const url = SP_API + '?limit=8&select=nom,pivot,telephone,adresse,adresse_courriel&where=' + encodeURIComponent(where);
+    const r = await fetch(url);
+    if(r.ok){
+      const d = await r.json();
+      out = (d.results||[]).map(x=>{
+        const piv = (typeof x.pivot === 'string' ? JSON.parse(x.pivot||'[]') : (x.pivot||[]));
+        const tel = (typeof x.telephone === 'string' ? JSON.parse(x.telephone||'[]') : (x.telephone||[]));
+        const adr = (typeof x.adresse === 'string' ? JSON.parse(x.adresse||'[]') : (x.adresse||[]));
+        const a = adr[0]||{};
+        return {
+          nom: x.nom||'',
+          type: (piv[0]||{}).type_service_local || '',
+          tel: (tel[0]||{}).valeur || '',
+          adresse: [a.numero_voie, a.code_postal, a.nom_commune].filter(Boolean).join(' '),
+        };
+      });
+    }
+  }catch(e){ out = []; }
+  SECU_CACHE.set(insee, out);
+  return out;
+}
+
+function secuHtml(liste){
+  if(!liste.length) return '';
+  const lignes = liste.map(x=>{
+    const tel = x.tel ? `<a class="v" href="tel:${digits(x.tel).length===10 ? '+33'+digits(x.tel).slice(1) : digits(x.tel)}">${esc(x.tel)}</a>` : '<span class="hint">numéro non publié</span>';
+    return `<div class="seculigne">
+      <span class="secutype">${esc(SECU_LBL[x.type]||'Sécurité')}</span>
+      <span class="secunom">${esc(x.nom)}${x.adresse?`<span class="hint"> · ${esc(x.adresse)}</span>`:''}</span>
+      ${tel}${x.adresse?btnItineraire(x.adresse):''}
+    </div>`;
+  }).join('');
+  return `<div class="secubloc"><div class="secuhead">${icn('pin',12)} Police et gendarmerie de la commune
+    <span class="hint">· source service-public.fr</span></div>${lignes}</div>`;
+}
+
+function communePaint(){
+  const box = document.getElementById('communeBox');
+  if(box) box.innerHTML = COMMUNE_HTML;
+}
+
+function majCommune(q){
+  const r = (q||'').trim();
+  if(r === COMMUNE_Q){ communePaint(); return; }   // deja calcule pour cette saisie
+  COMMUNE_Q = r; COMMUNE_HTML = '';
+  communePaint();
+  clearTimeout(communeTimer);
+  if(r.length < 3) return;
+  // anti-rebond : on n interroge le geocodeur qu une fois la frappe calmee
+  communeTimer = setTimeout(() => communeChercher(r), 320);
+}
+async function communeChercher(r){
+  try{
+    const g = await fetch('https://data.geopf.fr/geocodage/search/?limit=1&type=municipality&q='+encodeURIComponent(r));
+    if(!g.ok) return;
+    const d = await g.json();
+    const f = (d.features||[])[0];
+    if(!f || COMMUNE_Q !== r) return;
+    const nom = f.properties.city || f.properties.name || '';
+    const insee = f.properties.citycode || '';
+    const cp = f.properties.postcode || '';
+    // on n affiche le bloc que si la saisie vise VRAIMENT cette commune (et pas un mot qui lui ressemble)
+    const nq = norm(r), nn = norm(nom);
+    if(!(nn.startsWith(nq) || nq.startsWith(nn) || /^\d{5}$/.test(r))) return;
+    const comp = await loadComp();
+    const items = competencesPourInsee(comp, insee);
+    if(!items.length) return;
+    const surPlace = DATA.juridictions.filter(j => normVille(j.nom) === nn);
+    const tj = items.find(x=>x.type==='TJ');
+    COMP_LAST = {adresse: nom + (cp?' ('+cp+')':''), items, tjId: tj && tj.jurId};
+    const phrase = surPlace.length
+      ? `${surPlace.length} juridiction${surPlace.length>1?'s siègent':' siège'} à ${esc(nom)}. Juridictions compétentes pour cette commune :`
+      : `Aucune juridiction ne siège à ${esc(nom)} : voici les juridictions <b>compétentes</b> pour cette commune.`;
+    COMMUNE_HTML = `<div class="communebox">
+      <div class="hint commlead">${phrase}</div>
+      ${compCard(COMP_LAST, null, true)}
+      <div id="secuBox"></div>
+    </div>`;
+    if(COMMUNE_Q !== r) return;
+    communePaint();
+    const secu = await secuCommune(insee);
+    if(COMMUNE_Q !== r) return;
+    const sb2 = document.getElementById('secuBox');
+    if(sb2) sb2.innerHTML = secuHtml(secu);
+  }catch(e){ /* le bloc commune est un bonus : jamais bloquant */ }
+}
+function communeBox(){ return '<div id="communeBox"></div>'; }
+
 /* ---------- vue liste ---------- */
 function renderList(){
   const {results, tokens, offm} = search();
@@ -2293,9 +2451,11 @@ function renderList(){
     </div></div>`;
     return;
   }
+  const qbrut = $('#q').value.trim();
   if(!results.length){
-    V.innerHTML = offHtml || `<div class="vide"><div class="big">${icn('search',34)}</div>Aucun résultat.<br><br>
-      <button class="btn primary" onclick="openAdd()">＋ Ajouter ce contact</button></div>`;
+    V.innerHTML = communeBox() + (offHtml || `<div class="vide"><div class="big">${icn('search',34)}</div>Aucun résultat.<br><br>
+      <button class="btn primary" onclick="openAdd()">＋ Ajouter ce contact</button></div>`);
+    majCommune(qbrut);
     return;
   }
   const slice = results.slice(0, shownCards);
@@ -2329,7 +2489,8 @@ function renderList(){
     const totalMatched = withHits.reduce((n,r)=>n+r.hits.reduce((m,h)=>m+h.cts.length,0),0);
     if(withHits.length && results.length<=12 && totalMatched<=80){
       for(const r of results) html += r.hits ? suggInline(r) : suggJur(r);
-      V.innerHTML = html + offHtml;
+      V.innerHTML = communeBox() + html + offHtml;
+  majCommune(qbrut);
       return;
     }
     // les juridictions dont le NOM correspond passent en grandes suggestions
@@ -2350,7 +2511,8 @@ function renderList(){
         html += `<button class="more" onclick="shownCards+=80;render()">Afficher ${contentRes.length-shownCards} fiches de plus</button>`;
     }
   }
-  V.innerHTML = html + offHtml;
+  V.innerHTML = communeBox() + html + offHtml;
+  majCommune(qbrut);
 }
 
 function suggJur({j, hits}){
@@ -2544,7 +2706,8 @@ function renderFiche(j){
           ${j.adresse?`<div class="fblock" id="fadr">
             <h4>Adresse</h4>
             <div class="fadr">${icn('pin',13)}<div>${esc(j.adresse)}
-              <button class="mini" onclick="copyVal('${esc(j.adresse)}')">${icn('copy',11)} copier</button></div></div>
+              <button class="mini" onclick="copyVal('${esc(j.adresse)}')">${icn('copy',11)} copier</button>
+              ${btnItineraire(j.adresse)}</div></div>
           </div>`:`<div class="fblock" id="fadr"></div>`}
           <div id="fhoraires"></div>
         </div>
@@ -2782,11 +2945,17 @@ function renderChan(c){
   else if(nKo>0) badge = `<span class="score bad${faible?' fort':''}" title="${
       faible ? gens(vKo(c))+" n'ont pas obtenu de réponse" : nKo+' échec(s)'}${mien}">${
       icn('x',10)} ${nKo}</span>`;
+  // « i » : date de la derniere verification (reponse obtenue, ou dernier essai infructueux)
+  const lTry = Math.max(c.lastTry||0, 0);
+  const dVer = lOk || lTry;
+  const info = (c.type==='tel' && dVer) ? `<span class="vinfo" tabindex="0" title="Dernière vérification : ${
+      fmtDate(dVer)}${lOk && dVer===lOk ? ' — ce numéro a répondu' : ' — sans réponse ce jour-là'}${
+      nOk||nKo ? ` · ${nOk} réussite${nOk>1?'s':''}, ${nKo} échec${nKo>1?'s':''}` : ''}">i</span>` : '';
   const drag = editMode ? ` draggable="true" ondragstart="dragC(event,'${c.id}')" title="Glissez vers un autre bureau ou service"` : '';
   return `<div class="chan ${isDead(c)?'dead':''}" id="ct-${c.id}"${drag}>
     <span class="tico ${c.type}">${tico}</span>
     <a class="v" href="${href}" ${c.type==='fax'?'onclick="return false"':''}>${esc(c.valeur)}</a>
-    ${badge}
+    ${badge}${info}
     <div class="acts">
       ${c.type!=='tel' ? `<button class="abtn ghost" title="Copier" onclick="copyVal('${esc(c.valeur)}')">${icn('copy',13)}</button>` : ''}
       ${modifMode && estProp() ? `<button class="abtn ghost" title="Modifier" onclick="openEdit('${c.id}')">${icn('pen',13)}</button>
@@ -3562,32 +3731,8 @@ window.pickAdr = async i => {
   if(box) box.innerHTML = '<div class="hint" style="padding:8px 11px">Recherche de la juridiction compétente…</div>';
   const comp = await loadComp();
   if(!comp){ toast('Table des compétences indisponible'); return; }
-  const entry = comp.c[f.properties.citycode];
-  if(!entry){ toast('Commune introuvable dans la table officielle'); if(box) box.innerHTML=''; return; }
-  const types = [['CA','ca'], ['TJ','tj'], ['Proximité','tprx'], ['CPH','cph'], ['TCO','tco']];
-  const items = [];
-  types.forEach(([label, key], k)=>{
-    const idx = entry[k];
-    if(idx===undefined || idx<0) return;
-    const nom = comp[key][idx];
-    const j = key==='ca' ? findJurByName(nom, ['ca'])
-      : key==='tj' ? findJurByName(nom, ['tj'])
-      : key==='tprx' ? findJurByName(nom, null, 'proximit')
-      : key==='tco' ? findJurByName(nom, null, 'commerc')
-      : findJurByName(nom, null, 'prud');
-    items.push({type:label, key: key==='tco' ? 'commerce' : key, nom, jurId: j? j.id : null});
-  });
-  // ordre administratif : ressort départemental (CJA R221-3 et R221-7)
-  const cc = f.properties.citycode;
-  const depa = cc.startsWith('97') ? cc.slice(0,3) : cc.slice(0,2);
-  const tad = comp.tadep && comp.tadep[depa];
-  if(tad){
-    const nta = comp.ta[tad[0]], ncaa = comp.caa[tad[1]];
-    const jta = findJurByName(nta, null, 'administratif');
-    const jcaa = findJurByName(ncaa, null, 'administrative');
-    items.push({type:'TA', key:'ta', nom:nta, jurId: jta ? jta.id : null});
-    items.push({type:'CAA', key:'caa', nom:ncaa, jurId: jcaa ? jcaa.id : null});
-  }
+  const items = competencesPourInsee(comp, f.properties.citycode);
+  if(!items.length){ toast('Commune introuvable dans la table officielle'); if(box) box.innerHTML=''; return; }
   const tj = items.find(x=>x.type==='TJ');
   COMP_LAST = {adresse: f.properties.label, items, tjId: tj && tj.jurId};
   if(tj && tj.jurId){
@@ -4905,7 +5050,7 @@ if('serviceWorker' in navigator){
 }
 function applyTri(){
   const sel = document.getElementById('triContacts');
-  if(sel) sel.value = localStorage.getItem(LS_TRI) || 'annuaire';
+  if(sel) sel.value = localStorage.getItem(LS_TRI) || 'note';
 }
 applyTri();
 document.getElementById('triContacts').addEventListener('change', e => {
