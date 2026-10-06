@@ -1902,6 +1902,7 @@ hr{border:none; border-top:1px solid var(--line); margin:18px 0}
   </div>
   <hr>
   <p class="hint" id="metaInfo"></p>
+  <p class="hint" id="dataInfo"></p>
   <div class="dlgbtns"><button class="btn primary" id="btnCloseSettings">Fermer</button></div>
 </div></dialog>
 
@@ -2544,6 +2545,30 @@ document.addEventListener('mouseleave', tipHide, true);
 document.addEventListener('focusin', e => { const el = e.target.closest && e.target.closest('[data-tip]'); if(el) tipShow(el); });
 document.addEventListener('focusout', tipHide);
 window.addEventListener('scroll', tipHide, true);
+
+/* Fraicheur des donnees officielles embarquees (regenerees chaque mois par une action GitHub).
+   Les tribunaux de commerce font exception : leur referentiel date de 2021, l API Infogreffe etant
+   fermee depuis. On le dit, plutot que de laisser croire que tout est a jour. */
+async function majDataInfo(){
+  const box = document.getElementById('dataInfo');
+  if(!box) return;
+  const jolie = d => {
+    if(!d) return null;
+    const t = Date.parse(d);
+    return isNaN(t) ? null : new Date(t).toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
+  };
+  try{
+    const [off, comp] = await Promise.all([loadOfficiel(), loadComp()]);
+    const parts = [];
+    const dOff = jolie(off && off.genere);
+    const dComp = jolie(comp && (comp.sourceDate || comp.genere));
+    if(dOff) parts.push(`annuaire officiel relevé le ${dOff}`);
+    if(dComp) parts.push(`table des compétences du ${dComp}`);
+    box.innerHTML = parts.length
+      ? `Données officielles : ${parts.join(' · ')}. Tribunaux de commerce : référentiel Infogreffe 2021 (source fermée depuis).`
+      : '';
+  }catch(e){ box.textContent = ''; }
+}
 
 /* ---------- vue liste ---------- */
 function renderList(){
@@ -4695,6 +4720,7 @@ $('#btnsettings').addEventListener('click', ()=>{
     `Dernière modification : ${new Date(DATA.updatedAt).toLocaleString('fr-FR')}.`;
   sbAccountUI();
   sbNotifDemandes();   // la pastille suit l etat reel a chaque ouverture des reglages
+  majDataInfo();       // fraicheur des donnees officielles
   sbEstProprietaire().then(prop => {
     document.getElementById('ownerBox').style.display = prop ? '' : 'none';
   });
