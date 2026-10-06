@@ -1,0 +1,72 @@
+# Prévient le propriétaire qu'une demande d'accès attend, sans service d'e-mail :
+# un signalement (issue) est ouvert sur le dépôt, et GitHub envoie sa notification.
+# La fonction Supabase appelée ne renvoie QUE le nombre de demandes (aucune adresse),
+# elle s'interroge donc avec la clé publique déjà présente dans index.html.
+# Préalable : exécuter une fois supabase-notif-demandes.sql dans Supabase.
+name: Demandes d'accès
+
+on:
+  schedule:
+    - cron: '7 * * * *'   # toutes les heures
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Interroger Supabase (compte seul)
+        id: compte
+        run: |
+          URL=$(grep -oP "SUPA_URL\s*=\s*'\K[^']+" index.html | head -1)
+          KEY=$(grep -oP "SUPA_KEY\s*=\s*'\K[^']+" index.html | head -1)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "Configuration Supabase introuvable dans index.html."; echo "n=-1" >> $GITHUB_OUTPUT; exit 0
+          fi
+          REP=$(curl -s -X POST "$URL/rest/v1/rpc/demandes_en_attente" \
+                 -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}')
+          echo "Réponse : $REP"
+          N=$(printf '%s' "$REP" | tr -d '"' | grep -E '^[0-9]+$' || true)
+          if [ -z "$N" ]; then
+            echo "Fonction demandes_en_attente absente ou erreur : exécutez supabase-notif-demandes.sql."
+            echo "n=-1" >> $GITHUB_OUTPUT
+          else
+            echo "n=$N" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Ouvrir, mettre à jour ou refermer le signalement
+        env:
+          GH_TOKEN: ${{ github.token }}
+          N: ${{ steps.compte.outputs.n }}
+        run: |
+          if [ "$N" = "-1" ]; then echo "Rien à signaler (appel impossible)."; exit 0; fi
+          gh label create "demande-acces" --color F6C445 --description "Demandes d'accès à Juritel en attente" --force >/dev/null 2>&1 || true
+          NUM=$(gh issue list --label "demande-acces" --state open --json number --jq '.[0].number // empty')
+          APP="https://baptistecat.github.io/juritel/"
+          if [ "$N" -gt 0 ]; then
+            TITRE="Juritel : $N demande(s) d'accès en attente"
+            CORPS="$N demande(s) d'accès attendent votre arbitrage.\n\nOuvrez $APP puis **Réglages** : autorisez ou refusez chaque demande.\nCe signalement se referme tout seul quand la file est vide.\n\n_Aucune adresse n'apparaît ici : seul le nombre est transmis._"
+            if [ -z "$NUM" ]; then
+              printf "$CORPS" | gh issue create --title "$TITRE" --label "demande-acces" --body-file -
+              echo "Signalement ouvert."
+            else
+              ACTUEL=$(gh issue view "$NUM" --json title --jq .title)
+              if [ "$ACTUEL" != "$TITRE" ]; then
+                gh issue edit "$NUM" --title "$TITRE"
+                gh issue comment "$NUM" --body "Mise à jour : $N demande(s) d'accès en attente."
+                echo "Signalement mis à jour."
+              else
+                echo "Déjà signalé, rien de neuf."
+              fi
+            fi
+          elif [ -n "$NUM" ]; then
+            gh issue close "$NUM" --comment "Plus aucune demande en attente : file vide."
+            echo "Signalement refermé."
+          else
+            echo "Aucune demande, aucun signalement ouvert."
+          fi
